@@ -1,87 +1,98 @@
 <div align="center">
 
-<a href="https://aniyomi.org">
-    <img src="./.github/assets/logo.png" alt="Aniyomi logo" title="Aniyomi logo" width="80"/>
+<a href="https://github.com/richtunic/Kitsu-X">
+    <img src="./.github/assets/logo.png" alt="Kitsu X Logo" title="Kitsu X Logo" width="100"/>
 </a>
 
-# Aniyomi [App](#)
+# Kitsu X
 
-### Full-featured player and reader, based on ~~Tachiyomi~~ Mihon.
-Discover and watch anime, cartoons, series, and more – easier than ever on your Android device.
+### Reproductor y lector multimedia completo para Android, basado en Mihon/Aniyomi.
+*Descubre y disfruta de anime, manga, series y películas en un solo lugar de forma optimizada y personalizada.*
 
-[![Discord server](https://img.shields.io/discord/841701076242530374.svg?label=&labelColor=6A7EC2&color=7389D8&logo=discord&logoColor=FFFFFF)](https://discord.gg/F32UjdJZrR)
-[![GitHub downloads](https://img.shields.io/github/downloads/aniyomiorg/aniyomi/total?label=downloads&labelColor=27303D&color=0D1117&logo=github&logoColor=FFFFFF&style=flat)](https://github.com/aniyomiorg/aniyomi/releases)
+---
 
-[![CI](https://img.shields.io/github/actions/workflow/status/aniyomiorg/aniyomi/build_push.yml?labelColor=27303D)](https://github.com/aniyomiorg/aniyomi/actions/workflows/build_push.yml)
-[![License: Apache-2.0](https://img.shields.io/github/license/aniyomiorg/aniyomi?labelColor=27303D&color=818cf8)](/LICENSE)
-[![Translation status](https://img.shields.io/weblate/progress/aniyomi?labelColor=27303D&color=946300)](https://hosted.weblate.org/engage/aniyomi/)
+[**Español**](#kitsu-x-español) | [**English**](#kitsu-x-english)
 
-## Download
-
-[![Aniyomi Stable](https://img.shields.io/github/release/aniyomiorg/aniyomi.svg?maxAge=3600&label=Stable&labelColor=06599d&color=043b69)](https://github.com/aniyomiorg/aniyomi/releases)
-[![Aniyomi Preview](https://img.shields.io/github/v/release/aniyomiorg/aniyomi-preview.svg?maxAge=3600&label=Beta&labelColor=2c2c47&color=1c1c39)](https://github.com/aniyomiorg/aniyomi-preview/releases)
-
-*Requires Android 8.0 or higher.*
-
-## Features
-
-<div align="left">
-
-* Local reading and watching of content.
-* A configurable reader with multiple viewers, reading directions and other settings.
-* A configurable player built on mpv-android with multiple options and settings.
-* Tracker support: [MyAnimeList](https://myanimelist.net/), [AniList](https://anilist.co/), [Kitsu](https://kitsu.app/), [MangaUpdates](https://mangaupdates.com), [Shikimori](https://shikimori.one), [Simkl](https://simkl.com/), and [Bangumi](https://bgm.tv/) support.
-* Categories to organize your library.
-* Light and dark themes.
-* Schedule updating your library for new chapters/episodes.
-* Create backups locally to read/watch offline or to your desired cloud service.
-* Plus much more...
+---
 
 </div>
 
-## Contributing
+<a name="kitsu-x-español"></a>
+## 🇪🇸 Kitsu X - Español
 
-[Code of conduct](./CODE_OF_CONDUCT.md) · [Contributing guide](./CONTRIBUTING.md)
+Kitsu X es un fork moderno y optimizado de Aniyomi/Mihon diseñado para ofrecer la mejor experiencia de visualización de anime y lectura de manga en dispositivos Android. Con características mejoradas de automatización y correcciones críticas para saltar protecciones como Cloudflare de forma nativa.
+
+### 🚀 Características Clave
+
+* **Autocategorización Inteligente**: Integración con la API de Jikan para obtener automáticamente los géneros de las obras y organizarlas en carpetas/categorías en tu biblioteca al agregarlas o consultar sus detalles.
+* **Bypass de Cloudflare Optimizado**: Algoritmo que alinea las cabeceras (User-Agent de WebView y cliente HTTP OkHttp) y realiza un espejo de cookies (`cf_clearance` y `__cf_bm`) entre subdominios para evitar bucles infinitos de verificación en extensiones como *AnimeOnline*.
+* **Instalación Directa de Extensiones**: Refactorizado el sistema de descarga de extensiones para utilizar OkHttp en segundo plano, evitando que las extensiones se queden en estado "pendiente" o "cargando" por restricciones de Android.
+* **Actualización Automática de Repositorios**: Recarga inmediata de las extensiones al agregar o editar repositorios sin necesidad de reiniciar la aplicación.
+* **Donaciones**: Proyecto mantenido gracias al apoyo de la comunidad. Puedes apoyarnos mediante Ko-fi:
+
+<div align="center">
+
+[![Apoyar en Ko-fi](https://storage.ko-fi.com/cdn/kofi3.png?v=6)](https://ko-fi.com/relampagonegr0)
+
+</div>
+
+### 📥 Descarga e Instalación
+
+* **Requisitos**: Android 8.0 (API 26) o superior.
+* Descarga la última versión estable o preview desde la sección de [Releases](https://github.com/richtunic/Kitsu-X/releases).
+
+---
+
+## 🛠️ Contribuir
+
+¡Las contribuciones son bienvenidas! Si deseas realizar cambios importantes, abre primero un Issue para discutir lo que te gustaría cambiar.
+
+### Licencia
+
+Este proyecto está bajo la Licencia Apache 2.0. Consulta el archivo [LICENSE](./LICENSE) para más detalles.
+
+---
+
+<br/>
+<br/>
+
+<div align="center">
+<hr/>
+</div>
+
+<br/>
+<br/>
+
+<a name="kitsu-x-english"></a>
+## 🇺🇸 Kitsu X - English
+
+Kitsu X is a modern and optimized fork of Aniyomi/Mihon designed to provide the best anime watching and manga reading experience on Android devices. It features improved automation and critical fixes to natively bypass protections like Cloudflare.
+
+### 🚀 Key Features
+
+* **Smart Auto-Categorization**: Powered by Jikan API to automatically fetch genres and organize entries into library categories upon adding them or opening their details.
+* **Optimized Cloudflare Bypass**: Tailored headers synchronization (matching WebView and OkHttp User-Agents) and bidirectional cookie mirroring (`cf_clearance` & `__cf_bm`) across subdomains to prevent infinite Turnstile verification loops in extensions like *AnimeOnline*.
+* **Direct Extension Installer**: Replaced the system DownloadManager with background OkHttp streaming, resolving the "pending" or infinite loading screen bug on modern Android versions.
+* **Auto-Reload Repositories**: Real-time reloading of the extension list when repositories are added or edited, without requiring an app restart.
+* **Donations**: Support the project development via Ko-fi:
+
+<div align="center">
+
+[![Support on Ko-fi](https://storage.ko-fi.com/cdn/kofi3.png?v=6)](https://ko-fi.com/relampagonegr0)
+
+</div>
+
+### 📥 Download
+
+* **Requirements**: Android 8.0 (API 26) or higher.
+* Download the latest build from the [Releases](https://github.com/richtunic/Kitsu-X/releases) page.
+
+---
+
+## 🛠️ Contributing
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-Before reporting a new issue, take a look at the [FAQ](https://aniyomi.org/docs/faq/general), the [changelog](https://aniyomi.org/changelogs/) and the already opened [issues](https://github.com/aniyomiorg/aniyomi/issues); if you got any questions, join our [Discord server](https://discord.gg/F32UjdJZrR).
-
-### Repositories
-
-[![aniyomiorg/aniyomi-website - GitHub](https://github-readme-stats.vercel.app/api/pin/?username=aniyomiorg&repo=aniyomi-website&bg_color=161B22&text_color=c9d1d9&title_color=818cf8&icon_color=818cf8&border_radius=8&hide_border=true&description_lines_count=2)](https://github.com/aniyomiorg/aniyomi-website/)
-[![aniyomiorg/aniyomi-mpv-lib - GitHub](https://github-readme-stats.vercel.app/api/pin/?username=aniyomiorg&repo=aniyomi-mpv-lib&bg_color=161B22&text_color=c9d1d9&title_color=818cf8&icon_color=818cf8&border_radius=8&hide_border=true&description_lines_count=2)](https://github.com/aniyomiorg/aniyomi-mpv-lib/)
-
-### Credits
-
-Thank you to all the people who have contributed!
-
-<a href="https://github.com/aniyomiorg/aniyomi/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=aniyomiorg/aniyomi" alt="Aniyomi app contributors" title="Aniyomi app contributors" width="800"/>
-</a>
-
-### Disclaimer
-
-The developer(s) of this application does not have any affiliation with the content providers available, and this application hosts zero content.
-
 ### License
 
-<pre>
-Copyright © 2015 Javier Tomás
-Copyright © 2024 Mihon Open Source Project
-Copyright © 2024 Aniyomi Open Source Project
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-</pre>
-
-</div>
+Licensed under the Apache License, Version 2.0. See [LICENSE](./LICENSE) for details.
