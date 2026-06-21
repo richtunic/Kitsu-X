@@ -5,10 +5,14 @@ import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import tachiyomi.presentation.core.util.collectAsState
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
+import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.ui.model.NavStyle
 import eu.kanade.presentation.components.TabbedScreen
 import eu.kanade.presentation.util.Tab
@@ -18,8 +22,11 @@ import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.updates.anime.animeUpdatesTab
 import eu.kanade.tachiyomi.ui.updates.manga.mangaUpdatesTab
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 data object UpdatesTab : Tab {
 
@@ -49,12 +56,22 @@ data object UpdatesTab : Tab {
         val context = LocalContext.current
         val fromMore = currentNavigationStyle() == NavStyle.MOVE_UPDATES_TO_MORE
 
+        val uiPreferences = remember { Injekt.get<UiPreferences>() }
+        val showAnime by uiPreferences.showAnime().collectAsState()
+        val showManga by uiPreferences.showManga().collectAsState()
+
+        val tabs = buildList {
+            if (showAnime) {
+                add(animeUpdatesTab(context, fromMore))
+            }
+            if (showManga) {
+                add(mangaUpdatesTab(context, fromMore))
+            }
+        }.toPersistentList()
+
         TabbedScreen(
             titleRes = MR.strings.label_recent_updates,
-            tabs = persistentListOf(
-                animeUpdatesTab(context, fromMore),
-                mangaUpdatesTab(context, fromMore),
-            ),
+            tabs = tabs,
         )
 
         LaunchedEffect(Unit) {

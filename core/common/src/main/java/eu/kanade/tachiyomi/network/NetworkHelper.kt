@@ -36,7 +36,7 @@ class NetworkHelper(
             .addNetworkInterceptor(IgnoreGzipInterceptor())
             .addNetworkInterceptor(BrotliInterceptor)
 
-        if (preferences.verboseLogging().get()) {
+        if (true) {
             val httpLoggingInterceptor = HttpLoggingInterceptor().apply {
                 level = HttpLoggingInterceptor.Level.HEADERS
             }
@@ -76,5 +76,16 @@ class NetworkHelper(
     @Suppress("UNUSED")
     val cloudflareClient: OkHttpClient = client
 
-    fun defaultUserAgentProvider() = preferences.defaultUserAgent().get().trim()
+    fun defaultUserAgentProvider(): String {
+        val prefValue = preferences.defaultUserAgent().get().trim()
+        return if (prefValue == "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0") {
+            try {
+                eu.kanade.tachiyomi.util.system.WebViewUtil.getInferredUserAgent(context)
+            } catch (_: Throwable) {
+                prefValue
+            }
+        } else {
+            prefValue
+        }
+    }
 }

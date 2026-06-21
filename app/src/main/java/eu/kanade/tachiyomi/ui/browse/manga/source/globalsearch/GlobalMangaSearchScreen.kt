@@ -77,6 +77,14 @@ class GlobalMangaSearchScreen(
                 onClickItem = { navigator.push(MangaScreen(it.id, true)) },
                 onLongClickItem = { navigator.push(MangaScreen(it.id, true)) },
             )
+
+            state.activeEasterEgg?.let { message ->
+                eu.kanade.tachiyomi.ui.browse.EasterEggHelper.EasterEggDialog(
+                    message = message,
+                    onConfirm = { screenModel.confirmEasterEgg() },
+                    onDismiss = { screenModel.dismissEasterEgg() },
+                )
+            }
         }
     }
 }

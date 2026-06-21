@@ -68,14 +68,26 @@ abstract class WebViewInterceptor(
         return intercept(chain, request, response)
     }
 
-    fun parseHeaders(headers: Headers): Map<String, String> {
-        return headers
+    fun parseHeaders(request: Request): Map<String, String> {
+        val overrideUserAgent = AnimeOnlineCloudflareCompat.userAgentFor(request.url)
+        return request.headers
             // Keeping unsafe header makes webview throw [net::ERR_INVALID_ARGUMENT]
             .filter { (name, value) ->
                 isRequestHeaderSafe(name, value)
             }
             .groupBy(keySelector = { (name, _) -> name }) { (_, value) -> value }
-            .mapValues { it.value.getOrNull(0).orEmpty() }
+            .mapValues { (name, values) ->
+                if (name.equals("User-Agent", ignoreCase = true) && overrideUserAgent != null) {
+                    overrideUserAgent
+                } else {
+                    values.getOrNull(0)
+                    ?.takeUnless {
+                        name.equals("User-Agent", ignoreCase = true) &&
+                            it == DEFAULT_EXTENSION_USER_AGENT
+                    }
+                    ?: defaultUserAgentProvider()
+                }
+            }
     }
 
     fun CountDownLatch.awaitFor30Seconds() {
@@ -86,7 +98,9 @@ abstract class WebViewInterceptor(
         return WebView(context).apply {
             setDefaultSettings()
             // Avoid sending empty User-Agent, Chromium WebView will reset to default if empty
-            settings.userAgentString = request.header("User-Agent") ?: defaultUserAgentProvider()
+            settings.userAgentString = AnimeOnlineCloudflareCompat.userAgentFor(request.url)
+                ?: request.header("User-Agent")
+                ?: defaultUserAgentProvider()
         }
     }
 }
@@ -111,3 +125,6 @@ private val unsafeHeaderNames =
         "transfer-encoding",
         "set-cookie",
     )
+
+private const val DEFAULT_EXTENSION_USER_AGENT =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0"

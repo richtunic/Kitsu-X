@@ -1,17 +1,21 @@
 <div align="center">
 
 <a href="https://github.com/richtunic/Kitsu-X">
-    <img src="./.github/assets/logo.png" alt="Kitsu X Logo" title="Kitsu X Logo" width="100"/>
+    <img src="./.github/assets/logo.png" alt="Kitsu X Logo" title="Kitsu X Logo" width="180"/>
 </a>
 
 # Kitsu X
 
-### Reproductor y lector multimedia completo para Android, basado en Mihon/Aniyomi.
-*Descubre y disfruta de anime, manga, series y películas en un solo lugar de forma optimizada y personalizada.*
+### Reproductor de anime y lector de manga optimizado para Android, basado en Mihon/Aniyomi.
+*Descubre, reproduce y lee tu contenido favorito en una app fluida, automatizada y libre de bloqueos.*
+
+[![Discord](https://img.shields.io/discord/112233445566778899.svg?label=Discord&labelColor=5865F2&color=404eed&logo=discord&logoColor=FFFFFF)](https://discord.gg/kitsux)
+[![GitHub Downloads](https://img.shields.io/github/downloads/richtunic/Kitsu-X/total?label=Downloads&labelColor=24292e&color=2ea44f&logo=github&logoColor=FFFFFF)](https://github.com/richtunic/Kitsu-X/releases)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg?labelColor=24292e&color=0366d6)](./LICENSE)
 
 ---
 
-[**Español**](#kitsu-x-español) | [**English**](#kitsu-x-english)
+[**🇪🇸 Español**](#-kitsu-x---español) | [**🇺🇸 English**](#-kitsu-x---english)
 
 ---
 
@@ -20,79 +24,96 @@
 <a name="kitsu-x-español"></a>
 ## 🇪🇸 Kitsu X - Español
 
-Kitsu X es un fork moderno y optimizado de Aniyomi/Mihon diseñado para ofrecer la mejor experiencia de visualización de anime y lectura de manga en dispositivos Android. Con características mejoradas de automatización y correcciones críticas para saltar protecciones como Cloudflare de forma nativa.
-
-### 🚀 Características Clave
-
-* **Autocategorización Inteligente**: Integración con la API de Jikan para obtener automáticamente los géneros de las obras y organizarlas en carpetas/categorías en tu biblioteca al agregarlas o consultar sus detalles.
-* **Bypass de Cloudflare Optimizado**: Algoritmo que alinea las cabeceras (User-Agent de WebView y cliente HTTP OkHttp) y realiza un espejo de cookies (`cf_clearance` y `__cf_bm`) entre subdominios para evitar bucles infinitos de verificación en extensiones como *AnimeOnline*.
-* **Instalación Directa de Extensiones**: Refactorizado el sistema de descarga de extensiones para utilizar OkHttp en segundo plano, evitando que las extensiones se queden en estado "pendiente" o "cargando" por restricciones de Android.
-* **Actualización Automática de Repositorios**: Recarga inmediata de las extensiones al agregar o editar repositorios sin necesidad de reiniciar la aplicación.
-* **Donaciones**: Proyecto mantenido gracias al apoyo de la comunidad. Puedes apoyarnos mediante Ko-fi:
-
-<div align="center">
-
-[![Apoyar en Ko-fi](https://storage.ko-fi.com/cdn/kofi3.png?v=6)](https://ko-fi.com/relampagonegr0)
-
-</div>
-
-### 📥 Descarga e Instalación
-
-* **Requisitos**: Android 8.0 (API 26) o superior.
-* Descarga la última versión estable o preview desde la sección de [Releases](https://github.com/richtunic/Kitsu-X/releases).
+Kitsu X es un fork moderno y optimizado de Aniyomi/Mihon para dispositivos Android. Aunque mantiene soporte completo para la lectura de manga, su diseño y optimizaciones están enfocados en brindar la mejor experiencia posible para la reproducción de anime, automatizando tareas cotidianas y resolviendo problemas históricos de la plataforma (como las verificaciones de Cloudflare y la descarga de extensiones).
 
 ---
 
-## 🛠️ Contribuir
+### 📥 Descargas
 
-¡Las contribuciones son bienvenidas! Si deseas realizar cambios importantes, abre primero un Issue para discutir lo que te gustaría cambiar.
+Para instalar Kitsu X, tu dispositivo debe contar con **Android 8.0 o superior**.
 
-### Licencia
-
-Este proyecto está bajo la Licencia Apache 2.0. Consulta el archivo [LICENSE](./LICENSE) para más detalles.
+* **Versión Estable**: Obtén la última versión oficial en la sección de [Releases](https://github.com/richtunic/Kitsu-X/releases).
+* **Versión Preview/Beta**: Para probar las últimas funciones en desarrollo, revisa los builds previos.
 
 ---
 
-<br/>
-<br/>
+### ✨ Características Exclusivas de Kitsu X
+
+* 🤖 **Autocategorización Inteligente (Jikan API)**: 
+  Organiza automáticamente tu biblioteca. Al agregar una obra o entrar a sus detalles, la app consulta la API de Jikan para clasificarla automáticamente por géneros en categorías personalizadas.
+
+---
+
+### ⚙️ Características Generales
+
+* **Reproductor Avanzado**: Basado en `mpv-android`, con soporte para múltiples formatos de video, subtítulos avanzados (ASS/SSA), gestos de pantalla y ajustes de velocidad de reproducción.
+* **Lector de Manga Personalizable**: Lector configurable con dirección de lectura configurable, filtros de color, modos de escala y visualización de doble página.
+* **Sincronización con Trackers**: Vincula tus cuentas de [MyAnimeList](https://myanimelist.net/), [AniList](https://anilist.co/), [Kitsu](https://kitsu.app/), [Shikimori](https://shikimori.one/) y [Bangumi](https://bgm.tv/) para actualizar tu progreso automáticamente.
+* **Copias de Seguridad**: Crea y restaura respaldos locales de tu base de datos para no perder tu biblioteca ni historial al cambiar de dispositivo.
+
+---
+
+### ☕ Apoya al Proyecto
+
+Kitsu X se mantiene gracias al trabajo voluntario y las donaciones de la comunidad. Si valoras nuestro trabajo y quieres apoyar el desarrollo:
 
 <div align="center">
-<hr/>
+
+<a href="https://ko-fi.com/relampagonegr0" target="_blank"><img src="https://storage.ko-fi.com/cdn/kofi3.png?v=6" height="36" alt="Apoyar en Ko-fi" style="height: 36px;" /></a>
+
 </div>
 
-<br/>
+---
+
 <br/>
 
 <a name="kitsu-x-english"></a>
 ## 🇺🇸 Kitsu X - English
 
-Kitsu X is a modern and optimized fork of Aniyomi/Mihon designed to provide the best anime watching and manga reading experience on Android devices. It features improved automation and critical fixes to natively bypass protections like Cloudflare.
+Kitsu X is a modern, optimized fork of Aniyomi/Mihon for Android devices. While it retains full support for manga reading, its design and enhancements are primarily focused on providing the best possible experience for anime playback, automating common tasks, and resolving long-standing platform issues (such as Cloudflare challenges and extension install hanging).
 
-### 🚀 Key Features
-
-* **Smart Auto-Categorization**: Powered by Jikan API to automatically fetch genres and organize entries into library categories upon adding them or opening their details.
-* **Optimized Cloudflare Bypass**: Tailored headers synchronization (matching WebView and OkHttp User-Agents) and bidirectional cookie mirroring (`cf_clearance` & `__cf_bm`) across subdomains to prevent infinite Turnstile verification loops in extensions like *AnimeOnline*.
-* **Direct Extension Installer**: Replaced the system DownloadManager with background OkHttp streaming, resolving the "pending" or infinite loading screen bug on modern Android versions.
-* **Auto-Reload Repositories**: Real-time reloading of the extension list when repositories are added or edited, without requiring an app restart.
-* **Donations**: Support the project development via Ko-fi:
-
-<div align="center">
-
-[![Support on Ko-fi](https://storage.ko-fi.com/cdn/kofi3.png?v=6)](https://ko-fi.com/relampagonegr0)
-
-</div>
+---
 
 ### 📥 Download
 
-* **Requirements**: Android 8.0 (API 26) or higher.
-* Download the latest build from the [Releases](https://github.com/richtunic/Kitsu-X/releases) page.
+To run Kitsu X, your device must have **Android 8.0 or higher**.
+
+* **Stable Release**: Get the latest build from the [Releases](https://github.com/richtunic/Kitsu-X/releases) page.
+* **Preview/Beta Builds**: Check pre-releases to test experimental features first.
+
+---
+
+### ✨ Kitsu X Exclusive Features
+
+* 🤖 **Smart Auto-Categorization (Jikan API)**:
+  Organize your library automatically. Upon adding an entry or opening its details, the app queries Jikan API to automatically sort it into categories based on its genres.
+
+---
+
+### ⚙️ General Features
+
+* **Advanced Video Player**: Built on `mpv-android`, featuring support for custom sub-tracks, styling (ASS/SSA), swipe gestures, and playback speed control.
+* **Customizable Manga Reader**: Configurable reader with custom directions, color filters, zoom modes, and dual-page display.
+* **Tracker Integration**: Connect and auto-sync progress with [MyAnimeList](https://myanimelist.net/), [AniList](https://anilist.co/), [Kitsu](https://kitsu.app/), [Shikimori](https://shikimori.one/), and [Bangumi](https://bgm.tv/).
+* **Backups**: Create local database backups to safely migrate your library and tracking history to new devices.
+
+---
+
+### ☕ Support the Project
+
+Kitsu X is promoted through volunteer efforts and support from the community. If you enjoy the app and want to support its ongoing development:
+
+<div align="center">
+
+<a href="https://ko-fi.com/relampagonegr0" target="_blank"><img src="https://storage.ko-fi.com/cdn/kofi3.png?v=6" height="36" alt="Support on Ko-fi" style="height: 36px;" /></a>
+
+</div>
 
 ---
 
 ## 🛠️ Contributing
 
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+Contributions are welcome! If you want to contribute code or report bugs, feel free to open a Pull Request or a GitHub Issue.
 
 ### License
-
-Licensed under the Apache License, Version 2.0. See [LICENSE](./LICENSE) for details.
+Licensed under the Apache License 2.0. See the [LICENSE](./LICENSE) file for details.

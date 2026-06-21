@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">Aniyomi</string>
+    <string name="app_name" translatable="false">KitsuX</string>
 
     <!-- Generic strings -->
     <string name="on">On</string>
@@ -209,6 +209,15 @@
     <string name="pref_category_tracking">Tracking</string>
     <string name="pref_category_advanced">Advanced</string>
     <string name="pref_category_about">About</string>
+    <string name="pref_category_experience">Experience</string>
+    <string name="pref_experience_summary">Customize what content you see in the app</string>
+    <string name="pref_show_anime">Show Anime</string>
+    <string name="pref_show_anime_summary">Show anime categories, trends, history and continue watching</string>
+    <string name="pref_show_manga">Show Manga</string>
+    <string name="pref_show_manga_summary">Show manga categories, trends, history and library</string>
+    <string name="pref_show_recommendations">Show recommendations</string>
+    <string name="pref_show_recommendations_summary">Receive personalized recommendations based on your history</string>
+    <string name="pref_manage_repos">Manage repositories</string>
 
     <string name="pref_appearance_summary">Theme, date &amp; time format</string>
     <string name="pref_library_summary">Categories, global update, chapter swipe</string>
@@ -983,4 +992,75 @@
     <string name="exception_http">HTTP %d, check website in WebView</string>
     <string name="exception_offline">No Internet connection</string>
     <string name="exception_unknown_host">Couldn\'t reach %s</string>
+    <!-- KitsuX -->
+    <string name="kitsux_home_empty_library_title">Your library is empty</string>
+    <string name="kitsux_home_empty_library_description">Add your favorite anime and manga from Explore to see them organized here by category.</string>
+    <string name="kitsux_home_continue_watching">Continue watching</string>
+    <string name="kitsux_home_continue_reading">Continue reading</string>
+    <string name="kitsux_home_new_episodes_chapters">New episodes</string>
+    <string name="kitsux_home_new_badge">NEW</string>
+    <string name="kitsux_home_new_count">%d NEW</string>
+    <string name="kitsux_home_watch_now">Watch now</string>
+    <string name="kitsux_home_my_list">My List</string>
+    <string name="kitsux_home_recommended_for_you">Recommended for you</string>
+    <string name="kitsux_home_because_you_like">Because you like %s</string>
+    <string name="kitsux_home_similar_to_watched">Similar to what you watched</string>
+    <string name="kitsux_home_popular_this_week">Popular this week</string>
+    <string name="kitsux_home_popular_manga">Popular manga</string>
+    <string name="kitsux_home_episode_number">Ep %d</string>
+    <string name="kitsux_home_minutes_remaining">%d min</string>
+    <string name="kitsux_home_today">Today</string>
+    <string name="kitsux_home_yesterday">Yesterday</string>
+    <string name="kitsux_home_days_ago">%d days ago</string>
+    <string name="kitsux_category_completed">Completed</string>
+    <string name="kitsux_action_mark_completed">Completed</string>
+    <string name="kitsux_explore_search_anime">Search anime</string>
+    <string name="kitsux_explore_search_manga">Search manga</string>
+    <string name="kitsux_explore_search_all_sources">Search all your installed sources</string>
+    <string name="kitsux_pref_show_hero_banner">Show hero banner</string>
+    <string name="kitsux_pref_show_hero_banner_summary">Show or hide the main Home banner.</string>
+    <string name="kitsux_pref_auto_category">Create categories automatically</string>
+    <string name="kitsux_onboarding_content_type_title">What do you want to see in KitsuX?</string>
+    <string name="kitsux_onboarding_content_type_description">Personalize your experience.</string>
+    <string name="kitsux_onboarding_recommendations_title">Do you want recommendations?</string>
+    <string name="kitsux_onboarding_recommendations_description">KitsuX can show personalized recommendations using your watch and reading history.</string>
+    <string name="kitsux_onboarding_hero_banner_title">Show the main banner?</string>
+    <string name="kitsux_onboarding_hero_banner_description">The hero banner highlights recommendations and library entries at the top of Home.</string>
+    <string name="kitsux_onboarding_auto_category_title">Enable auto-categorization?</string>
+    <string name="kitsux_onboarding_auto_category_description">KitsuX can automatically create categories with Jikan when you add anime or manga to your library.</string>
+    <string name="kitsux_onboarding_extension_repo_title">Do you already have an extension repository?</string>
+    <string name="kitsux_onboarding_extension_repo_description">You can add it now or do it later from Settings.</string>
+    <string name="kitsux_onboarding_final_title">KitsuX is ready.</string>
+    <string name="kitsux_onboarding_final_description">Enjoy your content.</string>
+    <string name="kitsux_onboarding_final_ready">All set</string>
+    <string name="kitsux_extension_repo_url">Repository URL</string>
+    <string name="kitsux_extension_repo_add">Add repository</string>
+    <string name="kitsux_extension_repo_added">Repository added successfully.</string>
+    <string name="kitsux_extension_repo_invalid">Invalid repository or error while adding it.</string>
+    <string name="kitsux_extension_repo_empty">The URL can\'t be empty.</string>
+    <string name="kitsux_easter_alert_title">KitsuX alert</string>
+    <string name="kitsux_easter_continue_search">Continue search</string>
+    <string name="kitsux_easter_rent_1">Please get help and love yourself a little...</string>
+    <string name="kitsux_easter_rent_2">Rent-a-Girlfriend again? Value yourself a little.</string>
+    <string name="kitsux_easter_rent_3">A therapist might not be a bad idea, honestly...</string>
+    <string name="kitsux_easter_rent_4">We worked this hard on KitsuX so you could search for this...</string>
+    <string name="kitsux_easter_rent_5">Please go touch some grass.</string>
+    <string name="kitsux_easter_rent_6">Every Rent-a-Girlfriend search delays your favorite anime season.</string>
+    <string name="kitsux_easter_rent_7">Self-respect is free, you know?</string>
+    <string name="kitsux_easter_rent_8">Please love yourself at least a little.</string>
+    <string name="kitsux_easter_rent_9">Warning: watching this may cause dangerous levels of cringe.</string>
+    <string name="kitsux_easter_rent_10">Loneliness can hit hard, but this is another level...</string>
+    <string name="kitsux_easter_hundred_1">Please, someone cancel this already...</string>
+    <string name="kitsux_easter_hundred_2">100 girlfriends? You can barely handle one normal conversation...</string>
+    <string name="kitsux_easter_hundred_3">Warning: this much sugar and cringe may be harmful to your health.</string>
+    <string name="kitsux_easter_hundred_4">Rent-a-Girlfriend was too much, and now you want 100?</string>
+    <string name="kitsux_easter_hundred_5">100 girlfriends? That is not a harem, that is a union.</string>
+    <string name="kitsux_easter_hundred_6">The author consumed suspicious substances while writing this. Proceed with caution.</string>
+    <string name="kitsux_easter_hundred_7">Renting one girlfriend was not enough, now you want to recruit an army.</string>
+    <string name="kitsux_easter_hundred_8">100 girlfriends? Even the server is worried about you.</string>
+    <string name="kitsux_easter_quintuplets_1">Choosing between five sisters again? Brave.</string>
+    <string name="kitsux_easter_quintuplets_2">The quintuplet debate never truly ends.</string>
+    <string name="kitsux_easter_quintuplets_3">Five routes, one heart, endless arguments.</string>
+    <string name="kitsux_easter_quintuplets_4">Please keep the best-girl debate civil.</string>
+    <string name="donate_kofi">Support on Ko-fi</string>
 </resources>

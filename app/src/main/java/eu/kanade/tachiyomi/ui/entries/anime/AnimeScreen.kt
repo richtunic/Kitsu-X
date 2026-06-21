@@ -190,6 +190,7 @@ class AnimeScreen(
             onEditFetchIntervalClicked = screenModel::showSetAnimeFetchIntervalDialog.takeIf {
                 successState.anime.favorite
             },
+            onMarkCompletedClicked = screenModel::markAnimeCompleted.takeIf { successState.anime.favorite },
             onMigrateClicked = {
                 navigator.push(MigrateAnimeSearchScreen(successState.anime.id))
             }.takeIf { successState.anime.favorite },

@@ -1,14 +1,24 @@
 package eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch
 
+import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.animesource.AnimeCatalogueSource
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 class GlobalAnimeSearchScreenModel(
     initialQuery: String = "",
     initialExtensionFilter: String? = null,
+    sourcePreferences: SourcePreferences = Injekt.get(),
 ) : AnimeSearchScreenModel(
     State(
         searchQuery = initialQuery,
+        sourceFilter = if (sourcePreferences.searchPinnedAnimeSourcesOnly().get()) {
+            AnimeSourceFilter.PinnedOnly
+        } else {
+            AnimeSourceFilter.All
+        },
     ),
+    sourcePreferences = sourcePreferences,
 ) {
 
     init {

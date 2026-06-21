@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -68,6 +69,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
@@ -111,30 +113,32 @@ fun AnimeInfoBox(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
-        // Backdrop
-        val backdropGradientColors = listOf(
-            Color.Transparent,
-            MaterialTheme.colorScheme.background,
-        )
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(anime)
-                .useBackground(true)
-                .crossfade(true)
-                .build(),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .matchParentSize()
-                .drawWithContent {
-                    drawContent()
-                    drawRect(
-                        brush = Brush.verticalGradient(colors = backdropGradientColors),
-                    )
-                }
-                .blur(4.dp)
-                .alpha(0.2f),
-        )
+        if (isTabletUi) {
+            // Backdrop
+            val backdropGradientColors = listOf(
+                Color.Transparent,
+                MaterialTheme.colorScheme.background,
+            )
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(anime)
+                    .useBackground(true)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .matchParentSize()
+                    .drawWithContent {
+                        drawContent()
+                        drawRect(
+                            brush = Brush.verticalGradient(colors = backdropGradientColors),
+                        )
+                    }
+                    .blur(4.dp)
+                    .alpha(0.2f),
+            )
+        }
 
         // Anime & source info
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
@@ -173,9 +177,11 @@ fun AnimeActionRow(
     onTrackingClicked: (() -> Unit)?,
     onEditIntervalClicked: (() -> Unit)?,
     onEditCategory: (() -> Unit)?,
+    onMarkCompletedClicked: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    val defaultActionButtonColor = MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA)
+    val defaultActionButtonColor = Color.White.copy(alpha = 0.7f)
+    val activeActionButtonColor = Color(0xFFE50914) // KitsuX Red
 
     // TODO: show something better when using custom interval
     val nextUpdateDays = remember(nextUpdate) {
@@ -195,7 +201,7 @@ fun AnimeActionRow(
                 stringResource(MR.strings.add_to_library)
             },
             icon = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            color = if (favorite) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
+            color = if (favorite) activeActionButtonColor else defaultActionButtonColor,
             onClick = onAddToLibraryClicked,
             onLongClick = onEditCategory,
         )
@@ -210,7 +216,7 @@ fun AnimeActionRow(
                 )
             },
             icon = Icons.Default.HourglassEmpty,
-            color = if (isUserIntervalMode) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
+            color = if (isUserIntervalMode) activeActionButtonColor else defaultActionButtonColor,
             onClick = { onEditIntervalClicked?.invoke() },
         )
         if (onTrackingClicked != null) {
@@ -221,7 +227,7 @@ fun AnimeActionRow(
                     pluralStringResource(MR.plurals.num_trackers, count = trackingCount, trackingCount)
                 },
                 icon = if (trackingCount == 0) Icons.Outlined.Sync else Icons.Outlined.Done,
-                color = if (trackingCount == 0) defaultActionButtonColor else MaterialTheme.colorScheme.primary,
+                color = if (trackingCount == 0) defaultActionButtonColor else activeActionButtonColor,
                 onClick = onTrackingClicked,
             )
         }
@@ -233,6 +239,14 @@ fun AnimeActionRow(
                 color = defaultActionButtonColor,
                 onClick = onWebViewClicked,
                 onLongClick = onWebViewLongClicked,
+            )
+        }
+        if (favorite && onMarkCompletedClicked != null) {
+            AnimeActionButton(
+                title = stringResource(MR.strings.kitsux_action_mark_completed),
+                icon = Icons.Outlined.DoneAll,
+                color = defaultActionButtonColor,
+                onClick = onMarkCompletedClicked,
             )
         }
     }
@@ -384,36 +398,117 @@ private fun AnimeAndSourceTitlesSmall(
     onCoverClick: () -> Unit,
     doSearch: (query: String, global: Boolean) -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, top = appBarPadding + 16.dp, end = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    Column(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        ItemCover.Book(
+        // Backdrop Image Box
+        Box(
             modifier = Modifier
-                .sizeIn(maxWidth = 100.dp)
-                .align(Alignment.Top),
-            data = ImageRequest.Builder(LocalContext.current)
-                .data(anime)
-                .crossfade(true)
-                .build(),
-            contentDescription = stringResource(MR.strings.manga_cover),
-            onClick = onCoverClick,
-        )
-        Column(
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+                .fillMaxWidth()
+                .height(280.dp)
         ) {
-            AnimeContentInfo(
-                title = anime.title,
-                author = anime.author,
-                artist = anime.artist,
-                status = anime.status,
-                sourceName = sourceName,
-                isStubSource = isStubSource,
-                doSearch = doSearch,
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(anime)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(0.85f)
+                    .clickableNoIndication(onClick = onCoverClick)
             )
+
+            // Dark gradient overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.5f),
+                                Color.Black
+                            ),
+                            startY = 0f
+                        )
+                    )
+            )
+
+            // Overlaid Title at bottom left of backdrop
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                Text(
+                    text = anime.title.ifBlank { stringResource(MR.strings.unknown_title) },
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.5).sp
+                    ),
+                    color = Color.White,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+
+        // Metadata & Info section below the backdrop
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            // One-line Metadata separated by bullet
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                // Status tag
+                val statusText = when (anime.status) {
+                    SAnime.ONGOING.toLong() -> "En emisión"
+                    SAnime.COMPLETED.toLong() -> "Completado"
+                    SAnime.LICENSED.toLong() -> "Licenciado"
+                    SAnime.PUBLISHING_FINISHED.toLong() -> "Finalizado"
+                    SAnime.CANCELLED.toLong() -> "Cancelado"
+                    SAnime.ON_HIATUS.toLong() -> "En pausa"
+                    else -> "Desconocido"
+                }
+                Text(
+                    text = statusText,
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                )
+
+                Text(text = "•", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
+
+                // Source tag
+                Text(
+                    text = sourceName,
+                    color = Color.LightGray,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.clickableNoIndication {
+                        doSearch(sourceName, false)
+                    }
+                )
+
+                if (anime.author?.isNotBlank() == true) {
+                    Text(text = "•", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = anime.author!!,
+                        color = Color.LightGray,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.clickableNoIndication {
+                            doSearch(anime.author!!, true)
+                        }
+                    )
+                }
+            }
         }
     }
 }

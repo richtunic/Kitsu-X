@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.produceState
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.domain.entries.manga.model.toDomainManga
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.util.ioCoroutineScope
@@ -121,11 +122,30 @@ abstract class MangaSearchScreenModel(
         preferences.globalSearchFilterState().toggle()
     }
 
-    fun search() {
+    fun dismissEasterEgg() {
+        mutableState.update { it.copy(activeEasterEgg = null) }
+    }
+
+    fun confirmEasterEgg() {
+        val query = state.value.searchQuery ?: return
+        mutableState.update { it.copy(activeEasterEgg = null) }
+        search(force = true)
+    }
+
+    fun search(force: Boolean = false) {
         val query = state.value.searchQuery
         val sourceFilter = state.value.sourceFilter
 
         if (query.isNullOrBlank()) return
+
+        if (!force) {
+            val message = eu.kanade.tachiyomi.ui.browse.EasterEggHelper.getEasterEggMessage(query)
+            if (message != null) {
+                mutableState.update { it.copy(activeEasterEgg = message) }
+                return
+            }
+        }
+
         val sameQuery = this.lastQuery == query
         if (sameQuery && this.lastSourceFilter == sourceFilter) return
 
@@ -203,6 +223,7 @@ abstract class MangaSearchScreenModel(
         val sourceFilter: MangaSourceFilter = MangaSourceFilter.PinnedOnly,
         val onlyShowHasResults: Boolean = false,
         val items: PersistentMap<CatalogueSource, MangaSearchItemResult> = persistentMapOf(),
+    val activeEasterEgg: StringResource? = null,
     ) {
         val progress: Int = items.count { it.value !is MangaSearchItemResult.Loading }
         val total: Int = items.size

@@ -77,6 +77,14 @@ class GlobalAnimeSearchScreen(
                 onClickItem = { navigator.push(AnimeScreen(it.id, true)) },
                 onLongClickItem = { navigator.push(AnimeScreen(it.id, true)) },
             )
+
+            state.activeEasterEgg?.let { message ->
+                eu.kanade.tachiyomi.ui.browse.EasterEggHelper.EasterEggDialog(
+                    message = message,
+                    onConfirm = { screenModel.confirmEasterEgg() },
+                    onDismiss = { screenModel.dismissEasterEgg() },
+                )
+            }
         }
     }
 }

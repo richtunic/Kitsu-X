@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse.anime.extension
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,6 +42,11 @@ fun animeExtensionsTab(
         badgeNumber = state.updates.takeIf { it > 0 },
         searchEnabled = true,
         actions = persistentListOf(
+            AppBar.Action(
+                title = stringResource(MR.strings.label_extension_repos),
+                icon = Icons.Outlined.Tune,
+                onClick = { navigator.push(AnimeExtensionReposScreen()) },
+            ),
             AppBar.OverflowAction(
                 title = stringResource(MR.strings.action_filter),
                 onClick = {
@@ -47,10 +54,6 @@ fun animeExtensionsTab(
                         AnimeExtensionFilterScreen(),
                     )
                 },
-            ),
-            AppBar.OverflowAction(
-                title = stringResource(MR.strings.label_extension_repos),
-                onClick = { navigator.push(AnimeExtensionReposScreen()) },
             ),
         ),
         content = { contentPadding, _ ->

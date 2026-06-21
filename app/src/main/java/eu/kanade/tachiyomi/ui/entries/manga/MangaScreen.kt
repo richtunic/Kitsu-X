@@ -161,6 +161,7 @@ class MangaScreen(
             onEditFetchIntervalClicked = screenModel::showSetMangaFetchIntervalDialog.takeIf {
                 successState.manga.favorite
             },
+            onMarkCompletedClicked = screenModel::markMangaCompleted.takeIf { successState.manga.favorite },
             onMigrateClicked = {
                 navigator.push(MigrateMangaSearchScreen(successState.manga.id))
             }.takeIf { successState.manga.favorite },

@@ -33,6 +33,7 @@ import eu.kanade.presentation.theme.colorscheme.YinYangColorScheme
 import eu.kanade.presentation.theme.colorscheme.YotsubaColorScheme
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import tachiyomi.presentation.core.theme.kitsuXTypography
 
 @Composable
 fun TachiyomiTheme(
@@ -63,6 +64,7 @@ private fun BaseTachiyomiTheme(
 ) {
     MaterialTheme(
         colorScheme = getThemeColorScheme(appTheme, isAmoled),
+        typography = kitsuXTypography,
         content = content,
     )
 }

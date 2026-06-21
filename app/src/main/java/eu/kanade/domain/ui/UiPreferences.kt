@@ -17,15 +17,11 @@ class UiPreferences(
     private val preferenceStore: PreferenceStore,
 ) {
 
-    fun themeMode() = preferenceStore.getEnum("pref_theme_mode_key", ThemeMode.SYSTEM)
+    fun themeMode() = preferenceStore.getEnum("pref_theme_mode_key", ThemeMode.DARK)
 
     fun appTheme() = preferenceStore.getEnum(
         "pref_app_theme",
-        if (DeviceUtil.isDynamicColorAvailable) {
-            AppTheme.MONET
-        } else {
-            AppTheme.DEFAULT
-        },
+        AppTheme.DEFAULT,
     )
 
     fun themeDarkAmoled() = preferenceStore.getBoolean("pref_theme_dark_amoled_key", false)
@@ -35,6 +31,14 @@ class UiPreferences(
     fun dateFormat() = preferenceStore.getString("app_date_format", "")
 
     fun tabletUiMode() = preferenceStore.getEnum("tablet_ui_mode", TabletUiMode.AUTOMATIC)
+
+    fun showAnime() = preferenceStore.getBoolean("pref_show_anime_key", true)
+
+    fun showManga() = preferenceStore.getBoolean("pref_show_manga_key", true)
+
+    fun showRecommendations() = preferenceStore.getBoolean("pref_show_recommendations_key", true)
+    fun showHeroBanner() = preferenceStore.getBoolean("pref_show_hero_banner_key", true)
+    fun autoCategorizeLibrary() = preferenceStore.getBoolean("pref_auto_categorize_library_key", true)
 
     fun startScreen() = preferenceStore.getEnum("start_screen", StartScreen.ANIME)
 

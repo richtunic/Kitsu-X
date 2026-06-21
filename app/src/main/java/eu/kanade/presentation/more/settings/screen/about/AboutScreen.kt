@@ -2,12 +2,16 @@ package eu.kanade.presentation.more.settings.screen.about
 
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import coil3.compose.AsyncImage
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
@@ -149,7 +153,7 @@ object AboutScreen : Screen() {
                         title = stringResource(MR.strings.help_translate),
                         onPreferenceClick = {
                             uriHandler.openUri(
-                                "https://aniyomi.org/docs/contribute#translation",
+                                "https://github.com/richtunic/Kitsu-X#translations",
                             )
                         },
                     )
@@ -164,8 +168,15 @@ object AboutScreen : Screen() {
 
                 item {
                     TextPreferenceWidget(
+                        title = "Ayuda y FAQ de GitHub",
+                        onPreferenceClick = { navigator.push(KitsuXHelpScreen()) },
+                    )
+                }
+
+                item {
+                    TextPreferenceWidget(
                         title = stringResource(MR.strings.privacy_policy),
-                        onPreferenceClick = { uriHandler.openUri("https://aniyomi.org/privacy/") },
+                        onPreferenceClick = { uriHandler.openUri("https://github.com/richtunic/Kitsu-X#privacy") },
                     )
                 }
 
@@ -179,17 +190,36 @@ object AboutScreen : Screen() {
                         LinkIcon(
                             label = stringResource(MR.strings.website),
                             icon = Icons.Outlined.Public,
-                            url = "https://aniyomi.org",
+                            url = "https://github.com/richtunic/Kitsu-X",
                         )
                         LinkIcon(
                             label = "Discord",
                             icon = CustomIcons.Discord,
-                            url = "https://discord.gg/F32UjdJZrR",
+                            url = "https://discord.gg/kitsux",
                         )
                         LinkIcon(
                             label = "GitHub",
                             icon = CustomIcons.Github,
-                            url = "https://github.com/aniyomiorg/aniyomi",
+                            url = "https://github.com/richtunic/Kitsu-X",
+                        )
+                    }
+                }
+
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        AsyncImage(
+                            model = "https://storage.ko-fi.com/cdn/kofi3.png?v=6",
+                            contentDescription = stringResource(MR.strings.donate_kofi),
+                            modifier = Modifier
+                                .height(40.dp)
+                                .clickable {
+                                    uriHandler.openUri("https://ko-fi.com/relampagonegr0")
+                                }
                         )
                     }
                 }

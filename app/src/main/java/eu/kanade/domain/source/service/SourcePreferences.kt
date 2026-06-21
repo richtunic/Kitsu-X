@@ -84,6 +84,16 @@ class SourcePreferences(
         false,
     )
 
+    fun searchPinnedAnimeSourcesOnly() = preferenceStore.getBoolean(
+        "search_pinned_anime_sources_only",
+        false,
+    )
+
+    fun searchPinnedMangaSourcesOnly() = preferenceStore.getBoolean(
+        "search_pinned_manga_sources_only",
+        false,
+    )
+
     // SY -->
 
     // fun enableSourceBlacklist() = preferenceStore.getBoolean("eh_enable_source_blacklist", true)

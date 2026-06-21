@@ -376,7 +376,7 @@ actual class LocalMangaSource(
 
     companion object {
         const val ID = 0L
-        const val HELP_URL = "https://aniyomi.org/help/guides/local-manga/"
+        const val HELP_URL = "https://github.com/richtunic/Kitsu-X#local-manga"
 
         private val LATEST_THRESHOLD = TimeUnit.MILLISECONDS.convert(7, TimeUnit.DAYS)
     }

@@ -41,8 +41,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.ui.player.controls.LocalPlayerButtonsClickEvent
 import tachiyomi.presentation.core.components.material.Button
+import tachiyomi.presentation.core.components.material.ButtonDefaults
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.padding
+import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun ControlsButton(
@@ -142,8 +144,17 @@ fun FilledControlsButton(
     Box(
         modifier = modifier.padding(end = MaterialTheme.padding.small),
     ) {
-        Button(onClick = {}) {
-            Text(text = text)
+        Button(
+            onClick = {},
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFE50914), // KitsuX Red
+                contentColor = Color.White
+            )
+        ) {
+            Text(
+                text = text,
+                fontWeight = FontWeight.Bold
+            )
         }
         Box(
             modifier = Modifier

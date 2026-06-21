@@ -11,11 +11,12 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Text
@@ -24,6 +25,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -75,13 +77,28 @@ object HomeScreen : Screen() {
     private const val TAB_NAVIGATOR_KEY = "HomeTabs"
 
     private val uiPreferences: UiPreferences by injectLazy()
-    private val defaultTab = uiPreferences.startScreen().get().tab
+    private val defaultTab = KitsuXHomeTab
     private val moreTab = uiPreferences.navStyle().get().moreTab
 
     @Composable
     override fun Content() {
         val navStyle by uiPreferences.navStyle().collectAsState()
+        val showAnime by uiPreferences.showAnime().collectAsState()
+        val showManga by uiPreferences.showManga().collectAsState()
         val navigator = LocalNavigator.currentOrThrow
+
+        // Build tab list: KitsuXHomeTab always first, then original navStyle tabs
+        val allTabs = remember(navStyle, showAnime, showManga) {
+            buildList<eu.kanade.presentation.util.Tab> {
+                add(KitsuXHomeTab)
+                navStyle.tabs.forEach { tab ->
+                    if (tab == AnimeLibraryTab && !showAnime) return@forEach
+                    if (tab == MangaLibraryTab && !showManga) return@forEach
+                    add(tab)
+                }
+            }
+        }
+
         TabNavigator(
             tab = defaultTab,
             key = TAB_NAVIGATOR_KEY,
@@ -92,7 +109,7 @@ object HomeScreen : Screen() {
                     startBar = {
                         if (isTabletUi()) {
                             NavigationRail {
-                                navStyle.tabs.fastForEach {
+                                allTabs.fastForEach {
                                     NavigationRailItem(it)
                                 }
                             }
@@ -109,7 +126,7 @@ object HomeScreen : Screen() {
                                 exit = shrinkVertically(),
                             ) {
                                 NavigationBar {
-                                    navStyle.tabs.fastForEach {
+                                    allTabs.fastForEach {
                                         NavigationBarItem(it)
                                     }
                                 }
@@ -143,15 +160,10 @@ object HomeScreen : Screen() {
             }
 
             val goToStartScreen = {
-                if (defaultTab != moreTab) {
-                    tabNavigator.current = defaultTab
-                } else {
-                    tabNavigator.current = AnimeLibraryTab
-                }
+                tabNavigator.current = defaultTab
             }
             BackHandler(
-                enabled = (tabNavigator.current == moreTab || tabNavigator.current != defaultTab) &&
-                    (tabNavigator.current != AnimeLibraryTab || defaultTab != moreTab),
+                enabled = tabNavigator.current != defaultTab,
                 onBack = goToStartScreen,
             )
 
@@ -159,9 +171,9 @@ object HomeScreen : Screen() {
                 launch {
                     librarySearchEvent.receiveAsFlow().collectLatest {
                         goToStartScreen()
-                        when (defaultTab) {
-                            AnimeLibraryTab -> AnimeLibraryTab.search(it)
-                            MangaLibraryTab -> MangaLibraryTab.search(it)
+                        when {
+                            defaultTab == AnimeLibraryTab -> AnimeLibraryTab.search(it)
+                            defaultTab == MangaLibraryTab -> MangaLibraryTab.search(it)
                             else -> {}
                         }
                     }
@@ -220,7 +232,7 @@ object HomeScreen : Screen() {
             label = {
                 Text(
                     text = tab.options.title,
-                    style = MaterialTheme.typography.labelLarge,
+                    style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -248,7 +260,7 @@ object HomeScreen : Screen() {
             label = {
                 Text(
                     text = tab.options.title,
-                    style = MaterialTheme.typography.labelLarge,
+                    style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -311,12 +323,21 @@ object HomeScreen : Screen() {
                 }
             },
         ) {
-            Icon(
-                painter = tab.options.icon!!,
-                contentDescription = tab.options.title,
-                // TODO: https://issuetracker.google.com/u/0/issues/316327367
-                tint = LocalContentColor.current,
-            )
+            // KitsuXHomeTab uses a vector icon, not a painter from animated vectors
+            if (tab is KitsuXHomeTab) {
+                Icon(
+                    imageVector = Icons.Outlined.Home,
+                    contentDescription = tab.options.title,
+                    tint = LocalContentColor.current,
+                )
+            } else {
+                Icon(
+                    painter = tab.options.icon!!,
+                    contentDescription = tab.options.title,
+                    // TODO: https://issuetracker.google.com/u/0/issues/316327367
+                    tint = LocalContentColor.current,
+                )
+            }
         }
     }
 

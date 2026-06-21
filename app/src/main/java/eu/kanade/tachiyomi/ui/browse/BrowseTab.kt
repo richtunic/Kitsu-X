@@ -6,9 +6,14 @@ import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import eu.kanade.domain.ui.UiPreferences
+import androidx.compose.runtime.collectAsState
+import tachiyomi.presentation.core.util.collectAsState as collectPreferencesAsState
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
@@ -27,6 +32,7 @@ import eu.kanade.tachiyomi.ui.browse.manga.migration.sources.migrateMangaSourceT
 import eu.kanade.tachiyomi.ui.browse.manga.source.mangaSourcesTab
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
@@ -74,14 +80,30 @@ data object BrowseTab : Tab {
         val animeExtensionsScreenModel = rememberScreenModel { AnimeExtensionsScreenModel() }
         val animeExtensionsState by animeExtensionsScreenModel.state.collectAsState()
 
-        val tabs = persistentListOf(
-            animeSourcesTab(),
-            mangaSourcesTab(),
-            animeExtensionsTab(animeExtensionsScreenModel),
-            mangaExtensionsTab(mangaExtensionsScreenModel),
-            migrateAnimeSourceTab(),
-            migrateMangaSourceTab(),
-        )
+        val uiPreferences = remember { Injekt.get<UiPreferences>() }
+        val showAnime by uiPreferences.showAnime().collectPreferencesAsState()
+        val showManga by uiPreferences.showManga().collectPreferencesAsState()
+
+        val tabs = buildList {
+            if (showAnime) {
+                add(animeSourcesTab())
+            }
+            if (showManga) {
+                add(mangaSourcesTab())
+            }
+            if (showAnime) {
+                add(animeExtensionsTab(animeExtensionsScreenModel))
+            }
+            if (showManga) {
+                add(mangaExtensionsTab(mangaExtensionsScreenModel))
+            }
+            if (showAnime) {
+                add(migrateAnimeSourceTab())
+            }
+            if (showManga) {
+                add(migrateMangaSourceTab())
+            }
+        }.toPersistentList()
 
         val state = rememberPagerState { tabs.size }
 

@@ -86,7 +86,7 @@ import uy.kohesive.injekt.api.get
 object SettingsDataScreen : SearchableSettings {
 
     val restorePreferenceKeyString = MR.strings.label_backup
-    const val HELP_URL = "https://aniyomi.org/docs/faq/storage"
+    const val HELP_URL = "https://github.com/richtunic/Kitsu-X#storage"
 
     @ReadOnlyComposable
     @Composable
@@ -110,13 +110,13 @@ object SettingsDataScreen : SearchableSettings {
 
         return persistentListOf(
             getStorageLocationPref(storagePreferences = storagePreferences),
-            Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.pref_storage_location_info)),
+        Preference.PreferenceItem.InfoPreference(stringResource(MR.strings.pref_storage_location_info)),
 
-            getBackupAndRestoreGroup(backupPreferences = backupPreferences),
-            getDataGroup(),
-            getExportGroup(),
-        )
-    }
+        getBackupAndRestoreGroup(backupPreferences = backupPreferences),
+        getDataGroup(),
+        getExportGroup(),
+    )
+}
 
     @Composable
     fun storageLocationPicker(
@@ -279,13 +279,13 @@ object SettingsDataScreen : SearchableSettings {
                         stringResource(MR.strings.last_auto_backup_info, relativeTimeSpanString(lastAutoBackup)),
                 ),
             ),
-        )
-    }
+    )
+}
 
-    @Composable
-    private fun getDataGroup(): Preference.PreferenceGroup {
-        val context = LocalContext.current
-        val navigator = LocalNavigator.currentOrThrow
+@Composable
+private fun getDataGroup(): Preference.PreferenceGroup {
+    val context = LocalContext.current
+    val navigator = LocalNavigator.currentOrThrow
         val scope = rememberCoroutineScope()
         val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
 

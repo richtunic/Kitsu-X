@@ -17,26 +17,26 @@ import androidx.compose.ui.graphics.Color
 internal object TachiyomiColorScheme : BaseColorScheme() {
 
     override val darkScheme = darkColorScheme(
-        primary = Color(0xFFB0C6FF),
-        onPrimary = Color(0xFF002D6E),
-        primaryContainer = Color(0xFF00429B),
-        onPrimaryContainer = Color(0xFFD9E2FF),
-        inversePrimary = Color(0xFF0058CA),
-        secondary = Color(0xFFB0C6FF), // Unread badge
-        onSecondary = Color(0xFF002D6E), // Unread badge text
-        secondaryContainer = Color(0xFF00429B), // Navigation bar selector pill & pro
-        onSecondaryContainer = Color(0xFFD9E2FF), // Navigation bar selector icon
+        primary = Color(0xFFE50914),
+        onPrimary = Color(0xFFFFFFFF),
+        primaryContainer = Color(0xFF450005),
+        onPrimaryContainer = Color(0xFFFFDAD6),
+        inversePrimary = Color(0xFFE50914),
+        secondary = Color(0xFFFF4D4D), // Unread badge / Accent
+        onSecondary = Color(0xFF000000), // Unread badge text
+        secondaryContainer = Color(0xFF141414), // Navigation bar selector pill
+        onSecondaryContainer = Color(0xFFFFFFFF), // Navigation bar selector icon
         tertiary = Color(0xFF7ADC77), // Downloaded badge
         onTertiary = Color(0xFF003909), // Downloaded badge text
         tertiaryContainer = Color(0xFF005312),
         onTertiaryContainer = Color(0xFF95F990),
-        background = Color(0xFF1B1B1F),
+        background = Color(0xFF000000), // Black
         onBackground = Color(0xFFE3E2E6),
-        surface = Color(0xFF1B1B1F),
+        surface = Color(0xFF111111), // Surface
         onSurface = Color(0xFFE3E2E6),
-        surfaceVariant = Color(0xFF211F26), // Navigation bar background (ThemePrefWidget)
+        surfaceVariant = Color(0xFF141414), // Navigation bar background
         onSurfaceVariant = Color(0xFFC5C6D0),
-        surfaceTint = Color(0xFFB0C6FF),
+        surfaceTint = Color(0xFFE50914),
         inverseSurface = Color(0xFFE3E2E6),
         inverseOnSurface = Color(0xFF1B1B1F),
         error = Color(0xFFFFB4AB),
@@ -45,11 +45,11 @@ internal object TachiyomiColorScheme : BaseColorScheme() {
         onErrorContainer = Color(0xFFFFDAD6),
         outline = Color(0xFF8F9099),
         outlineVariant = Color(0xFF44464F),
-        surfaceContainerLowest = Color(0xFF1A181D),
-        surfaceContainerLow = Color(0xFF1E1C22),
-        surfaceContainer = Color(0xFF211F26), // Navigation bar background
-        surfaceContainerHigh = Color(0xFF292730),
-        surfaceContainerHighest = Color(0xFF302E38),
+        surfaceContainerLowest = Color(0xFF000000),
+        surfaceContainerLow = Color(0xFF0A0A0A),
+        surfaceContainer = Color(0xFF111111), // Navigation bar background
+        surfaceContainerHigh = Color(0xFF161616),
+        surfaceContainerHighest = Color(0xFF1F1F1F),
     )
 
     override val lightScheme = lightColorScheme(

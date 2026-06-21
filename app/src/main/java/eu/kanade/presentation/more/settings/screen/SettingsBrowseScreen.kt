@@ -55,6 +55,14 @@ object SettingsBrowseScreen : SearchableSettings {
                         preference = sourcePreferences.hideInMangaLibraryItems(),
                         title = stringResource(AYMR.strings.pref_hide_in_manga_library_items),
                     ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = sourcePreferences.searchPinnedAnimeSourcesOnly(),
+                        title = stringResource(AYMR.strings.pref_search_pinned_anime_sources_only),
+                    ),
+                    Preference.PreferenceItem.SwitchPreference(
+                        preference = sourcePreferences.searchPinnedMangaSourcesOnly(),
+                        title = stringResource(AYMR.strings.pref_search_pinned_manga_sources_only),
+                    ),
                     Preference.PreferenceItem.TextPreference(
                         title = stringResource(AYMR.strings.label_anime_extension_repos),
                         subtitle = pluralStringResource(

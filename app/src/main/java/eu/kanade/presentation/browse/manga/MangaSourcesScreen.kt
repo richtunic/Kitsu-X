@@ -1,14 +1,18 @@
 package eu.kanade.presentation.browse.manga
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.outlined.PushPin
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -20,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import eu.kanade.presentation.browse.manga.components.BaseMangaSourceItem
 import eu.kanade.tachiyomi.ui.browse.manga.source.MangaSourcesScreenModel
 import eu.kanade.tachiyomi.ui.browse.manga.source.browse.BrowseMangaSourceScreenModel.Listing
@@ -43,6 +48,7 @@ import tachiyomi.source.local.entries.manga.LocalMangaSource
 fun MangaSourcesScreen(
     state: MangaSourcesScreenModel.State,
     contentPadding: PaddingValues,
+    onGlobalSearchClick: () -> Unit,
     onClickItem: (Source, Listing) -> Unit,
     onClickPin: (Source) -> Unit,
     onLongClickItem: (Source) -> Unit,
@@ -57,6 +63,13 @@ fun MangaSourcesScreen(
             ScrollbarLazyColumn(
                 contentPadding = contentPadding + topSmallPaddingValues,
             ) {
+                item {
+                    GlobalSearchEntry(
+                        title = stringResource(MR.strings.kitsux_explore_search_manga),
+                        subtitle = stringResource(MR.strings.kitsux_explore_search_all_sources),
+                        onClick = onGlobalSearchClick,
+                    )
+                }
                 items(
                     items = state.items,
                     contentType = {
@@ -89,6 +102,40 @@ fun MangaSourcesScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun GlobalSearchEntry(
+    title: String,
+    subtitle: String,
+    onClick: () -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .padding(horizontal = MaterialTheme.padding.medium, vertical = 8.dp)
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Search,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+        )
+        Column {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

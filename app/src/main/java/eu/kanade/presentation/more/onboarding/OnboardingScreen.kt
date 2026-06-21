@@ -33,28 +33,31 @@ fun OnboardingScreen(
 
     var currentStep by rememberSaveable { mutableIntStateOf(0) }
     val steps = remember {
-        listOf(
-            ThemeStep(),
-            StorageStep(),
-            PermissionStep(),
-            GuidesStep(onRestoreBackup = onRestoreBackup),
-        )
+            listOf(
+                ContentTypeStep(),
+                RecommendationsStep(),
+                HeroBannerStep(),
+                AutoCategorizationStep(),
+                ExtensionsRepoStep(onSuccess = { currentStep++ }),
+                BatteryOptimizationStep(),
+                FinalStep(),
+            )
     }
     val isLastStep = currentStep == steps.lastIndex
 
     BackHandler(enabled = currentStep != 0, onBack = { currentStep-- })
 
+    val acceptText = when (currentStep) {
+        4 -> "Omitir"
+        6 -> "Comenzar"
+        else -> stringResource(MR.strings.onboarding_action_next)
+    }
+
     InfoScreen(
         icon = Icons.Outlined.RocketLaunch,
-        headingText = stringResource(MR.strings.onboarding_heading),
-        subtitleText = stringResource(MR.strings.onboarding_description),
-        acceptText = stringResource(
-            if (isLastStep) {
-                MR.strings.onboarding_action_finish
-            } else {
-                MR.strings.onboarding_action_next
-            },
-        ),
+        headingText = stringResource(steps[currentStep].title),
+        subtitleText = stringResource(steps[currentStep].description),
+        acceptText = acceptText,
         canAccept = steps[currentStep].isComplete,
         onAcceptClick = {
             if (isLastStep) {
@@ -86,3 +89,5 @@ fun OnboardingScreen(
         }
     }
 }
+
+const val GETTING_STARTED_URL = "https://github.com/richtunic/Kitsu-X#getting-started"

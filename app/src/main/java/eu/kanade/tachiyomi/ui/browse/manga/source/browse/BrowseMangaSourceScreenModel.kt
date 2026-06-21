@@ -13,6 +13,7 @@ import androidx.paging.filter
 import androidx.paging.map
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import dev.icerock.moko.resources.StringResource
 import eu.kanade.core.preference.asState
 import eu.kanade.domain.entries.manga.interactor.UpdateManga
 import eu.kanade.domain.entries.manga.model.toDomainManga
@@ -164,19 +165,34 @@ class BrowseMangaSourceScreenModel(
         }
     }
 
-    fun search(query: String? = null, filters: FilterList? = null) {
+    fun search(query: String? = null, filters: FilterList? = null, force: Boolean = false) {
         if (source !is CatalogueSource) return
 
         val input = state.value.listing as? Listing.Search
             ?: Listing.Search(query = null, filters = source.getFilterList())
 
+        val finalQuery = query ?: input.query
+
+        if (!force) {
+            val message = eu.kanade.tachiyomi.ui.browse.EasterEggHelper.getEasterEggMessage(finalQuery)
+            if (message != null) {
+                mutableState.update {
+                    it.copy(
+                        dialog = Dialog.EasterEgg(message),
+                        toolbarQuery = finalQuery,
+                    )
+                }
+                return
+            }
+        }
+
         mutableState.update {
             it.copy(
                 listing = input.copy(
-                    query = query ?: input.query,
+                    query = finalQuery,
                     filters = filters ?: input.filters,
                 ),
-                toolbarQuery = query ?: input.query,
+                toolbarQuery = finalQuery,
             )
         }
     }
@@ -356,6 +372,7 @@ class BrowseMangaSourceScreenModel(
             val initialSelection: ImmutableList<CheckboxState.State<Category>>,
         ) : Dialog
         data class Migrate(val newManga: Manga, val oldManga: Manga) : Dialog
+        data class EasterEgg(val message: StringResource) : Dialog
     }
 
     @Immutable

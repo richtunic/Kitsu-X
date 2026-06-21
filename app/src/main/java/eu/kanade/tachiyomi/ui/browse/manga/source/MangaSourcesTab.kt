@@ -48,6 +48,7 @@ fun Screen.mangaSourcesTab(): TabContent {
             MangaSourcesScreen(
                 state = state,
                 contentPadding = contentPadding,
+                onGlobalSearchClick = { navigator.push(GlobalMangaSearchScreen()) },
                 onClickItem = { source, listing ->
                     navigator.push(BrowseMangaSourceScreen(source.id, listing.query))
                 },

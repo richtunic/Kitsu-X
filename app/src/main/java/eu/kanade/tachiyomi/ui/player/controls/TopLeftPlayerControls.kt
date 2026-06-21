@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
@@ -64,6 +65,7 @@ fun TopLeftPlayerControls(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 color = Color.White,
+                fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.bodyLarge,
             )
             Text(
@@ -73,7 +75,7 @@ fun TopLeftPlayerControls(
                 overflow = TextOverflow.Ellipsis,
                 color = Color.White.copy(alpha = 0.5f),
                 style = MaterialTheme.typography.bodyLarge,
-                fontStyle = FontStyle.Italic,
+                fontStyle = FontStyle.Normal,
             )
         }
     }

@@ -27,6 +27,7 @@ class MangaExtensionReposScreenModel(
     private val deleteExtensionRepo: DeleteMangaExtensionRepo = Injekt.get(),
     private val replaceExtensionRepo: ReplaceMangaExtensionRepo = Injekt.get(),
     private val updateExtensionRepo: UpdateMangaExtensionRepo = Injekt.get(),
+    private val extensionManager: eu.kanade.tachiyomi.extension.manga.MangaExtensionManager = Injekt.get(),
 ) : StateScreenModel<RepoScreenState>(RepoScreenState.Loading) {
 
     private val _events: Channel<RepoEvent> = Channel(Int.MAX_VALUE)
@@ -40,6 +41,11 @@ class MangaExtensionReposScreenModel(
                         RepoScreenState.Success(
                             repos = repos.toImmutableSet(),
                         )
+                    }
+                    try {
+                        extensionManager.findAvailableExtensions()
+                    } catch (e: Exception) {
+                        // Ignore
                     }
                 }
         }

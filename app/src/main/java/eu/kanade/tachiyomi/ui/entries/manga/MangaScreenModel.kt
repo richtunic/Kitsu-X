@@ -14,6 +14,7 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.preference.asState
 import eu.kanade.core.util.addOrRemove
 import eu.kanade.core.util.insertSeparators
+import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.entries.manga.interactor.GetExcludedScanlators
 import eu.kanade.domain.entries.manga.interactor.SetExcludedScanlators
 import eu.kanade.domain.entries.manga.interactor.UpdateManga
@@ -36,7 +37,10 @@ import eu.kanade.tachiyomi.data.download.manga.MangaDownloadManager
 import eu.kanade.tachiyomi.data.download.manga.model.MangaDownload
 import eu.kanade.tachiyomi.data.track.EnhancedMangaTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
+import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.HttpException
+import eu.kanade.tachiyomi.network.NetworkHelper
+import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.source.MangaSource
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import eu.kanade.tachiyomi.util.chapter.getNextUnread
@@ -54,6 +58,9 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import logcat.LogPriority
 import mihon.domain.items.chapter.interactor.FilterChaptersForDownload
 import tachiyomi.core.common.i18n.stringResource
@@ -65,6 +72,7 @@ import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.category.manga.interactor.CreateMangaCategoryWithName
 import tachiyomi.domain.category.manga.interactor.GetMangaCategories
 import tachiyomi.domain.category.manga.interactor.SetMangaCategories
 import tachiyomi.domain.category.model.Category
@@ -76,6 +84,7 @@ import tachiyomi.domain.entries.manga.model.Manga
 import tachiyomi.domain.entries.manga.repository.MangaRepository
 import tachiyomi.domain.items.chapter.interactor.SetMangaDefaultChapterFlags
 import tachiyomi.domain.items.chapter.interactor.UpdateChapter
+import tachiyomi.domain.items.chapter.interactor.GetChaptersByMangaId
 import tachiyomi.domain.items.chapter.model.Chapter
 import tachiyomi.domain.items.chapter.model.ChapterUpdate
 import tachiyomi.domain.items.chapter.model.NoChaptersException
@@ -89,6 +98,7 @@ import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.source.local.entries.manga.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.net.URLEncoder
 import kotlin.math.floor
 
 class MangaScreenModel(
@@ -97,6 +107,7 @@ class MangaScreenModel(
     private val mangaId: Long,
     private val isFromSource: Boolean,
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
+    private val uiPreferences: UiPreferences = Injekt.get(),
     private val trackPreferences: TrackPreferences = Injekt.get(),
     readerPreferences: ReaderPreferences = Injekt.get(),
     private val trackerManager: TrackerManager = Injekt.get(),
@@ -112,6 +123,7 @@ class MangaScreenModel(
     private val setMangaDefaultChapterFlags: SetMangaDefaultChapterFlags = Injekt.get(),
     private val setReadStatus: SetReadStatus = Injekt.get(),
     private val updateChapter: UpdateChapter = Injekt.get(),
+    private val getChaptersByMangaId: GetChaptersByMangaId = Injekt.get(),
     private val updateManga: UpdateManga = Injekt.get(),
     private val syncChaptersWithSource: SyncChaptersWithSource = Injekt.get(),
     private val getCategories: GetMangaCategories = Injekt.get(),
@@ -120,6 +132,8 @@ class MangaScreenModel(
     private val setMangaCategories: SetMangaCategories = Injekt.get(),
     private val mangaRepository: MangaRepository = Injekt.get(),
     private val filterChaptersForDownload: FilterChaptersForDownload = Injekt.get(),
+    private val createMangaCategoryWithName: CreateMangaCategoryWithName = Injekt.get(),
+    private val networkHelper: NetworkHelper = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
 ) : StateScreenModel<MangaScreenModel.State>(State.Loading) {
 
@@ -252,6 +266,16 @@ class MangaScreenModel(
 
             // Initial loading finished
             updateSuccessState { it.copy(isRefreshingData = false) }
+
+            if (manga.favorite) {
+                try {
+                    if (getCategories.await(manga.id).isEmpty()) {
+                        applyJikanCategoriesToManga(manga)
+                    }
+                } catch (e: Exception) {
+                    logcat(LogPriority.ERROR, e) { "Failed to auto-categorize existing manga '${manga.title}'" }
+                }
+            }
         }
     }
 
@@ -344,29 +368,56 @@ class MangaScreenModel(
                     }
                 }
 
-                // Now check if user previously set categories, when available
-                val categories = getCategories()
-                val defaultCategoryId = libraryPreferences.defaultMangaCategory().get().toLong()
-                val defaultCategory = categories.find { it.id == defaultCategoryId }
-                when {
-                    // Default category set
-                    defaultCategory != null -> {
-                        val result = updateManga.awaitUpdateFavorite(manga.id, true)
-                        if (!result) return@launchIO
-                        moveMangaToCategory(defaultCategory)
-                    }
+                val genres = fetchJikanGenresForManga(manga.title)
 
-                    // Automatic 'Default' or no categories
-                    defaultCategoryId == 0L || categories.isEmpty() -> {
-                        val result = updateManga.awaitUpdateFavorite(manga.id, true)
-                        if (!result) return@launchIO
-                        moveMangaToCategory(null)
+                if (!genres.isNullOrEmpty()) {
+                    val result = updateManga.awaitUpdateFavorite(manga.id, true)
+                    if (result) {
+                        val assignedCategories = mutableListOf<Category>()
+                        for (genreName in genres) {
+                            val categories = getCategories()
+                            var genreCategory = categories.find { it.name.equals(genreName, ignoreCase = true) }
+                            if (genreCategory == null) {
+                                val createResult = createMangaCategoryWithName.await(genreName)
+                                if (createResult is CreateMangaCategoryWithName.Result.Success) {
+                                    val updatedCategories = getCategories()
+                                    genreCategory = updatedCategories.find { it.name.equals(genreName, ignoreCase = true) }
+                                }
+                            }
+                            if (genreCategory != null) {
+                                assignedCategories.add(genreCategory)
+                            }
+                        }
+                        if (assignedCategories.isNotEmpty()) {
+                            moveMangaToCategories(assignedCategories)
+                        } else {
+                            moveMangaToCategory(null)
+                        }
                     }
+                } else {
+                    val categories = getCategories()
+                    val defaultCategoryId = libraryPreferences.defaultMangaCategory().get().toLong()
+                    val defaultCategory = categories.find { it.id == defaultCategoryId }
+                    when {
+                        // Default category set
+                        defaultCategory != null -> {
+                            val result = updateManga.awaitUpdateFavorite(manga.id, true)
+                            if (!result) return@launchIO
+                            moveMangaToCategory(defaultCategory)
+                        }
 
-                    // Choose a category
-                    else -> {
-                        isFromChangeCategory = true
-                        showChangeCategoryDialog()
+                        // Automatic 'Default' or no categories
+                        defaultCategoryId == 0L || categories.isEmpty() -> {
+                            val result = updateManga.awaitUpdateFavorite(manga.id, true)
+                            if (!result) return@launchIO
+                            moveMangaToCategory(null)
+                        }
+
+                        // Choose a category
+                        else -> {
+                            isFromChangeCategory = true
+                            showChangeCategoryDialog()
+                        }
                     }
                 }
 
@@ -454,10 +505,12 @@ class MangaScreenModel(
 
     fun moveMangaToCategoriesAndAddToLibrary(manga: Manga, categories: List<Long>) {
         moveMangaToCategory(categories)
-        if (manga.favorite) return
 
         screenModelScope.launchIO {
-            updateManga.awaitUpdateFavorite(manga.id, true)
+            if (!manga.favorite) {
+                updateManga.awaitUpdateFavorite(manga.id, true)
+            }
+            applyJikanCategoriesToManga(manga)
         }
     }
 
@@ -484,6 +537,26 @@ class MangaScreenModel(
      */
     private fun moveMangaToCategory(category: Category?) {
         moveMangaToCategories(listOfNotNull(category))
+    }
+
+    fun markMangaCompleted() {
+        val state = successState ?: return
+        screenModelScope.launchIO {
+            val completedCategory = getOrCreateCompletedMangaCategory() ?: return@launchIO
+            val chapters = getChaptersByMangaId.await(state.manga.id)
+            chapters
+                .filterNot { it.read }
+                .map { ChapterUpdate(id = it.id, read = true, lastPageRead = 0L) }
+                .let { updateChapter.awaitAll(it) }
+            setMangaCategories.await(state.manga.id, listOf(completedCategory.id))
+        }
+    }
+
+    private suspend fun getOrCreateCompletedMangaCategory(): Category? {
+        val completedCategoryName = context.stringResource(MR.strings.kitsux_category_completed)
+        getCategories().find { it.name.isCompletedCategoryName(completedCategoryName) }?.let { return it }
+        createMangaCategoryWithName.await(completedCategoryName)
+        return getCategories().find { it.name.isCompletedCategoryName(completedCategoryName) }
     }
 
     // Manga info - end
@@ -1130,10 +1203,58 @@ class MangaScreenModel(
         updateSuccessState { it.copy(dialog = Dialog.Migrate(newManga = manga, oldManga = duplicate)) }
     }
 
+    private suspend fun applyJikanCategoriesToManga(manga: Manga): Boolean {
+        if (!uiPreferences.autoCategorizeLibrary().get()) return false
+        val genres = fetchJikanGenresForManga(manga.title) ?: return false
+        val assignedCategories = genres.mapNotNull { genreName ->
+            getOrCreateJikanMangaCategory(genreName)
+        }
+        if (assignedCategories.isEmpty()) return false
+
+        setMangaCategories.await(manga.id, assignedCategories.map { it.id })
+        return true
+    }
+
+    private suspend fun getOrCreateJikanMangaCategory(genreName: String): Category? {
+        getCategories().find { it.name.equals(genreName, ignoreCase = true) }?.let { return it }
+        createMangaCategoryWithName.await(genreName)
+        return getCategories().find { it.name.equals(genreName, ignoreCase = true) }
+    }
+
     fun setExcludedScanlators(excludedScanlators: Set<String>) {
         screenModelScope.launchIO {
             setExcludedScanlators.await(mangaId, excludedScanlators)
         }
+    }
+
+    private suspend fun fetchJikanGenresForManga(title: String): List<String>? {
+        val normalizedTitle = title.trim()
+        if (normalizedTitle.isBlank()) return null
+
+        return try {
+            val encodedTitle = URLEncoder.encode(normalizedTitle, "UTF-8")
+            val response = networkHelper.client
+                .newCall(GET("https://api.jikan.moe/v4/manga?q=$encodedTitle&limit=1"))
+                .awaitSuccess()
+            val parsed = jikanJson.decodeFromString<JikanMediaSearchResponse>(response.body.string())
+            parsed.data
+                .firstOrNull()
+                ?.genres
+                ?.mapNotNull { normalizeJikanCategoryGenre(it.name) }
+                ?.distinctBy { it.lowercase() }
+                ?.takeIf { it.isNotEmpty() }
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e) { "Failed to resolve Jikan genres for '$title'" }
+            null
+        }
+    }
+
+    private fun normalizeJikanCategoryGenre(genre: String): String? {
+        val normalized = genre.trim()
+            .lowercase()
+            .replace("-", " ")
+            .replace(Regex("\\s+"), " ")
+        return JIKAN_CATEGORY_GENRES[normalized]
     }
 
     sealed interface State {
@@ -1221,6 +1342,53 @@ class MangaScreenModel(
         }
     }
 }
+
+private const val COMPLETED_CATEGORY_NAME = "Terminados"
+
+private fun String.isCompletedCategoryName(localizedName: String): Boolean {
+    return equals(localizedName, ignoreCase = true) ||
+        equals(COMPLETED_CATEGORY_NAME, ignoreCase = true) ||
+        equals("Terminado", ignoreCase = true)
+}
+
+private val jikanJson = Json { ignoreUnknownKeys = true }
+
+private val JIKAN_CATEGORY_GENRES = mapOf(
+    "action" to "Action",
+    "adventure" to "Adventure",
+    "avant garde" to "Avant Garde",
+    "award winning" to "Award Winning",
+    "boys love" to "Boys Love",
+    "comedy" to "Comedy",
+    "drama" to "Drama",
+    "fantasy" to "Fantasy",
+    "girls love" to "Girls Love",
+    "gourmet" to "Gourmet",
+    "horror" to "Horror",
+    "mystery" to "Mystery",
+    "romance" to "Romance",
+    "sci fi" to "Sci-Fi",
+    "slice of life" to "Slice of Life",
+    "sports" to "Sports",
+    "supernatural" to "Supernatural",
+    "suspense" to "Suspense",
+)
+
+@Serializable
+private data class JikanMediaSearchResponse(
+    val data: List<JikanMediaSearchItem>,
+)
+
+@Serializable
+private data class JikanMediaSearchItem(
+    val genres: List<JikanMediaGenre> = emptyList(),
+)
+
+@Serializable
+private data class JikanMediaGenre(
+    @SerialName("mal_id") val malId: Long? = null,
+    val name: String,
+)
 
 @Immutable
 sealed class ChapterList {

@@ -108,10 +108,10 @@ fun SeekbarWithTimers(
                 },
             modifier = Modifier.weight(1f),
             colors = SeekerDefaults.seekerColors(
-                progressColor = MaterialTheme.colorScheme.primary,
-                thumbColor = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.background,
-                readAheadColor = MaterialTheme.colorScheme.inversePrimary,
+                progressColor = Color(0xFFE50914), // KitsuX Red
+                thumbColor = Color(0xFFE50914),    // KitsuX Red
+                trackColor = Color.White.copy(alpha = 0.24f),
+                readAheadColor = Color.White.copy(alpha = 0.45f),
             ),
         )
         VideoTimer(

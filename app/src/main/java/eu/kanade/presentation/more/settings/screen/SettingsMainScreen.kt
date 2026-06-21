@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material.icons.outlined.VideoSettings
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -181,6 +182,12 @@ object SettingsMainScreen : Screen() {
             subtitleRes = MR.strings.pref_appearance_summary,
             icon = Icons.Outlined.Palette,
             screen = SettingsAppearanceScreen,
+        ),
+        Item(
+            titleRes = MR.strings.pref_category_experience,
+            subtitleRes = MR.strings.pref_experience_summary,
+            icon = Icons.Outlined.Tune,
+            screen = SettingsExperienceScreen,
         ),
         Item(
             titleRes = MR.strings.pref_category_library,

@@ -33,6 +33,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -139,6 +150,7 @@ fun AnimeScreen(
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
     onEditCategoryClicked: (() -> Unit)?,
     onEditFetchIntervalClicked: (() -> Unit)?,
+    onMarkCompletedClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
     changeAnimeSkipIntro: (() -> Unit)?,
 
@@ -200,6 +212,7 @@ fun AnimeScreen(
             onDownloadActionClicked = onDownloadActionClicked,
             onEditCategoryClicked = onEditCategoryClicked,
             onEditIntervalClicked = onEditFetchIntervalClicked,
+            onMarkCompletedClicked = onMarkCompletedClicked,
             onMigrateClicked = onMigrateClicked,
             changeAnimeSkipIntro = changeAnimeSkipIntro,
             onMultiBookmarkClicked = onMultiBookmarkClicked,
@@ -243,6 +256,7 @@ fun AnimeScreen(
             onEditCategoryClicked = onEditCategoryClicked,
             onEditIntervalClicked = onEditFetchIntervalClicked,
             changeAnimeSkipIntro = changeAnimeSkipIntro,
+            onMarkCompletedClicked = onMarkCompletedClicked,
             onMigrateClicked = onMigrateClicked,
             onMultiBookmarkClicked = onMultiBookmarkClicked,
             onMultiFillermarkClicked = onMultiFillermarkClicked,
@@ -295,6 +309,7 @@ private fun AnimeScreenSmallImpl(
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
     onEditCategoryClicked: (() -> Unit)?,
     onEditIntervalClicked: (() -> Unit)?,
+    onMarkCompletedClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
     changeAnimeSkipIntro: (() -> Unit)?,
     onSettingsClicked: (() -> Unit)?,
@@ -414,8 +429,10 @@ private fun AnimeScreenSmallImpl(
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
             floatingActionButton = {
                 val isFABVisible = remember(episodes) {
-                    episodes.fastAny { !it.episode.seen } && !isAnySelected
-                }
+                    derivedStateOf {
+                        episodes.fastAny { !it.episode.seen } && !isAnySelected && itemListState.firstVisibleItemIndex > 1
+                    }
+                }.value
                 AnimatedVisibility(
                     visible = isFABVisible,
                     enter = fadeIn(),
@@ -424,7 +441,7 @@ private fun AnimeScreenSmallImpl(
                     ExtendedFloatingActionButton(
                         text = {
                             val isWatching = remember(state.episodes) {
-                                state.episodes.fastAny { it.episode.seen }
+                                state.episodes.fastAny { it.episode.seen || it.episode.lastSecondSeen > 0L }
                             }
                             Text(
                                 text = stringResource(
@@ -485,19 +502,58 @@ private fun AnimeScreenSmallImpl(
                         contentType = EntryScreenItem.ACTION_ROW,
                         span = { GridItemSpan(maxLineSpan) },
                     ) {
-                        AnimeActionRow(
-                            favorite = state.anime.favorite,
-                            trackingCount = state.trackingCount,
-                            nextUpdate = nextUpdate,
-                            isUserIntervalMode = state.anime.fetchInterval < 0,
-                            onAddToLibraryClicked = onAddToLibraryClicked,
-                            onWebViewClicked = onWebViewClicked,
-                            onWebViewLongClicked = onWebViewLongClicked,
+                        Column(
+                            modifier = Modifier
+                                .ignorePadding(offsetGridPaddingPx)
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            if (episodes.isNotEmpty()) {
+                                val isWatching = remember(state.episodes) {
+                                    state.episodes.fastAny { it.episode.seen || it.episode.lastSecondSeen > 0L }
+                                }
+                                Button(
+                                    onClick = onContinueWatching,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFE50914), // KitsuX Red
+                                        contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(4.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.PlayArrow,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (isWatching) "Reanudar" else "Empezar a ver",
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = 0.5.sp
+                                        )
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                            AnimeActionRow(
+                                favorite = state.anime.favorite,
+                                trackingCount = state.trackingCount,
+                                nextUpdate = nextUpdate,
+                                isUserIntervalMode = state.anime.fetchInterval < 0,
+                                onAddToLibraryClicked = onAddToLibraryClicked,
+                                onWebViewClicked = onWebViewClicked,
+                                onWebViewLongClicked = onWebViewLongClicked,
                             onTrackingClicked = onTrackingClicked,
                             onEditIntervalClicked = onEditIntervalClicked,
                             onEditCategory = onEditCategoryClicked,
-                            modifier = Modifier.ignorePadding(offsetGridPaddingPx),
+                            onMarkCompletedClicked = onMarkCompletedClicked,
+                            modifier = Modifier
                         )
+                        }
                     }
 
                     item(
@@ -540,14 +596,14 @@ private fun AnimeScreenSmallImpl(
                         )
                     }
 
-                    when (state.anime.fetchType) {
-                        FetchType.Seasons -> {
-                            sharedSeasons(
-                                anime = state.anime,
-                                seasons = seasons,
-                                containerHeight = containerHeightPx - toolbarHeight,
-                                onSeasonClicked = onSeasonClicked,
-                                onClickContinueWatching = onClickContinueWatching,
+        when (state.anime.fetchType) {
+            FetchType.Seasons -> {
+                sharedSeasons(
+                                    anime = state.anime,
+                                    seasons = seasons,
+                                    containerHeight = containerHeightPx - toolbarHeight,
+                                    onSeasonClicked = onSeasonClicked,
+                                    onClickContinueWatching = onClickContinueWatching,
                                 listItemModifier = Modifier.ignorePadding(offsetGridPaddingPx),
                             )
                         }
@@ -640,6 +696,7 @@ fun AnimeScreenLargeImpl(
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
     onEditCategoryClicked: (() -> Unit)?,
     onEditIntervalClicked: (() -> Unit)?,
+    onMarkCompletedClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
     changeAnimeSkipIntro: (() -> Unit)?,
     onSettingsClicked: (() -> Unit)?,
@@ -762,7 +819,7 @@ fun AnimeScreenLargeImpl(
                     ExtendedFloatingActionButton(
                         text = {
                             val isWatching = remember(state.episodes) {
-                                state.episodes.fastAny { it.episode.seen }
+                                state.episodes.fastAny { it.episode.seen || it.episode.lastSecondSeen > 0L }
                             }
                             Text(
                                 text = stringResource(
@@ -818,6 +875,7 @@ fun AnimeScreenLargeImpl(
                                 onTrackingClicked = onTrackingClicked,
                                 onEditIntervalClicked = onEditIntervalClicked,
                                 onEditCategory = onEditCategoryClicked,
+                                onMarkCompletedClicked = onMarkCompletedClicked,
                             )
                             ExpandableAnimeDescription(
                                 defaultExpandState = true,
@@ -865,9 +923,9 @@ fun AnimeScreenLargeImpl(
                                 )
                             }
 
-                            when (state.anime.fetchType) {
-                                FetchType.Seasons -> {
-                                    sharedSeasons(
+        when (state.anime.fetchType) {
+            FetchType.Seasons -> {
+                sharedSeasons(
                                         anime = state.anime,
                                         seasons = seasons,
                                         containerHeight = containerHeightPx - topBarHeight,

@@ -66,6 +66,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
@@ -110,29 +112,31 @@ fun MangaInfoBox(
     modifier: Modifier = Modifier,
 ) {
     Box(modifier = modifier) {
-        // Backdrop
-        val backdropGradientColors = listOf(
-            Color.Transparent,
-            MaterialTheme.colorScheme.background,
-        )
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(manga)
-                .crossfade(true)
-                .build(),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .matchParentSize()
-                .drawWithContent {
-                    drawContent()
-                    drawRect(
-                        brush = Brush.verticalGradient(colors = backdropGradientColors),
-                    )
-                }
-                .blur(4.dp)
-                .alpha(0.2f),
-        )
+        if (isTabletUi) {
+            // Backdrop
+            val backdropGradientColors = listOf(
+                Color.Transparent,
+                MaterialTheme.colorScheme.background,
+            )
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(manga)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .matchParentSize()
+                    .drawWithContent {
+                        drawContent()
+                        drawRect(
+                            brush = Brush.verticalGradient(colors = backdropGradientColors),
+                        )
+                    }
+                    .blur(4.dp)
+                    .alpha(0.2f),
+            )
+        }
 
         // Manga & source info
         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
@@ -171,9 +175,11 @@ fun MangaActionRow(
     onTrackingClicked: () -> Unit,
     onEditIntervalClicked: (() -> Unit)?,
     onEditCategory: (() -> Unit)?,
+    onMarkCompletedClicked: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    val defaultActionButtonColor = MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA)
+    val defaultActionButtonColor = Color.White.copy(alpha = 0.7f)
+    val activeActionButtonColor = Color(0xFFE50914) // KitsuX Red
 
     // TODO: show something better when using custom interval
     val nextUpdateDays = remember(nextUpdate) {
@@ -193,7 +199,7 @@ fun MangaActionRow(
                 stringResource(MR.strings.add_to_library)
             },
             icon = if (favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            color = if (favorite) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
+            color = if (favorite) activeActionButtonColor else defaultActionButtonColor,
             onClick = onAddToLibraryClicked,
             onLongClick = onEditCategory,
         )
@@ -208,7 +214,7 @@ fun MangaActionRow(
                 )
             },
             icon = Icons.Default.HourglassEmpty,
-            color = if (isUserIntervalMode) MaterialTheme.colorScheme.primary else defaultActionButtonColor,
+            color = if (isUserIntervalMode) activeActionButtonColor else defaultActionButtonColor,
             onClick = { onEditIntervalClicked?.invoke() },
         )
         MangaActionButton(
@@ -218,7 +224,7 @@ fun MangaActionRow(
                 pluralStringResource(MR.plurals.num_trackers, count = trackingCount, trackingCount)
             },
             icon = if (trackingCount == 0) Icons.Outlined.Sync else Icons.Outlined.Done,
-            color = if (trackingCount == 0) defaultActionButtonColor else MaterialTheme.colorScheme.primary,
+            color = if (trackingCount == 0) defaultActionButtonColor else activeActionButtonColor,
             onClick = onTrackingClicked,
         )
         if (onWebViewClicked != null) {
@@ -228,6 +234,14 @@ fun MangaActionRow(
                 color = defaultActionButtonColor,
                 onClick = onWebViewClicked,
                 onLongClick = onWebViewLongClicked,
+            )
+        }
+        if (favorite && onMarkCompletedClicked != null) {
+            MangaActionButton(
+                title = stringResource(MR.strings.kitsux_action_mark_completed),
+                icon = Icons.Outlined.DoneAll,
+                color = defaultActionButtonColor,
+                onClick = onMarkCompletedClicked,
             )
         }
     }
@@ -379,36 +393,117 @@ private fun MangaAndSourceTitlesSmall(
     onCoverClick: () -> Unit,
     doSearch: (query: String, global: Boolean) -> Unit,
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(start = 16.dp, top = appBarPadding + 16.dp, end = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
+    Column(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        ItemCover.Book(
+        // Backdrop Image Box
+        Box(
             modifier = Modifier
-                .sizeIn(maxWidth = 100.dp)
-                .align(Alignment.Top),
-            data = ImageRequest.Builder(LocalContext.current)
-                .data(manga)
-                .crossfade(true)
-                .build(),
-            contentDescription = stringResource(MR.strings.manga_cover),
-            onClick = onCoverClick,
-        )
-        Column(
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+                .fillMaxWidth()
+                .height(280.dp)
         ) {
-            MangaContentInfo(
-                title = manga.title,
-                author = manga.author,
-                artist = manga.artist,
-                status = manga.status,
-                sourceName = sourceName,
-                isStubSource = isStubSource,
-                doSearch = doSearch,
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(manga)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(0.85f)
+                    .clickableNoIndication(onClick = onCoverClick)
             )
+
+            // Dark gradient overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.5f),
+                                Color.Black
+                            ),
+                            startY = 0f
+                        )
+                    )
+            )
+
+            // Overlaid Title at bottom left of backdrop
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                Text(
+                    text = manga.title.ifBlank { stringResource(MR.strings.unknown_title) },
+                    style = MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.5).sp
+                    ),
+                    color = Color.White,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+
+        // Metadata & Info section below the backdrop
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            // One-line Metadata separated by bullet
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                // Status tag
+                val statusText = when (manga.status) {
+                    SManga.ONGOING.toLong() -> "En emisión"
+                    SManga.COMPLETED.toLong() -> "Completado"
+                    SManga.LICENSED.toLong() -> "Licenciado"
+                    SManga.PUBLISHING_FINISHED.toLong() -> "Finalizado"
+                    SManga.CANCELLED.toLong() -> "Cancelado"
+                    SManga.ON_HIATUS.toLong() -> "En pausa"
+                    else -> "Desconocido"
+                }
+                Text(
+                    text = statusText,
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                )
+
+                Text(text = "•", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
+
+                // Source tag
+                Text(
+                    text = sourceName,
+                    color = Color.LightGray,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.clickableNoIndication {
+                        doSearch(sourceName, false)
+                    }
+                )
+
+                if (manga.author?.isNotBlank() == true) {
+                    Text(text = "•", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = manga.author!!,
+                        color = Color.LightGray,
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.clickableNoIndication {
+                            doSearch(manga.author!!, true)
+                        }
+                    )
+                }
+            }
         }
     }
 }

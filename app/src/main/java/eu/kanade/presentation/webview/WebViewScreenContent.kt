@@ -40,11 +40,13 @@ import eu.kanade.presentation.components.AppBarActions
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.network.NetworkHelper
+import eu.kanade.tachiyomi.network.interceptor.AnimeOnlineCloudflareCompat
 import eu.kanade.tachiyomi.util.system.WebViewUtil
 import eu.kanade.tachiyomi.util.system.getHtml
 import eu.kanade.tachiyomi.util.system.setDefaultSettings
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Request
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -129,9 +131,45 @@ fun WebViewScreenContent(
                 view: WebView?,
                 request: WebResourceRequest?,
             ): WebResourceResponse? {
+                if (request == null) return null
+
+                val requestUrl = request.url.toString()
+                val requestHost = request.url.host ?: ""
+
+                if (request.isForMainFrame || requestHost.isAnimeOnlineCloudflareHost()) {
+                    return null
+                }
+
+                // Do not intercept Cloudflare challenges, Google ReCAPTCHA, hCaptcha, gstatic, etc.
+                if (requestHost.contains("cloudflare") ||
+                    requestHost.contains("recaptcha") ||
+                    requestHost.contains("hcaptcha") ||
+                    requestHost.contains("google") ||
+                    requestHost.contains("gstatic")
+                ) {
+                    return null
+                }
+
+                // Only intercept requests for the current site domain/subdomains to avoid TLS fingerprint mismatch on 3rd parties
+                val currentHost = try {
+                    currentUrl.toHttpUrl().host
+                } catch (_: Exception) {
+                    ""
+                }
+
+                val isTargetHost = currentHost.isNotEmpty() && (
+                    requestHost == currentHost ||
+                    requestHost.endsWith(".$currentHost") ||
+                    currentHost.endsWith(".$requestHost")
+                )
+
+                if (!isTargetHost) {
+                    return null
+                }
+
                 return try {
                     val internalRequest = Request.Builder().apply {
-                        url(request!!.url.toString())
+                        url(requestUrl)
                         request.requestHeaders.forEach { (key, value) ->
                             if (key == "X-Requested-With" && value in setOf(context.packageName, spoofedPackageName)) {
                                 return@forEach
@@ -224,7 +262,7 @@ fun WebViewScreenContent(
                                     .clip(MaterialTheme.shapes.small)
                                     .clickable {
                                         uriHandler.openUri(
-                                            "https://aniyomi.org/docs/guides/troubleshooting/#cloudflare",
+                                            "https://github.com/richtunic/Kitsu-X#cloudflare",
                                         )
                                     },
                             )
@@ -264,11 +302,27 @@ fun WebViewScreenContent(
                     WebView.setWebContentsDebuggingEnabled(true)
                 }
 
-                headers["user-agent"]?.let {
-                    webView.settings.userAgentString = it
+                val headerUserAgent = headers.entries
+                    .firstOrNull { it.key.equals("user-agent", ignoreCase = true) }
+                    ?.value
+                val animeOnlineUserAgent = try {
+                    AnimeOnlineCloudflareCompat.userAgentFor(url.toHttpUrl())
+                } catch (_: Exception) {
+                    null
                 }
+                val ua = animeOnlineUserAgent ?: headerUserAgent
+                    ?.takeUnless { it == DEFAULT_EXTENSION_USER_AGENT }
+                    ?: network.defaultUserAgentProvider()
+                webView.settings.userAgentString = ua
             },
             client = webClient,
         )
     }
 }
+
+private fun String.isAnimeOnlineCloudflareHost(): Boolean {
+    return contains("animeonline.ninja") || contains("animeninja.online")
+}
+
+private const val DEFAULT_EXTENSION_USER_AGENT =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0"

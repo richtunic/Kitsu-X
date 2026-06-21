@@ -177,7 +177,7 @@ class AnimeLibraryUpdateNotifier(
         ) {
             setContentTitle(context.stringResource(MR.strings.notification_update_error, failed))
             setContentText(context.stringResource(MR.strings.action_show_errors))
-            setSmallIcon(R.drawable.ic_ani)
+            setSmallIcon(R.drawable.ic_kitsux_notification)
 
             setContentIntent(NotificationReceiver.openErrorLogPendingActivity(context, uri))
         }
@@ -217,7 +217,7 @@ class AnimeLibraryUpdateNotifier(
                 }
             }
 
-            setSmallIcon(R.drawable.ic_ani)
+            setSmallIcon(R.drawable.ic_kitsux_notification)
             setLargeIcon(notificationBitmap)
 
             setGroup(Notifications.GROUP_NEW_EPISODES)
@@ -253,7 +253,7 @@ class AnimeLibraryUpdateNotifier(
             setContentText(description)
             setStyle(NotificationCompat.BigTextStyle().bigText(description))
 
-            setSmallIcon(R.drawable.ic_ani)
+            setSmallIcon(R.drawable.ic_kitsux_notification)
 
             if (icon != null) {
                 setLargeIcon(icon)
@@ -403,7 +403,7 @@ class AnimeLibraryUpdateNotifier(
 
     companion object {
         const val HELP_WARNING_URL =
-            "https://aniyomi.org/docs/faq/library#why-am-i-warned-about-large-bulk-updates-and-downloads"
+            "https://github.com/richtunic/Kitsu-X#library-updates"
     }
 }
 

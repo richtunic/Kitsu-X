@@ -343,6 +343,8 @@ fun PlayerControls(
                     MiddlePlayerControls(
                         hasPrevious = hasPreviousEpisode,
                         onSkipPrevious = { viewModel.changeEpisode(true) },
+                        onSkipBackward = { viewModel.seekBy(-10) },
+                        onSkipForward = { viewModel.seekBy(10) },
                         hasNext = hasNextEpisode,
                         onSkipNext = { viewModel.changeEpisode(false) },
                         isLoading = isLoading,

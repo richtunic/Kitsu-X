@@ -1,5 +1,7 @@
 package eu.kanade.tachiyomi.ui.browse.manga.extension
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,13 +42,14 @@ fun mangaExtensionsTab(
         badgeNumber = state.updates.takeIf { it > 0 },
         searchEnabled = true,
         actions = persistentListOf(
+            AppBar.Action(
+                title = stringResource(MR.strings.label_extension_repos),
+                icon = Icons.Outlined.Tune,
+                onClick = { navigator.push(MangaExtensionReposScreen()) },
+            ),
             AppBar.OverflowAction(
                 title = stringResource(MR.strings.action_filter),
                 onClick = { navigator.push(MangaExtensionFilterScreen()) },
-            ),
-            AppBar.OverflowAction(
-                title = stringResource(MR.strings.label_extension_repos),
-                onClick = { navigator.push(MangaExtensionReposScreen()) },
             ),
         ),
         content = { contentPadding, _ ->

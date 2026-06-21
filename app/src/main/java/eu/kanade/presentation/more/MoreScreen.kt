@@ -38,6 +38,7 @@ fun MoreScreen(
     incognitoMode: Boolean,
     onIncognitoModeChange: (Boolean) -> Unit,
     navStyle: NavStyle,
+    showAnime: Boolean,
     onClickAlt: () -> Unit,
     onClickDownloadQueue: () -> Unit,
     onClickCategories: () -> Unit,
@@ -76,7 +77,7 @@ fun MoreScreen(
                 )
             }
 
-            item { HorizontalDivider() }
+        item { HorizontalDivider() }
 
             item {
                 TextPreferenceWidget(
@@ -151,12 +152,14 @@ fun MoreScreen(
                     onPreferenceClick = onClickSettings,
                 )
             }
-            item {
-                TextPreferenceWidget(
-                    title = stringResource(AYMR.strings.label_player_settings),
-                    icon = Icons.Outlined.VideoSettings,
-                    onPreferenceClick = onClickPlayerSettings,
-                )
+            if (showAnime) {
+                item {
+                    TextPreferenceWidget(
+                        title = stringResource(AYMR.strings.label_player_settings),
+                        icon = Icons.Outlined.VideoSettings,
+                        onPreferenceClick = onClickPlayerSettings,
+                    )
+                }
             }
             item {
                 TextPreferenceWidget(

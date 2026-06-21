@@ -103,6 +103,9 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         Injekt.importModule(SYDomainModule())
         // SY <--
 
+        // Initialize KitsuX Intelligence System
+        eu.kanade.tachiyomi.ui.home.intelligence.KitsuXIntelSystem.initialize(this)
+
         setupNotificationChannels()
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
@@ -222,9 +225,9 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
     override fun getPackageName(): String {
         try {
             // Override the value passed as X-Requested-With in WebView requests
-            val stackTrace = Looper.getMainLooper().thread.stackTrace
+            val stackTrace = Thread.currentThread().stackTrace
             val isChromiumCall = stackTrace.any { trace ->
-                trace.className.equals("org.chromium.base.BuildInfo", ignoreCase = true) &&
+                trace.className.startsWith("org.chromium.") &&
                     setOf("getAll", "getPackageName", "<init>").any { trace.methodName.equals(it, ignoreCase = true) }
             }
 

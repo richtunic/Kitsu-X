@@ -17,10 +17,10 @@ android {
     namespace = "eu.kanade.tachiyomi"
 
     defaultConfig {
-        applicationId = "xyz.jmir.tachiyomi.mi"
+        applicationId = "io.kitsux.app"
 
-        versionCode = 131
-        versionName = "0.18.1.2"
+        versionCode = 1
+        versionName = "1.0.0"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getGitSha()}\"")
@@ -42,6 +42,15 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file("kitsux.keystore")
+            storePassword = "kitsux123"
+            keyAlias = "kitsux"
+            keyPassword = "kitsux123"
+        }
+    }
+
     buildTypes {
         val debug by getting {
             applicationIdSuffix = ".dev"
@@ -55,6 +64,7 @@ android {
             proguardFiles("proguard-android-optimize.txt", "proguard-rules.pro")
 
             buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLastCommitTime = true)}\"")
+            signingConfig = signingConfigs.getByName("release")
         }
 
         val commonMatchingFallbacks = listOf(release.name)
@@ -231,6 +241,7 @@ dependencies {
     implementation(aniyomilibs.mediasession)
 
     implementation(androidx.bundles.lifecycle)
+    implementation(androidx.navigation.compose)
 
     // Job scheduling
     implementation(androidx.workmanager)

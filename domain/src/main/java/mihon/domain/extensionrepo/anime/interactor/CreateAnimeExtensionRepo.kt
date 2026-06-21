@@ -15,7 +15,18 @@ class CreateAnimeExtensionRepo(
     private val repoRegex = """^https://.*/index\.min\.json$""".toRegex()
 
     suspend fun await(indexUrl: String): Result {
-        val formattedIndexUrl = indexUrl.toHttpUrlOrNull()
+        val trimmed = indexUrl.trim()
+        val indexUrlNormalized = if (trimmed.endsWith("index.min.json", ignoreCase = true)) {
+            trimmed
+        } else {
+            if (trimmed.endsWith("/")) {
+                trimmed + "index.min.json"
+            } else {
+                trimmed + "/index.min.json"
+            }
+        }
+
+        val formattedIndexUrl = indexUrlNormalized.toHttpUrlOrNull()
             ?.toString()
             ?.takeIf { it.matches(repoRegex) }
             ?: return Result.InvalidUrl

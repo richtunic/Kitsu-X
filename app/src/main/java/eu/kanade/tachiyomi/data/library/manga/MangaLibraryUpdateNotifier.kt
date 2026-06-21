@@ -159,7 +159,7 @@ class MangaLibraryUpdateNotifier(
         ) {
             setContentTitle(context.stringResource(MR.strings.notification_update_error, failed))
             setContentText(context.stringResource(MR.strings.action_show_errors))
-            setSmallIcon(R.drawable.ic_ani)
+            setSmallIcon(R.drawable.ic_kitsux_notification)
 
             setContentIntent(NotificationReceiver.openErrorLogPendingActivity(context, uri))
         }
@@ -199,7 +199,7 @@ class MangaLibraryUpdateNotifier(
                 }
             }
 
-            setSmallIcon(R.drawable.ic_ani)
+            setSmallIcon(R.drawable.ic_kitsux_notification)
             setLargeIcon(notificationBitmap)
 
             setGroup(Notifications.GROUP_NEW_CHAPTERS)
@@ -235,7 +235,7 @@ class MangaLibraryUpdateNotifier(
             setContentText(description)
             setStyle(NotificationCompat.BigTextStyle().bigText(description))
 
-            setSmallIcon(R.drawable.ic_ani)
+            setSmallIcon(R.drawable.ic_kitsux_notification)
 
             if (icon != null) {
                 setLargeIcon(icon)
@@ -390,7 +390,7 @@ class MangaLibraryUpdateNotifier(
     companion object {
         // TODO: Change when implemented on Aniyomi website
         const val HELP_WARNING_URL =
-            "https://aniyomi.org/docs/faq/library#why-am-i-warned-about-large-bulk-updates-and-downloads"
+            "https://github.com/richtunic/Kitsu-X#library-updates"
     }
 }
 

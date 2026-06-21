@@ -33,6 +33,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.player.controls.components.ControlsButton
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 import `is`.xyz.mpv.Utils
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.padding
@@ -44,6 +46,10 @@ fun MiddlePlayerControls(
     // previous
     hasPrevious: Boolean,
     onSkipPrevious: () -> Unit,
+
+    // seek 10s
+    onSkipBackward: () -> Unit,
+    onSkipForward: () -> Unit,
 
     // middle
     isLoading: Boolean,
@@ -66,7 +72,7 @@ fun MiddlePlayerControls(
     Row(
         modifier,
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.large),
+        horizontalArrangement = Arrangement.spacedBy(MaterialTheme.padding.medium),
     ) {
         AnimatedVisibility(
             visible = controlsShown && !areControlsLocked,
@@ -75,10 +81,26 @@ fun MiddlePlayerControls(
         ) {
             if (gestureSeekAmount == null) {
                 ControlsButton(
-                    Icons.Filled.SkipPrevious,
+                    icon = Icons.Filled.SkipPrevious,
                     onClick = onSkipPrevious,
-                    iconSize = 48.dp,
+                    iconSize = 36.dp,
                     enabled = hasPrevious,
+                    horizontalSpacing = MaterialTheme.padding.small,
+                )
+            }
+        }
+
+        AnimatedVisibility(
+            visible = controlsShown && !areControlsLocked,
+            enter = enter,
+            exit = exit,
+        ) {
+            if (gestureSeekAmount == null) {
+                ControlsButton(
+                    icon = ImageVector.vectorResource(R.drawable.ic_replay_10_24dp),
+                    onClick = onSkipBackward,
+                    iconSize = 48.dp,
+                    horizontalSpacing = MaterialTheme.padding.small,
                 )
             }
         }
@@ -133,10 +155,26 @@ fun MiddlePlayerControls(
         ) {
             if (gestureSeekAmount == null) {
                 ControlsButton(
-                    Icons.Filled.SkipNext,
-                    onClick = onSkipNext,
+                    icon = ImageVector.vectorResource(R.drawable.ic_forward_10_24dp),
+                    onClick = onSkipForward,
                     iconSize = 48.dp,
+                    horizontalSpacing = MaterialTheme.padding.small,
+                )
+            }
+        }
+
+        AnimatedVisibility(
+            visible = controlsShown && !areControlsLocked,
+            enter = enter,
+            exit = exit,
+        ) {
+            if (gestureSeekAmount == null) {
+                ControlsButton(
+                    icon = Icons.Filled.SkipNext,
+                    onClick = onSkipNext,
+                    iconSize = 36.dp,
                     enabled = hasNext,
+                    horizontalSpacing = MaterialTheme.padding.small,
                 )
             }
         }

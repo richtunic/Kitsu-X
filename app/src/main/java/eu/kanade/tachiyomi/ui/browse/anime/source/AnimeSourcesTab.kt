@@ -48,6 +48,7 @@ fun Screen.animeSourcesTab(): TabContent {
             AnimeSourcesScreen(
                 state = state,
                 contentPadding = contentPadding,
+                onGlobalSearchClick = { navigator.push(GlobalAnimeSearchScreen()) },
                 onClickItem = { source, listing ->
                     navigator.push(BrowseAnimeSourceScreen(source.id, listing.query))
                 },

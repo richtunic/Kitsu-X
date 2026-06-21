@@ -1349,6 +1349,26 @@ class PlayerViewModel @JvmOverloads constructor(
                                         }
                                     }
                                 }
+
+                                if (
+                                    prefIndex == -1 &&
+                                    hosterIndex == -1 &&
+                                    shouldStartFirstReadyVideo(source) &&
+                                    selectedHosterVideoIndex.value == Pair(-1, -1)
+                                ) {
+                                    val currentHosterState = _hosterState.value
+                                    val (readyHosterIdx, readyVideoIdx) =
+                                        HosterLoader.selectBestVideo(currentHosterState)
+                                    if (readyHosterIdx != -1 && hasFoundPreferredVideo.compareAndSet(false, true)) {
+                                        val readyVideo =
+                                            (currentHosterState[readyHosterIdx] as HosterState.Ready)
+                                                .videoList[readyVideoIdx]
+                                        val success = loadVideo(source, readyVideo, readyHosterIdx, readyVideoIdx)
+                                        if (!success) {
+                                            hasFoundPreferredVideo.set(false)
+                                        }
+                                    }
+                                }
                             }
                         }
                     }.awaitAll()
@@ -1437,6 +1457,11 @@ class PlayerViewModel @JvmOverloads constructor(
 
         activity.setVideo(resolvedVideo)
         return true
+    }
+
+    private fun shouldStartFirstReadyVideo(source: AnimeSource): Boolean {
+        return (source as? AnimeHttpSource)?.baseUrl
+            ?.contains("animeonline.ninja", ignoreCase = true) == true
     }
 
     fun onVideoClicked(hosterIndex: Int, videoIndex: Int) {

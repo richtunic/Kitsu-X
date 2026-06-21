@@ -13,6 +13,7 @@ import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.util.addOrRemove
 import eu.kanade.core.util.insertSeparators
+import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.entries.anime.interactor.SetAnimeViewerFlags
 import eu.kanade.domain.entries.anime.interactor.SyncSeasonsWithSource
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
@@ -39,7 +40,10 @@ import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.data.track.EnhancedAnimeTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
+import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.HttpException
+import eu.kanade.tachiyomi.network.NetworkHelper
+import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.ui.entries.anime.track.AnimeTrackItem
 import eu.kanade.tachiyomi.ui.player.settings.GesturePreferences
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
@@ -62,6 +66,9 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import logcat.LogPriority
 import mihon.domain.items.episode.interactor.FilterEpisodesForDownload
 import tachiyomi.core.common.i18n.stringResource
@@ -73,6 +80,7 @@ import tachiyomi.core.common.util.lang.launchNonCancellable
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
+import tachiyomi.domain.category.anime.interactor.CreateAnimeCategoryWithName
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
 import tachiyomi.domain.category.anime.interactor.SetAnimeCategories
 import tachiyomi.domain.category.model.Category
@@ -104,6 +112,7 @@ import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.source.local.entries.anime.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.net.URLEncoder
 import java.util.Calendar
 import kotlin.math.floor
 
@@ -114,6 +123,7 @@ class AnimeScreenModel(
     private val isFromSource: Boolean,
     private val downloadPreferences: DownloadPreferences = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
+    private val uiPreferences: UiPreferences = Injekt.get(),
     private val trackPreferences: TrackPreferences = Injekt.get(),
     internal val playerPreferences: PlayerPreferences = Injekt.get(),
     internal val gesturePreferences: GesturePreferences = Injekt.get(),
@@ -134,6 +144,8 @@ class AnimeScreenModel(
     private val syncEpisodesWithSource: SyncEpisodesWithSource = Injekt.get(),
     private val syncSeasonsWithSource: SyncSeasonsWithSource = Injekt.get(),
     private val getCategories: GetAnimeCategories = Injekt.get(),
+    private val createAnimeCategoryWithName: CreateAnimeCategoryWithName = Injekt.get(),
+    private val networkHelper: NetworkHelper = Injekt.get(),
     private val getTracks: GetAnimeTracks = Injekt.get(),
     private val addTracks: AddAnimeTracks = Injekt.get(),
     private val setAnimeCategories: SetAnimeCategories = Injekt.get(),
@@ -250,7 +262,8 @@ class AnimeScreenModel(
                     dialog = null,
                 )
             }
-            // Start observe tracking since it only needs animeId
+
+        // Start observe tracking since it only needs animeId
             observeTrackers()
 
             // Fetch info-episodes when needed
@@ -264,6 +277,16 @@ class AnimeScreenModel(
 
             // Initial loading finished
             updateSuccessState { it.copy(isRefreshingData = false) }
+
+            if (anime.favorite) {
+                try {
+                    if (getCategories.await(anime.id).isEmpty()) {
+                        applyJikanCategoriesToAnime(anime)
+                    }
+                } catch (e: Exception) {
+                    logcat(LogPriority.ERROR, e) { "Failed to auto-categorize existing anime '${anime.title}'" }
+                }
+            }
         }
     }
 
@@ -356,29 +379,57 @@ class AnimeScreenModel(
                     }
                 }
 
-                // Now check if user previously set categories, when available
-                val categories = getCategories()
-                val defaultCategoryId = libraryPreferences.defaultAnimeCategory().get().toLong()
-                val defaultCategory = categories.find { it.id == defaultCategoryId }
-                when {
-                    // Default category set
-                    defaultCategory != null -> {
-                        val result = updateAnime.awaitUpdateFavorite(anime.id, true)
-                        if (!result) return@launchIO
-                        moveAnimeToCategory(defaultCategory)
-                    }
+                val genres = fetchJikanGenresForAnime(anime.title)
 
-                    // Automatic 'Default' or no categories
-                    defaultCategoryId == 0L || categories.isEmpty() -> {
-                        val result = updateAnime.awaitUpdateFavorite(anime.id, true)
-                        if (!result) return@launchIO
-                        moveAnimeToCategory(null)
+                if (!genres.isNullOrEmpty()) {
+                    val result = updateAnime.awaitUpdateFavorite(anime.id, true)
+                    if (result) {
+                        val assignedCategories = mutableListOf<Category>()
+                        for (genreName in genres) {
+                            val categories = getCategories()
+                            var genreCategory = categories.find { it.name.equals(genreName, ignoreCase = true) }
+                            if (genreCategory == null) {
+                                val createResult = createAnimeCategoryWithName.await(genreName)
+                                if (createResult is CreateAnimeCategoryWithName.Result.Success) {
+                                    val updatedCategories = getCategories()
+                                    genreCategory = updatedCategories.find { it.name.equals(genreName, ignoreCase = true) }
+                                }
+                            }
+                            if (genreCategory != null) {
+                                assignedCategories.add(genreCategory)
+                            }
+                        }
+                        if (assignedCategories.isNotEmpty()) {
+                            moveAnimeToCategories(assignedCategories)
+                        } else {
+                            moveAnimeToCategory(null)
+                        }
                     }
+                } else {
+                    // Now check if user previously set categories, when available
+                    val categories = getCategories()
+                    val defaultCategoryId = libraryPreferences.defaultAnimeCategory().get().toLong()
+                    val defaultCategory = categories.find { it.id == defaultCategoryId }
+                    when {
+                        // Default category set
+                        defaultCategory != null -> {
+                            val result = updateAnime.awaitUpdateFavorite(anime.id, true)
+                            if (!result) return@launchIO
+                            moveAnimeToCategory(defaultCategory)
+                        }
 
-                    // Choose a category
-                    else -> {
-                        isFromChangeCategory = true
-                        showChangeCategoryDialog()
+                        // Automatic 'Default' or no categories
+                        defaultCategoryId == 0L || categories.isEmpty() -> {
+                            val result = updateAnime.awaitUpdateFavorite(anime.id, true)
+                            if (!result) return@launchIO
+                            moveAnimeToCategory(null)
+                        }
+
+                        // Choose a category
+                        else -> {
+                            isFromChangeCategory = true
+                            showChangeCategoryDialog()
+                        }
                     }
                 }
 
@@ -466,10 +517,12 @@ class AnimeScreenModel(
 
     fun moveAnimeToCategoriesAndAddToLibrary(anime: Anime, categories: List<Long>) {
         moveAnimeToCategory(categories)
-        if (anime.favorite) return
 
         screenModelScope.launchIO {
-            updateAnime.awaitUpdateFavorite(anime.id, true)
+            if (!anime.favorite) {
+                updateAnime.awaitUpdateFavorite(anime.id, true)
+            }
+            applyJikanCategoriesToAnime(anime)
         }
     }
 
@@ -496,6 +549,26 @@ class AnimeScreenModel(
      */
     private fun moveAnimeToCategory(category: Category?) {
         moveAnimeToCategories(listOfNotNull(category))
+    }
+
+    fun markAnimeCompleted() {
+        val state = successState ?: return
+        screenModelScope.launchIO {
+            val completedCategory = getOrCreateCompletedAnimeCategory() ?: return@launchIO
+            val episodes = getEpisodesByAnimeId.await(state.anime.id)
+            episodes
+                .filterNot { it.seen }
+                .map { EpisodeUpdate(id = it.id, seen = true, lastSecondSeen = 0L) }
+                .let { updateEpisode.awaitAll(it) }
+            setAnimeCategories.await(state.anime.id, listOf(completedCategory.id))
+        }
+    }
+
+    private suspend fun getOrCreateCompletedAnimeCategory(): Category? {
+        val completedCategoryName = context.stringResource(MR.strings.kitsux_category_completed)
+        getCategories().find { it.name.isCompletedCategoryName(completedCategoryName) }?.let { return it }
+        createAnimeCategoryWithName.await(completedCategoryName)
+        return getCategories().find { it.name.isCompletedCategoryName(completedCategoryName) }
     }
 
     // Anime info - end
@@ -1572,6 +1645,54 @@ class AnimeScreenModel(
         updateSuccessState { it.copy(dialog = Dialog.ShowQualities(episode, it.anime, it.source)) }
     }
 
+    private suspend fun applyJikanCategoriesToAnime(anime: Anime): Boolean {
+        if (!uiPreferences.autoCategorizeLibrary().get()) return false
+        val genres = fetchJikanGenresForAnime(anime.title) ?: return false
+        val assignedCategories = genres.mapNotNull { genreName ->
+            getOrCreateJikanAnimeCategory(genreName)
+        }
+        if (assignedCategories.isEmpty()) return false
+
+        setAnimeCategories.await(anime.id, assignedCategories.map { it.id })
+        return true
+    }
+
+    private suspend fun getOrCreateJikanAnimeCategory(genreName: String): Category? {
+        getCategories().find { it.name.equals(genreName, ignoreCase = true) }?.let { return it }
+        createAnimeCategoryWithName.await(genreName)
+        return getCategories().find { it.name.equals(genreName, ignoreCase = true) }
+    }
+
+    private suspend fun fetchJikanGenresForAnime(title: String): List<String>? {
+        val normalizedTitle = title.trim()
+        if (normalizedTitle.isBlank()) return null
+
+        return try {
+            val encodedTitle = URLEncoder.encode(normalizedTitle, "UTF-8")
+            val response = networkHelper.client
+                .newCall(GET("https://api.jikan.moe/v4/anime?q=$encodedTitle&limit=1"))
+                .awaitSuccess()
+            val parsed = jikanJson.decodeFromString<JikanAnimeSearchResponse>(response.body.string())
+            parsed.data
+                .firstOrNull()
+                ?.genres
+                ?.mapNotNull { normalizeJikanCategoryGenre(it.name) }
+                ?.distinctBy { it.lowercase() }
+                ?.takeIf { it.isNotEmpty() }
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e) { "Failed to resolve Jikan genres for '$title'" }
+            null
+        }
+    }
+
+    private fun normalizeJikanCategoryGenre(genre: String): String? {
+        val normalized = genre.trim()
+            .lowercase()
+            .replace("-", " ")
+            .replace(Regex("\\s+"), " ")
+        return JIKAN_CATEGORY_GENRES[normalized]
+    }
+
     sealed interface State {
         @Immutable
         data object Loading : State
@@ -1580,9 +1701,9 @@ class AnimeScreenModel(
         data class Success(
             val anime: Anime,
             val source: AnimeSource,
-            val isFromSource: Boolean,
-            val episodes: List<EpisodeList.Item>,
-            val seasons: List<AnimeSeasonItem>,
+        val isFromSource: Boolean,
+        val episodes: List<EpisodeList.Item>,
+        val seasons: List<AnimeSeasonItem>,
             val trackingCount: Int = 0,
             val hasLoggedInTrackers: Boolean = false,
             val isRefreshingData: Boolean = false,
@@ -1709,6 +1830,53 @@ class AnimeScreenModel(
         }
     }
 }
+
+private const val COMPLETED_CATEGORY_NAME = "Terminados"
+
+private fun String.isCompletedCategoryName(localizedName: String): Boolean {
+    return equals(localizedName, ignoreCase = true) ||
+        equals(COMPLETED_CATEGORY_NAME, ignoreCase = true) ||
+        equals("Terminado", ignoreCase = true)
+}
+
+private val jikanJson = Json { ignoreUnknownKeys = true }
+
+private val JIKAN_CATEGORY_GENRES = mapOf(
+    "action" to "Action",
+    "adventure" to "Adventure",
+    "avant garde" to "Avant Garde",
+    "award winning" to "Award Winning",
+    "boys love" to "Boys Love",
+    "comedy" to "Comedy",
+    "drama" to "Drama",
+    "fantasy" to "Fantasy",
+    "girls love" to "Girls Love",
+    "gourmet" to "Gourmet",
+    "horror" to "Horror",
+    "mystery" to "Mystery",
+    "romance" to "Romance",
+    "sci fi" to "Sci-Fi",
+    "slice of life" to "Slice of Life",
+    "sports" to "Sports",
+    "supernatural" to "Supernatural",
+    "suspense" to "Suspense",
+)
+
+@Serializable
+private data class JikanAnimeSearchResponse(
+    val data: List<JikanAnimeSearchItem>,
+)
+
+@Serializable
+private data class JikanAnimeSearchItem(
+    val genres: List<JikanAnimeGenre> = emptyList(),
+)
+
+@Serializable
+private data class JikanAnimeGenre(
+    @SerialName("mal_id") val malId: Long? = null,
+    val name: String,
+)
 
 @Immutable
 sealed class EpisodeList {

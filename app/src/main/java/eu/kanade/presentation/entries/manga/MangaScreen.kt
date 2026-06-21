@@ -30,6 +30,18 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -117,6 +129,7 @@ fun MangaScreen(
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
     onEditCategoryClicked: (() -> Unit)?,
     onEditFetchIntervalClicked: (() -> Unit)?,
+    onMarkCompletedClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
 
     // For bottom action menu
@@ -170,6 +183,7 @@ fun MangaScreen(
             onDownloadActionClicked = onDownloadActionClicked,
             onEditCategoryClicked = onEditCategoryClicked,
             onEditIntervalClicked = onEditFetchIntervalClicked,
+            onMarkCompletedClicked = onMarkCompletedClicked,
             onMigrateClicked = onMigrateClicked,
             onMultiBookmarkClicked = onMultiBookmarkClicked,
             onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
@@ -206,6 +220,7 @@ fun MangaScreen(
             onDownloadActionClicked = onDownloadActionClicked,
             onEditCategoryClicked = onEditCategoryClicked,
             onEditIntervalClicked = onEditFetchIntervalClicked,
+            onMarkCompletedClicked = onMarkCompletedClicked,
             onMigrateClicked = onMigrateClicked,
             onMultiBookmarkClicked = onMultiBookmarkClicked,
             onMultiMarkAsReadClicked = onMultiMarkAsReadClicked,
@@ -252,6 +267,7 @@ private fun MangaScreenSmallImpl(
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
     onEditCategoryClicked: (() -> Unit)?,
     onEditIntervalClicked: (() -> Unit)?,
+    onMarkCompletedClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
     onSettingsClicked: (() -> Unit)?,
 
@@ -344,8 +360,10 @@ private fun MangaScreenSmallImpl(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         floatingActionButton = {
             val isFABVisible = remember(chapters) {
-                chapters.fastAny { !it.chapter.read } && !isAnySelected
-            }
+                derivedStateOf {
+                    chapters.fastAny { !it.chapter.read } && !isAnySelected && chapterListState.firstVisibleItemIndex > 1
+                }
+            }.value
             AnimatedVisibility(
                 visible = isFABVisible,
                 enter = fadeIn(),
@@ -354,7 +372,7 @@ private fun MangaScreenSmallImpl(
                 ExtendedFloatingActionButton(
                     text = {
                         val isReading = remember(state.chapters) {
-                            state.chapters.fastAny { it.chapter.read }
+                            state.chapters.fastAny { it.chapter.read || it.chapter.lastPageRead > 0L }
                         }
                         Text(
                             text = stringResource(if (isReading) MR.strings.action_resume else MR.strings.action_start),
@@ -409,18 +427,57 @@ private fun MangaScreenSmallImpl(
                         key = EntryScreenItem.ACTION_ROW,
                         contentType = EntryScreenItem.ACTION_ROW,
                     ) {
-                        MangaActionRow(
-                            favorite = state.manga.favorite,
-                            trackingCount = state.trackingCount,
-                            nextUpdate = nextUpdate,
-                            isUserIntervalMode = state.manga.fetchInterval < 0,
-                            onAddToLibraryClicked = onAddToLibraryClicked,
-                            onWebViewClicked = onWebViewClicked,
-                            onWebViewLongClicked = onWebViewLongClicked,
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            if (chapters.isNotEmpty()) {
+                                val isReading = remember(state.chapters) {
+                                    state.chapters.fastAny { it.chapter.read || it.chapter.lastPageRead > 0L }
+                                }
+                                Button(
+                                    onClick = onContinueReading,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFE50914), // KitsuX Red
+                                        contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(4.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(48.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.PlayArrow,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = if (isReading) "Reanudar lectura" else "Empezar a leer",
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = 0.5.sp
+                                        )
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                            MangaActionRow(
+                                favorite = state.manga.favorite,
+                                trackingCount = state.trackingCount,
+                                nextUpdate = nextUpdate,
+                                isUserIntervalMode = state.manga.fetchInterval < 0,
+                                onAddToLibraryClicked = onAddToLibraryClicked,
+                                onWebViewClicked = onWebViewClicked,
+                                onWebViewLongClicked = onWebViewLongClicked,
                             onTrackingClicked = onTrackingClicked,
                             onEditIntervalClicked = onEditIntervalClicked,
                             onEditCategory = onEditCategoryClicked,
+                            onMarkCompletedClicked = onMarkCompletedClicked,
+                            modifier = Modifier
                         )
+                        }
                     }
 
                     item(
@@ -501,6 +558,7 @@ fun MangaScreenLargeImpl(
     onDownloadActionClicked: ((DownloadAction) -> Unit)?,
     onEditCategoryClicked: (() -> Unit)?,
     onEditIntervalClicked: (() -> Unit)?,
+    onMarkCompletedClicked: (() -> Unit)?,
     onMigrateClicked: (() -> Unit)?,
     onSettingsClicked: (() -> Unit)?,
 
@@ -601,7 +659,7 @@ fun MangaScreenLargeImpl(
                 ExtendedFloatingActionButton(
                     text = {
                         val isReading = remember(state.chapters) {
-                            state.chapters.fastAny { it.chapter.read }
+                            state.chapters.fastAny { it.chapter.read || it.chapter.lastPageRead > 0L }
                         }
                         Text(
                             text = stringResource(
@@ -654,10 +712,11 @@ fun MangaScreenLargeImpl(
                             onAddToLibraryClicked = onAddToLibraryClicked,
                             onWebViewClicked = onWebViewClicked,
                             onWebViewLongClicked = onWebViewLongClicked,
-                            onTrackingClicked = onTrackingClicked,
-                            onEditIntervalClicked = onEditIntervalClicked,
-                            onEditCategory = onEditCategoryClicked,
-                        )
+                                onTrackingClicked = onTrackingClicked,
+                                onEditIntervalClicked = onEditIntervalClicked,
+                                onEditCategory = onEditCategoryClicked,
+                                onMarkCompletedClicked = onMarkCompletedClicked,
+                            )
                         ExpandableMangaDescription(
                             defaultExpandState = true,
                             description = state.manga.description,

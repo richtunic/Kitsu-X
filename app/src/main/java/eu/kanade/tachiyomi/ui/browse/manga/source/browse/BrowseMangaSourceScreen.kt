@@ -295,6 +295,16 @@ data class BrowseMangaSourceScreen(
                     entryToRemove = dialog.manga.title,
                 )
             }
+            is BrowseMangaSourceScreenModel.Dialog.EasterEgg -> {
+                eu.kanade.tachiyomi.ui.browse.EasterEggHelper.EasterEggDialog(
+                    message = dialog.message,
+                    onConfirm = {
+                        screenModel.setDialog(null)
+                        screenModel.search(force = true)
+                    },
+                    onDismiss = onDismissRequest,
+                )
+            }
             is BrowseMangaSourceScreenModel.Dialog.ChangeMangaCategory -> {
                 ChangeCategoryDialog(
                     initialSelection = dialog.initialSelection,
