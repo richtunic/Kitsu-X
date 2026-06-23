@@ -9,7 +9,8 @@
 ### Reproductor de anime y lector de manga optimizado para Android, basado en Mihon/Aniyomi.
 *Descubre, reproduce y lee tu contenido favorito en una app fluida, automatizada y libre de bloqueos.*
 
-[![GitHub Downloads](https://img.shields.io/github/downloads/richtunic/Kitsu-X/total?label=Downloads&labelColor=24292e&color=2ea44f&logo=github&logoColor=FFFFFF)](https://github.com/richtunic/Kitsu-X/releases)
+[![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=FFFFFF)](https://discord.gg/uHY7TpZdZ)
+[![GitHub Downloads](https://img.shields.io/badge/Downloads-Releases-2ea44f?logo=github&logoColor=FFFFFF)](https://github.com/richtunic/Kitsu-X/releases)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg?labelColor=24292e&color=0366d6)](./LICENSE)
 
 ---
