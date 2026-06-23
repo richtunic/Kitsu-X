@@ -85,6 +85,7 @@ import eu.kanade.tachiyomi.data.download.manga.MangaDownloadCache
 import eu.kanade.tachiyomi.data.notification.NotificationReceiver
 import eu.kanade.tachiyomi.data.updater.AppUpdateChecker
 import eu.kanade.tachiyomi.data.updater.RELEASE_URL
+import eu.kanade.tachiyomi.data.updater.localizedReleaseInfo
 import eu.kanade.tachiyomi.extension.anime.api.AnimeExtensionApi
 import eu.kanade.tachiyomi.extension.manga.api.MangaExtensionApi
 import eu.kanade.tachiyomi.ui.base.activity.BaseActivity
@@ -331,8 +332,7 @@ class MainActivity : BaseActivity() {
                                     .parseAs<GithubRelease>()
                             }
                         }
-                        val cleanInfo = response.info.replace("""---(\R|.)*Checksums(\R|.)*""".toRegex(), "")
-                        changelogText = cleanInfo
+                            changelogText = context.localizedReleaseInfo(response.info)
                     } catch (e: Exception) {
                         logcat(LogPriority.ERROR, e)
                     } finally {

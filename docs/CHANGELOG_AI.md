@@ -1,5 +1,40 @@
 # CHANGELOG_AI
 
+Fecha: 2026-06-23
+Tarea: Release KitsuX 1.0.4 con changelog bilingue localizado
+Cambios:
+- Bump de version estable a `versionName = 1.0.4` y `versionCode = 5`.
+- Se agrego selector de release notes por idioma: `## es` para usuarios con app en espanol y `## en` para cualquier otro idioma.
+- La pantalla de nueva version y el dialogo post-update reutilizan el mismo selector de changelog.
+Archivos:
+- [app/build.gradle.kts](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/build.gradle.kts)
+- [ReleaseNotes.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/data/updater/ReleaseNotes.kt)
+- [MainActivity.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/ui/main/MainActivity.kt)
+- [NewUpdateScreen.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/ui/more/NewUpdateScreen.kt)
+Validacion:
+- `./gradlew :app:compileDebugKotlin` ejecutado correctamente.
+- `./gradlew :app:assembleRelease` ejecutado correctamente.
+Notas:
+- Las notas de GitHub Release deben mantener secciones markdown `## es` y `## en`.
+
+---
+
+Fecha: 2026-06-23
+Tarea: Adaptar sistema de actualizaciones Android por GitHub Releases para KitsuX
+Cambios:
+- El updater existente ahora usa el `name` del GitHub Release como versión limpia de la app, con fallback al `tag_name` sin prefijo `v`.
+- La selección del APK de actualización ahora recorre todas las ABIs soportadas por el dispositivo.
+- Se agregó fallback a APK `universal` y, como último recurso, al primer asset `.apk` disponible.
+Archivos:
+- [GithubRelease.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/data/src/main/java/tachiyomi/data/release/GithubRelease.kt)
+- [ReleaseServiceImpl.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/data/src/main/java/tachiyomi/data/release/ReleaseServiceImpl.kt)
+Validación:
+- `./gradlew :data:compileDebugKotlin` ejecutado correctamente.
+Notas:
+- No se agregaron dependencias ni nueva UI. Se reutiliza el updater heredado de Aniyomi/Tachiyomi ya integrado con WorkManager, notificaciones y `FileProvider`.
+
+---
+
 Fecha: 2026-06-20
 Tarea: KitsuX MVP Fase 1: Build & Rebrand
 Cambios:

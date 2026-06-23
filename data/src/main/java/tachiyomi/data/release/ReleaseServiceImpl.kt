@@ -25,7 +25,7 @@ class ReleaseServiceImpl(
         val downloadLink = getDownloadLink(release = release) ?: return null
 
         return Release(
-            version = release.version,
+            version = release.versionName,
             info = release.info.replace(gitHubUsernameMentionRegex) { mention ->
                 "[${mention.value}](https://github.com/${mention.value.substring(1)})"
             },
@@ -35,15 +35,24 @@ class ReleaseServiceImpl(
     }
 
     private fun getDownloadLink(release: GithubRelease): String? {
-        val map = release.assets.associate { asset ->
-            BUILD_TYPES.find { "-$it" in asset.name } to asset.downloadLink
-        }
+        val apkAssets = release.assets.filter { it.name.endsWith(".apk", ignoreCase = true) }
 
-        return map[Build.SUPPORTED_ABIS[0]] ?: map[null]
+        return Build.SUPPORTED_ABIS.firstNotNullOfOrNull { abi ->
+            apkAssets.firstOrNull { asset ->
+                asset.name.contains(abi, ignoreCase = true)
+            }?.downloadLink
+        }
+            ?: apkAssets.firstOrNull { asset ->
+                asset.name.contains("universal", ignoreCase = true)
+            }?.downloadLink
+            ?: apkAssets.firstOrNull()?.downloadLink
     }
 
     companion object {
-        private val BUILD_TYPES = listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
+        private val GithubRelease.versionName: String
+            get() = name
+                ?.takeIf { it.isNotBlank() }
+                ?: version.removePrefix("v")
 
         /**
          * Regular expression that matches a mention to a valid GitHub username, like it's

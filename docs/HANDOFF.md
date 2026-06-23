@@ -1,5 +1,23 @@
 # HANDOFF
 
+## Nota técnica: updates Android KitsuX
+El sistema de actualizaciones reutiliza el updater heredado de Aniyomi/Tachiyomi y consulta GitHub Releases según build type:
+- Stable: `richtunic/Kitsu-X`
+- Preview: `richtunic/Kitsu-X-preview`
+
+Contrato de publicación:
+- `tag_name`: usar prefijo `v`, por ejemplo `v1.0.5`.
+- `name`: usar versión limpia igual a `versionName`, por ejemplo `1.0.5`.
+- Assets: subir APKs con la ABI en el nombre (`arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86`) y opcionalmente un APK `universal`.
+
+La selección del APK recorre `Build.SUPPORTED_ABIS`, cae a `universal` si no hay match y finalmente al primer `.apk` disponible. No se agregaron canales configurables por usuario en esta fase; si se retoman, hacerlo como fase separada con preferencias y UI en ajustes.
+
+Release notes:
+- Publicar siempre body bilingue con secciones `## es` y `## en`.
+- La app muestra solo `## es` cuando el idioma configurado es espanol.
+- Para cualquier otro idioma la app muestra `## en`.
+- Si falta la seccion esperada, cae a `## en` y luego al body completo.
+
 ## Nota técnica: i18n KitsuX
 Las adaptaciones de KitsuX deben usar recursos `MR.strings.*`/`AYMR.strings.*` y no textos hardcodeados en Compose o ScreenModels. Las claves nuevas se agregan en `i18n/src/commonMain/moko-resources/base/strings.xml`; español se mantiene en `i18n/src/commonMain/moko-resources/es/strings.xml`; el resto de idiomas heredan base hasta que sean traducidos por el flujo normal.
 
