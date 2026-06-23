@@ -1064,4 +1064,5 @@
     <string name="kitsux_easter_quintuplets_3">Five routes, one heart, endless arguments.</string>
     <string name="kitsux_easter_quintuplets_4">Please keep the best-girl debate civil.</string>
     <string name="donate_kofi">Support on Ko-fi</string>
+    <string name="kitsux_changelog_content">Features and improvements in this version:\n\n• Complete Rebranding: Kitsu X is the evolution of Aniyomi with a premium look and Outfit font.\n• Smart Auto-Categorization: Automatically sort your library by genres using the Jikan API.\n• Improved Cloudflare Bypass: Default User-Agent set to Brave to resolve anime source blocks.\n• Enhanced Library Updates: Support for background progress notifications and pull-to-refresh on the home screen.\n• Smarter App Updates: Snooze update reminders (\'Not Now\') for 5 days.\n• Funny Easter Eggs: Discover witty commentary when searching for certain series in global search.\n• UI Enhancements: Reorganized Ko-fi donation button and corrected Discord link in About section.</string>
 </resources>

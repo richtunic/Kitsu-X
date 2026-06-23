@@ -19,6 +19,11 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.unit.dp
+import eu.kanade.tachiyomi.App
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -284,7 +289,7 @@ class MainActivity : BaseActivity() {
                 ShowOnboarding()
             }
 
-            var showChangelog by remember { mutableStateOf(didMigration && !BuildConfig.DEBUG) }
+            var showChangelog by remember { mutableStateOf(didMigration && App.isUpgrade && !BuildConfig.DEBUG) }
             if (showChangelog) {
                 AlertDialog(
                     onDismissRequest = { showChangelog = false },
@@ -292,6 +297,18 @@ class MainActivity : BaseActivity() {
                         Text(
                             text = stringResource(MR.strings.updated_version, BuildConfig.VERSION_NAME),
                         )
+                    },
+                    text = {
+                        Column(
+                            modifier = Modifier
+                                .verticalScroll(rememberScrollState())
+                                .padding(vertical = 8.dp),
+                        ) {
+                            Text(
+                                text = stringResource(MR.strings.kitsux_changelog_content),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
+                        }
                     },
                     dismissButton = {
                         TextButton(onClick = { openInBrowser(RELEASE_URL) }) {

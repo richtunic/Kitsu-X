@@ -164,15 +164,24 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
             LogcatLogger.install(AndroidLogcatLogger(LogPriority.VERBOSE))
         }
 
+        // Migrate old default User-Agent if stored in preferences
+        val preferenceStore = Injekt.get<PreferenceStore>()
+        val defaultUserAgentPref = preferenceStore.getString("default_user_agent", "Brave 1.62.152, Chromium 121.0.6167.101")
+        if (defaultUserAgentPref.get() == "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0") {
+            defaultUserAgentPref.set("Brave 1.62.152, Chromium 121.0.6167.101")
+        }
+
         initializeMigrator()
     }
 
     private fun initializeMigrator() {
         val preferenceStore = Injekt.get<PreferenceStore>()
         val preference = preferenceStore.getInt(Preference.appStateKey("last_version_code"), 0)
-        logcat { "Migration from ${preference.get()} to ${BuildConfig.VERSION_CODE}" }
+        val oldVersion = preference.get()
+        isUpgrade = oldVersion > 0
+        logcat { "Migration from $oldVersion to ${BuildConfig.VERSION_CODE}" }
         Migrator.initialize(
-            old = preference.get(),
+            old = oldVersion,
             new = BuildConfig.VERSION_CODE,
             migrations = migrations,
             onMigrationComplete = {
@@ -271,6 +280,10 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
                 registered = false
             }
         }
+    }
+
+    companion object {
+        var isUpgrade: Boolean = false
     }
 }
 
