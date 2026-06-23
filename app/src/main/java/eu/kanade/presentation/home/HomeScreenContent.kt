@@ -28,10 +28,21 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
+import tachiyomi.presentation.core.components.material.PullRefresh
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,6 +69,7 @@ fun HomeScreenContent(
     onItemClick: (KitsuXMediaItem) -> Unit,
     onHeroClick: (KitsuXMediaItem) -> Unit,
     onContinueClick: (ContinueWatchingItem) -> Unit,
+    onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (state.isLoading) {
@@ -75,98 +87,109 @@ fun HomeScreenContent(
         return
     }
 
-    if (state.continueWatching.isEmpty() && state.newReleases.isEmpty() && state.categories.isEmpty()) {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(Color(0xFF000000))
-                .padding(32.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "🍿",
-                    fontSize = 64.sp
-                )
-                Text(
-                            text = stringResource(MR.strings.kitsux_home_empty_library_title),
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.1.sp
-                    ),
-                    color = Color.White,
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                            text = stringResource(MR.strings.kitsux_home_empty_library_description),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-            }
-        }
-        return
-    }
+    val scope = rememberCoroutineScope()
+    var isRefreshing by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color(0xFF000000))
+    PullRefresh(
+        refreshing = isRefreshing,
+        enabled = true,
+        onRefresh = {
+            onRefresh()
+            scope.launch {
+                isRefreshing = true
+                delay(1.seconds)
+                isRefreshing = false
+            }
+        },
+        modifier = modifier,
     ) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 16.dp),
-        ) {
-            // Spacer to avoid status bar overlap and add premium top spacing
-            item {
-                Spacer(modifier = Modifier.statusBarsPadding().height(24.dp))
-            }
-
-            // Hero Banner Section (Slider)
-            if (state.heroBannerItems.isNotEmpty()) {
-                item {
-                    HeroBannerSection(
-                        items = state.heroBannerItems,
-                        onClick = onHeroClick,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        if (state.continueWatching.isEmpty() && state.newReleases.isEmpty() && state.categories.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xFF000000))
+                    .verticalScroll(rememberScrollState())
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "🍿",
+                        fontSize = 64.sp
+                    )
+                    Text(
+                        text = stringResource(MR.strings.kitsux_home_empty_library_title),
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.1.sp
+                        ),
+                        color = Color.White,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = stringResource(MR.strings.kitsux_home_empty_library_description),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
             }
-
-            // 1. Continue Watching Row
-            if (state.continueWatching.isNotEmpty()) {
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 16.dp),
+            ) {
+                // Spacer to avoid status bar overlap and add premium top spacing
                 item {
-                    ContinueWatchingSection(
-                        items = state.continueWatching,
-                        onContinueClick = onContinueClick,
-                    )
+                    Spacer(modifier = Modifier.statusBarsPadding().height(24.dp))
                 }
-            }
 
-            if (state.newReleases.isNotEmpty()) {
-                item {
-                    ContinueWatchingSection(
-                        title = stringResource(MR.strings.kitsux_home_new_episodes_chapters),
-                        items = state.newReleases,
-                        onContinueClick = onContinueClick,
-                    )
-                }
-            }
-
-            // 2. Custom Category Rows
-            state.categories.forEach { categoryRow ->
-                if (categoryRow.items.isNotEmpty()) {
-                    item(key = categoryRow.name) {
-                        MediaSection(
-                            title = categoryRow.name,
-                            items = categoryRow.items,
-                            onItemClick = onItemClick,
+                // Hero Banner Section (Slider)
+                if (state.heroBannerItems.isNotEmpty()) {
+                    item {
+                        HeroBannerSection(
+                            items = state.heroBannerItems,
+                            onClick = onHeroClick,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                         )
+                    }
+                }
+
+                // 1. Continue Watching Row
+                if (state.continueWatching.isNotEmpty()) {
+                    item {
+                        ContinueWatchingSection(
+                            items = state.continueWatching,
+                            onContinueClick = onContinueClick,
+                        )
+                    }
+                }
+
+                if (state.newReleases.isNotEmpty()) {
+                    item {
+                        ContinueWatchingSection(
+                            title = stringResource(MR.strings.kitsux_home_new_episodes_chapters),
+                            items = state.newReleases,
+                            onContinueClick = onContinueClick,
+                        )
+                    }
+                }
+
+                // 2. Custom Category Rows
+                state.categories.forEach { categoryRow ->
+                    if (categoryRow.items.isNotEmpty()) {
+                        item(key = categoryRow.name) {
+                            MediaSection(
+                                title = categoryRow.name,
+                                items = categoryRow.items,
+                                onItemClick = onItemClick,
+                            )
+                        }
                     }
                 }
             }

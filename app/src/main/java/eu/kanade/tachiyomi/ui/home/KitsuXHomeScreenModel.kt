@@ -36,6 +36,10 @@ import tachiyomi.domain.items.episode.interactor.GetEpisodesByAnimeId
 import tachiyomi.domain.items.chapter.interactor.GetChaptersByMangaId
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.manga.MangaDownloadManager
+import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.manga.MangaLibraryUpdateJob
+import logcat.LogPriority
+import tachiyomi.core.common.util.system.logcat
 import eu.kanade.tachiyomi.util.episode.getNextUnseen
 import eu.kanade.tachiyomi.util.chapter.getNextUnread
 import tachiyomi.domain.entries.anime.interactor.GetAnime
@@ -619,6 +623,20 @@ class KitsuXHomeScreenModel(
                         navigator.push(eu.kanade.tachiyomi.ui.entries.manga.MangaScreen(mangaId))
                     }
                 }
+            }
+        }
+    }
+
+    fun refresh() {
+        screenModelScope.launch {
+            try {
+                KitsuXIntelSystem.loadAllRecommendations()
+            } catch (e: Exception) {
+                logcat(LogPriority.ERROR, e) { "Failed to reload recommendations" }
+            }
+            withContext(Dispatchers.Main) {
+                AnimeLibraryUpdateJob.startNow(context)
+                MangaLibraryUpdateJob.startNow(context)
             }
         }
     }

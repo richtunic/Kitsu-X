@@ -83,6 +83,9 @@ data object KitsuXHomeTab : Tab {
             onContinueClick = { continueItem ->
                 screenModel.continueWatchingOrReading(context, continueItem, navigator)
             },
+            onRefresh = {
+                screenModel.refresh()
+            },
         )
     }
 }
