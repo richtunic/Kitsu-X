@@ -48,6 +48,8 @@ Para instalar Kitsu X, tu dispositivo debe contar con **Android 8.0 o superior**
 
 * 🤖 **Autocategorización Inteligente (Jikan API)**: 
   Organiza automáticamente tu biblioteca. Al agregar una obra o entrar a sus detalles, la app consulta la API de Jikan para clasificarla automáticamente por géneros en categorías personalizadas.
+* 🥚 **Easter Eggs Divertidos**:
+  ¿Buscas reírte un poco? Prueba buscando obras como "Rent a Girlfriend", "100 novias" o "quintillizas" en el buscador de la aplicación y recibe cómicos comentarios del equipo sobre tu amor propio y salud mental.
 
 ---
 
@@ -101,6 +103,8 @@ To run Kitsu X, your device must have **Android 8.0 or higher**.
 
 * 🤖 **Smart Auto-Categorization (Jikan API)**:
   Organize your library automatically. Upon adding an entry or opening its details, the app queries Jikan API to automatically sort it into categories based on its genres.
+* 🥚 **Funny Easter Eggs**:
+  Looking for a laugh? Try searching for series like "Rent a Girlfriend", "100 Girlfriends", or "Quintuplets" in the global search and prepare for some witty commentary about self-respect and sanity from the Kitsu X team.
 
 ---
 
