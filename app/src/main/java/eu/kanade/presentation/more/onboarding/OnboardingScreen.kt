@@ -39,6 +39,7 @@ fun OnboardingScreen(
                 HeroBannerStep(),
                 AutoCategorizationStep(),
                 ExtensionsRepoStep(onSuccess = { currentStep++ }),
+                InstallPermissionStep(),
                 NotificationPermissionStep(),
                 BatteryOptimizationStep(),
                 FinalStep(),

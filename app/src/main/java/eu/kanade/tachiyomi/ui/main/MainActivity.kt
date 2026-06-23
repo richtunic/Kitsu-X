@@ -107,6 +107,20 @@ import eu.kanade.tachiyomi.util.system.isNavigationBarNeedsScrim
 import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.system.updaterEnabled
+import eu.kanade.tachiyomi.network.GET
+import eu.kanade.tachiyomi.network.NetworkHelper
+import eu.kanade.tachiyomi.network.awaitSuccess
+import eu.kanade.tachiyomi.network.parseAs
+import kotlinx.serialization.json.Json
+import tachiyomi.core.common.util.lang.withIOContext
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.CircularProgressIndicator
+import com.halilibo.richtext.markdown.Markdown
+import com.halilibo.richtext.ui.RichTextStyle
+import com.halilibo.richtext.ui.material3.RichText
+import com.halilibo.richtext.ui.string.RichTextStringStyle
+import tachiyomi.data.release.GithubRelease
 import eu.kanade.tachiyomi.util.view.setComposeContent
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -290,7 +304,42 @@ class MainActivity : BaseActivity() {
             }
 
             var showChangelog by remember { mutableStateOf(didMigration && App.isUpgrade && !BuildConfig.DEBUG) }
+            var changelogText by remember { mutableStateOf<String?>(null) }
+            var isFetchingChangelog by remember { mutableStateOf(false) }
+
             if (showChangelog) {
+                LaunchedEffect(Unit) {
+                    isFetchingChangelog = true
+                    try {
+                        val networkHelper = Injekt.get<NetworkHelper>()
+                        val json = Injekt.get<Json>()
+                        val response = withIOContext {
+                            val repo = if (eu.kanade.tachiyomi.util.system.isPreviewBuildType) {
+                                "richtunic/Kitsu-X-preview"
+                            } else {
+                                "richtunic/Kitsu-X"
+                            }
+                            val tag = if (eu.kanade.tachiyomi.util.system.isPreviewBuildType) {
+                                "r${BuildConfig.COMMIT_COUNT}"
+                            } else {
+                                "v${BuildConfig.VERSION_NAME}"
+                            }
+                            with(json) {
+                                networkHelper.client
+                                    .newCall(GET("https://api.github.com/repos/$repo/releases/tags/$tag"))
+                                    .awaitSuccess()
+                                    .parseAs<GithubRelease>()
+                            }
+                        }
+                        val cleanInfo = response.info.replace("""---(\R|.)*Checksums(\R|.)*""".toRegex(), "")
+                        changelogText = cleanInfo
+                    } catch (e: Exception) {
+                        logcat(LogPriority.ERROR, e)
+                    } finally {
+                        isFetchingChangelog = false
+                    }
+                }
+
                 AlertDialog(
                     onDismissRequest = { showChangelog = false },
                     title = {
@@ -299,15 +348,35 @@ class MainActivity : BaseActivity() {
                         )
                     },
                     text = {
-                        Column(
+                        Box(
                             modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(max = 400.dp)
                                 .verticalScroll(rememberScrollState())
                                 .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center,
                         ) {
-                            Text(
-                                text = stringResource(MR.strings.kitsux_changelog_content),
-                                style = MaterialTheme.typography.bodyMedium,
-                            )
+                            if (isFetchingChangelog) {
+                                CircularProgressIndicator()
+                            } else {
+                                val textToShow = changelogText
+                                if (textToShow != null) {
+                                    RichText(
+                                        style = RichTextStyle(
+                                            stringStyle = RichTextStringStyle(
+                                                linkStyle = SpanStyle(color = MaterialTheme.colorScheme.primary),
+                                            ),
+                                        ),
+                                    ) {
+                                        Markdown(content = textToShow)
+                                    }
+                                } else {
+                                    Text(
+                                        text = stringResource(MR.strings.kitsux_changelog_content),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                    )
+                                }
+                            }
                         }
                     },
                     dismissButton = {
@@ -384,7 +453,7 @@ class MainActivity : BaseActivity() {
 
         // App updates
         LaunchedEffect(Unit) {
-            if (updaterEnabled) {
+            if (updaterEnabled && !BuildConfig.DEBUG) {
                 try {
                     val result = AppUpdateChecker().checkForUpdate(context, forceCheck = false)
                     if (result is GetApplicationRelease.Result.NewUpdate) {

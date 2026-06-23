@@ -768,6 +768,7 @@
     <string name="onboarding_permission_ignore_battery_opts_description">Evita interrupciones en las actualizaciones de las bibliotecas, descargas y restauraciones de copias de seguridad.</string>
     <string name="onboarding_permission_ignore_battery_opts">Uso de batería en segundo plano</string>
     <string name="onboarding_permission_install_apps_description">Para poder instalar extensiones que te dejen encontrar y descargar contenido.</string>
+    <string name="onboarding_permission_install_apps_granted">Instalación permitida</string>
     <string name="onboarding_permission_notifications_description">Recibe notificaciones sobre actualizaciones de la biblioteca y mucho más.</string>
     <string name="onboarding_permission_notifications_granted">Notificaciones permitidas</string>
     <string name="onboarding_permission_action_grant">Conceder</string>

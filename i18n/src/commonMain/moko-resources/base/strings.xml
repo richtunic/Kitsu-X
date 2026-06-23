@@ -187,6 +187,7 @@
     <string name="onboarding_storage_help_action">Storage guide</string>
     <string name="onboarding_permission_install_apps">Install apps permission</string>
     <string name="onboarding_permission_install_apps_description">To install source extensions.</string>
+    <string name="onboarding_permission_install_apps_granted">Installation allowed</string>
     <string name="onboarding_permission_notifications">Notification permission</string>
     <string name="onboarding_permission_notifications_description">Get notified for library updates and more.</string>
     <string name="onboarding_permission_notifications_granted">Notifications allowed</string>

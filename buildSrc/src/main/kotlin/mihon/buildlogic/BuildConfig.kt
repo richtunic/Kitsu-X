@@ -9,7 +9,7 @@ interface BuildConfig {
 }
 
 val Project.Config: BuildConfig get() = object : BuildConfig {
-    override val enableUpdater: Boolean = project.hasProperty("enable-updater")
+    override val enableUpdater: Boolean = !project.hasProperty("disable-updater")
     override val enableCodeShrink: Boolean = !project.hasProperty("disable-code-shrink")
     override val includeDependencyInfo: Boolean = project.hasProperty("include-dependency-info")
 }
