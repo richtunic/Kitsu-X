@@ -9,6 +9,10 @@ import eu.kanade.presentation.more.NewUpdateScreen
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.data.updater.AppUpdateDownloadJob
 import eu.kanade.tachiyomi.util.system.openInBrowser
+import tachiyomi.core.common.preference.Preference
+import tachiyomi.core.common.preference.PreferenceStore
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 class NewUpdateScreen(
     private val versionName: String,
@@ -21,6 +25,7 @@ class NewUpdateScreen(
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
+        val preferenceStore = remember { Injekt.get<PreferenceStore>() }
         val changelogInfoNoChecksum = remember {
             changelogInfo.replace("""---(\R|.)*Checksums(\R|.)*""".toRegex(), "")
         }
@@ -29,7 +34,11 @@ class NewUpdateScreen(
             versionName = versionName,
             changelogInfo = changelogInfoNoChecksum,
             onOpenInBrowser = { context.openInBrowser(releaseLink) },
-            onRejectUpdate = navigator::pop,
+            onRejectUpdate = {
+                preferenceStore.getString(Preference.appStateKey("last_skipped_version")).set(versionName)
+                preferenceStore.getLong(Preference.appStateKey("last_skipped_time")).set(System.currentTimeMillis())
+                navigator.pop()
+            },
             onAcceptUpdate = {
                 AppUpdateDownloadJob.start(
                     context = context,

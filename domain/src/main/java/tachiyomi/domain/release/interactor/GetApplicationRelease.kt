@@ -39,9 +39,25 @@ class GetApplicationRelease(
             arguments.versionName,
             release.version,
         )
-        return when {
-            isNewVersion -> Result.NewUpdate(release)
-            else -> Result.NoNewUpdate
+        return if (isNewVersion) {
+            if (!arguments.forceCheck) {
+                val skippedVersion = preferenceStore.getString(Preference.appStateKey("last_skipped_version"), "").get()
+                if (release.version == skippedVersion) {
+                    val skippedTime = preferenceStore.getLong(Preference.appStateKey("last_skipped_time"), 0L).get()
+                    val fiveDaysAgo = now.minus(5, ChronoUnit.DAYS).toEpochMilli()
+                    if (skippedTime > fiveDaysAgo) {
+                        Result.NoNewUpdate
+                    } else {
+                        Result.NewUpdate(release)
+                    }
+                } else {
+                    Result.NewUpdate(release)
+                }
+            } else {
+                Result.NewUpdate(release)
+            }
+        } else {
+            Result.NoNewUpdate
         }
     }
 
