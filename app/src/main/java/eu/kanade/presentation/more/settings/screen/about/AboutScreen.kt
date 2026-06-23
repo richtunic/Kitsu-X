@@ -183,6 +183,25 @@ object AboutScreen : Screen() {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        AsyncImage(
+                            model = "https://storage.ko-fi.com/cdn/kofi3.png?v=6",
+                            contentDescription = stringResource(MR.strings.donate_kofi),
+                            modifier = Modifier
+                                .height(40.dp)
+                                .clickable {
+                                    uriHandler.openUri("https://ko-fi.com/relampagonegr0")
+                                },
+                        )
+                    }
+                }
+
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
                             .padding(vertical = 8.dp),
                         horizontalArrangement = Arrangement.Center,
                     ) {
@@ -200,25 +219,6 @@ object AboutScreen : Screen() {
                             label = "GitHub",
                             icon = CustomIcons.Github,
                             url = "https://github.com/richtunic/Kitsu-X",
-                        )
-                    }
-                }
-
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 12.dp),
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                        AsyncImage(
-                            model = "https://storage.ko-fi.com/cdn/kofi3.png?v=6",
-                            contentDescription = stringResource(MR.strings.donate_kofi),
-                            modifier = Modifier
-                                .height(40.dp)
-                                .clickable {
-                                    uriHandler.openUri("https://ko-fi.com/relampagonegr0")
-                                },
                         )
                     }
                 }
