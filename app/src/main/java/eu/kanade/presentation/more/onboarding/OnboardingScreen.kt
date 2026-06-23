@@ -39,6 +39,7 @@ fun OnboardingScreen(
                 HeroBannerStep(),
                 AutoCategorizationStep(),
                 ExtensionsRepoStep(onSuccess = { currentStep++ }),
+                NotificationPermissionStep(),
                 BatteryOptimizationStep(),
                 FinalStep(),
             )
@@ -47,9 +48,9 @@ fun OnboardingScreen(
 
     BackHandler(enabled = currentStep != 0, onBack = { currentStep-- })
 
-    val acceptText = when (currentStep) {
-        4 -> "Omitir"
-        6 -> "Comenzar"
+    val acceptText = when (steps[currentStep]) {
+        is ExtensionsRepoStep -> "Omitir"
+        is FinalStep -> "Comenzar"
         else -> stringResource(MR.strings.onboarding_action_next)
     }
 
