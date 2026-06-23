@@ -1,6 +1,13 @@
 package eu.kanade.tachiyomi.ui.library.anime
 
+import android.Manifest
+import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.PermissionChecker
 import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
@@ -101,14 +108,44 @@ data object AnimeLibraryTab : Tab {
         val state by screenModel.state.collectAsState()
 
         val snackbarHostState = remember { SnackbarHostState() }
+        var pendingCategoryToRefresh by remember { mutableStateOf<Category?>(null) }
+
+        val permissionLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission(),
+        ) { isGranted ->
+            if (isGranted) {
+                val started = AnimeLibraryUpdateJob.startNow(context, pendingCategoryToRefresh)
+                scope.launch {
+                    val msgRes = if (started) MR.strings.updating_category else MR.strings.update_already_running
+                    snackbarHostState.showSnackbar(context.stringResource(msgRes))
+                }
+            } else {
+                val started = AnimeLibraryUpdateJob.startNow(context, pendingCategoryToRefresh)
+                scope.launch {
+                    val msgRes = if (started) MR.strings.updating_category else MR.strings.update_already_running
+                    snackbarHostState.showSnackbar(context.stringResource(msgRes))
+                }
+            }
+        }
 
         val onClickRefresh: (Category?) -> Boolean = { category ->
-            val started = AnimeLibraryUpdateJob.startNow(context, category)
-            scope.launch {
-                val msgRes = if (started) MR.strings.updating_category else MR.strings.update_already_running
-                snackbarHostState.showSnackbar(context.stringResource(msgRes))
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                PermissionChecker.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS,
+                ) != PermissionChecker.PERMISSION_GRANTED
+            ) {
+                pendingCategoryToRefresh = category
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                false
+            } else {
+                val started = AnimeLibraryUpdateJob.startNow(context, category)
+                scope.launch {
+                    val msgRes = if (started) MR.strings.updating_category else MR.strings.update_already_running
+                    snackbarHostState.showSnackbar(context.stringResource(msgRes))
+                }
+                started
             }
-            started
         }
 
         suspend fun openEpisode(episode: Episode) {

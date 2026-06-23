@@ -1,12 +1,17 @@
 package eu.kanade.tachiyomi.ui.updates.manga
 
+import android.Manifest
 import android.content.Context
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.FlipToBack
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.runtime.Composable
+import androidx.core.content.PermissionChecker
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,6 +45,13 @@ fun Screen.mangaUpdatesTab(
 ): TabContent {
     val navigator = LocalNavigator.currentOrThrow
     val screenModel = rememberScreenModel { MangaUpdatesScreenModel() }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+    ) { isGranted ->
+        if (isGranted) {
+            screenModel.updateLibrary()
+        }
+    }
     val state by screenModel.state.collectAsState()
 
     val scope = rememberCoroutineScope()
@@ -66,7 +78,19 @@ fun Screen.mangaUpdatesTab(
                 onClickCover = { item -> navigator.push(MangaScreen(item.update.mangaId)) },
                 onSelectAll = screenModel::toggleAllSelection,
                 onInvertSelection = screenModel::invertSelection,
-                onUpdateLibrary = screenModel::updateLibrary,
+                onUpdateLibrary = {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                        PermissionChecker.checkSelfPermission(
+                            context,
+                            Manifest.permission.POST_NOTIFICATIONS,
+                        ) != PermissionChecker.PERMISSION_GRANTED
+                    ) {
+                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        false
+                    } else {
+                        screenModel.updateLibrary()
+                    }
+                },
                 onDownloadChapter = screenModel::downloadChapters,
                 onMultiBookmarkClicked = screenModel::bookmarkUpdates,
                 onMultiMarkAsReadClicked = screenModel::markUpdatesRead,
@@ -152,7 +176,18 @@ fun Screen.mangaUpdatesTab(
                 AppBar.Action(
                     title = stringResource(MR.strings.action_update_library),
                     icon = Icons.Outlined.Refresh,
-                    onClick = { screenModel.updateLibrary() },
+                    onClick = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                            PermissionChecker.checkSelfPermission(
+                                context,
+                                Manifest.permission.POST_NOTIFICATIONS,
+                            ) != PermissionChecker.PERMISSION_GRANTED
+                        ) {
+                            permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            screenModel.updateLibrary()
+                        }
+                    },
                 ),
             )
         },
