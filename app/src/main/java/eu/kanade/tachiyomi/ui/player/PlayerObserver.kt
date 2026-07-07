@@ -42,6 +42,9 @@ class PlayerObserver(val activity: PlayerActivity) :
         }
         logcat(LogPriority.ERROR) { errorMessage }
         activity.runOnUiThread {
+            if (errorMessage.isRecoverablePlaybackLoadError()) {
+                activity.onPlaybackLoadFailed()
+            }
             activity.toast(errorMessage, Toast.LENGTH_LONG)
         }
     }
@@ -57,5 +60,11 @@ class PlayerObserver(val activity: PlayerActivity) :
         }
         if (text.contains("HTTP error")) httpError = text
         logcat.logcat("mpv/$prefix", logPriority) { text }
+    }
+
+    private fun String.isRecoverablePlaybackLoadError(): Boolean {
+        return contains("loading failed", ignoreCase = true) ||
+            contains("unrecognized file format", ignoreCase = true) ||
+            contains("failed to recognize file format", ignoreCase = true)
     }
 }

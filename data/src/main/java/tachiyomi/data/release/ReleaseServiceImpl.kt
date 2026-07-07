@@ -22,7 +22,7 @@ class ReleaseServiceImpl(
                 .awaitSuccess()
                 .parseAs<GithubRelease>()
         }
-        val downloadLink = getDownloadLink(release = release) ?: return null
+        val downloadLink = getDownloadLink(release = release, installedAbi = arguments.installedAbi) ?: return null
 
         return Release(
             version = release.versionName,
@@ -34,21 +34,40 @@ class ReleaseServiceImpl(
         )
     }
 
-    private fun getDownloadLink(release: GithubRelease): String? {
+    private fun getDownloadLink(release: GithubRelease, installedAbi: String?): String? {
         val apkAssets = release.assets.filter { it.name.endsWith(".apk", ignoreCase = true) }
 
-        return Build.SUPPORTED_ABIS.firstNotNullOfOrNull { abi ->
+        return preferredApkAssetNames(installedAbi).firstNotNullOfOrNull { preferredName ->
             apkAssets.firstOrNull { asset ->
-                asset.name.contains(abi, ignoreCase = true)
+                asset.name.matchesApkVariant(preferredName)
             }?.downloadLink
         }
-            ?: apkAssets.firstOrNull { asset ->
-                asset.name.contains("universal", ignoreCase = true)
-            }?.downloadLink
-            ?: apkAssets.firstOrNull()?.downloadLink
     }
 
     companion object {
+        internal fun preferredApkAssetNames(installedAbi: String?): List<String> {
+            return listOfNotNull(installedAbi?.takeIf { it in supportedReleaseAbis })
+                .plus(
+                    Build.SUPPORTED_ABIS
+                        .filter { it in supportedReleaseAbis },
+                )
+                .plus("universal")
+                .distinct()
+        }
+
+        private fun String.matchesApkVariant(variant: String): Boolean {
+            val variantRegex = "(^|[-_])${Regex.escape(variant)}($|[-.])"
+                .toRegex(RegexOption.IGNORE_CASE)
+            return removeSuffix(".apk").matches(variantRegex) ||
+                variantRegex.containsMatchIn(this)
+        }
+
+        internal fun preferredApkAssetNames(): List<String> {
+            return preferredApkAssetNames(installedAbi = null)
+        }
+
+        private val supportedReleaseAbis = setOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+
         private val GithubRelease.versionName: String
             get() = name
                 ?.takeIf { it.isNotBlank() }

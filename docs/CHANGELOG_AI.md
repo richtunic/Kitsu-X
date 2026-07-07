@@ -1,6 +1,89 @@
 # CHANGELOG_AI
 
 Fecha: 2026-07-07
+Tarea: Preparar release KitsuX 1.0.6
+Cambios:
+- Bump de version estable a `versionName = 1.0.6` y `versionCode = 7`.
+- Se actualizaron enlaces de descarga del README a `v1.0.6`.
+- Se compilaron APKs release firmados para universal, arm64-v8a, armeabi-v7a, x86 y x86_64.
+- Se agregaron notas de release bilingues sin mencionar fuentes especificas afectadas; el fix de reproduccion queda documentado como bug menor de compatibilidad de la version anterior.
+Archivos:
+- [app/build.gradle.kts](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/build.gradle.kts)
+- [README.md](file:///Users/richtunic/Documents/Proyectos/KitsuX/README.md)
+- [release-notes-v1.0.6.md](file:///Users/richtunic/Documents/Proyectos/KitsuX/docs/release-notes-v1.0.6.md)
+Validacion:
+- `./gradlew :domain:testDebugUnitTest --tests tachiyomi.domain.release.interactor.GetApplicationReleaseTest` ejecutado correctamente.
+- `./gradlew :app:assembleRelease -Penable-updater` ejecutado correctamente.
+
+---
+
+Fecha: 2026-07-07
+Tarea: Ocultar tarjetas individuales de continuar viendo/leyendo
+Cambios:
+- La pulsacion larga en `Continuar viendo` y `Continuar leyendo` ahora oculta solo la tarjeta seleccionada mediante una preferencia local, sin borrar historial ni progreso.
+- La clave de ocultamiento incluye tipo, obra y episodio/capitulo objetivo; si aparece contenido nuevo con otro objetivo, la obra puede volver a mostrarse.
+- El carrusel de novedades ya no reutiliza el dialogo de eliminar, dejando el gesto largo limitado a continuar viendo/leyendo.
+- `Continuar leyendo` ahora puede resolver manga fuera de biblioteca usando la entrada local y el siguiente capitulo no leido, no solo los contadores de biblioteca.
+Archivos:
+- [KitsuXHomeScreenModel.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/ui/home/KitsuXHomeScreenModel.kt)
+- [KitsuXHomeTab.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/ui/home/KitsuXHomeTab.kt)
+- [HomeScreenContent.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/presentation/home/HomeScreenContent.kt)
+Validacion:
+- `./gradlew :app:compileDebugKotlin` ejecutado correctamente.
+
+---
+
+Fecha: 2026-07-07
+Tarea: Mejorar deteccion automatica de updates y seleccion de APK compatible
+Cambios:
+- Se redujo el intervalo del chequeo automatico de app updates de 3 dias a 1 hora para que una nueva version publicada en GitHub se muestre al abrir la app sin buscar manualmente.
+- El chequeo de app update ahora se ejecuta al entrar o volver a estado `RESUMED`, protegido por el intervalo automatico para no consultar GitHub en exceso ni apilar pantallas duplicadas.
+- Se conserva el respeto a `No ahora`: una version rechazada no vuelve a molestar durante 5 dias.
+- La seleccion de APK ahora prioriza la ABI instalada inferida por `nativeLibraryDir`, luego las ABIs soportadas por el dispositivo y finalmente `universal`.
+- Se retiro el fallback inseguro al primer `.apk` del release; si GitHub no tiene asset compatible, no se ofrece descarga arbitraria.
+Archivos:
+- [GetApplicationRelease.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/domain/src/main/java/tachiyomi/domain/release/interactor/GetApplicationRelease.kt)
+- [MainActivity.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/ui/main/MainActivity.kt)
+- [AppUpdateChecker.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/data/updater/AppUpdateChecker.kt)
+- [ReleaseServiceImpl.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/data/src/main/java/tachiyomi/data/release/ReleaseServiceImpl.kt)
+- [GetApplicationReleaseTest.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/domain/src/test/java/tachiyomi/domain/release/interactor/GetApplicationReleaseTest.kt)
+- [HANDOFF.md](file:///Users/richtunic/Documents/Proyectos/KitsuX/docs/HANDOFF.md)
+Validacion:
+- `./gradlew :domain:testDebugUnitTest --tests tachiyomi.domain.release.interactor.GetApplicationReleaseTest` ejecutado correctamente.
+- `./gradlew :app:compileDebugKotlin` ejecutado correctamente.
+
+---
+
+Fecha: 2026-07-07
+Tarea: Reducir fallos al reproducir Anime por requests duplicados de recomendaciones
+Cambios:
+- Se revisaron logs de Legion Anime: la fuente entrega contenido y abre el `PlayerActivity`; el ruido critico viene de rafagas de Jikan con `429 Too Many Requests` y `504 Gateway Time-out`.
+- Se evito que `KitsuXIntelSystem` registre multiples observers para "similar a lo ultimo visto" cada vez que se refrescan recomendaciones.
+- Se deduplicaron busquedas simultaneas del mismo `mal_id` por titulo para no saturar Jikan al abrir/reproducir el mismo contenido.
+- Se retiro el fallback experimental de `Latest` a `Popular` porque no corresponde con el problema observado en Legion Anime.
+- Se corrigio la reproduccion de hosters que devuelven URLs protocol-relative (`//host/ruta`): ahora se normalizan a `https://...` antes de enviarlas a mpv o reproductores externos. Los logs de Legion Anime mostraban mpv intentando abrir `//www.mediafire.com/...` como archivo local.
+- Se agrego fallback automatico de hoster cuando mpv rechaza el enlace con `loading failed` o `unrecognized file format`; el video fallido queda marcado como error y se intenta el siguiente hoster disponible.
+- Se restauro el User-Agent legacy de Brave como default real en vez de reemplazarlo por Android Chrome/WebView inferido. La tablet con KitsuX 1.0.4 que si reproduce Legion Anime usa ese UA y llega a `video/avc`.
+- Se elimino la conversion del User-Agent Brave a Android Chrome/WebView en requests a hosters externos, evitando que Legion Anime reciba paginas HTML donde espera streams reproducibles. Los overrides especificos de AnimeOnline siguen limitados a sus dominios.
+Archivos:
+- [KitsuXIntelSystem.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/ui/home/intelligence/KitsuXIntelSystem.kt)
+- [PlayerUtils.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/ui/player/PlayerUtils.kt)
+- [PlayerActivity.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/ui/player/PlayerActivity.kt)
+- [PlayerObserver.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/ui/player/PlayerObserver.kt)
+- [PlayerViewModel.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/ui/player/PlayerViewModel.kt)
+- [ExternalIntents.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/ui/player/ExternalIntents.kt)
+- [NetworkHelper.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/core/common/src/main/java/eu/kanade/tachiyomi/network/NetworkHelper.kt)
+- [UserAgentInterceptor.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/core/common/src/main/java/eu/kanade/tachiyomi/network/interceptor/UserAgentInterceptor.kt)
+- [AnimeOnlineCloudflareCompat.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/core/common/src/main/java/eu/kanade/tachiyomi/network/interceptor/AnimeOnlineCloudflareCompat.kt)
+Validacion:
+- `./gradlew :app:compileDebugKotlin` ejecutado correctamente tras el fix de Jikan.
+- `./gradlew :app:compileDebugKotlin` ejecutado correctamente tras restaurar el User-Agent legacy.
+- `./gradlew :app:installDebug` ejecutado correctamente; APK debug `1.0.5-20` instalado en los dispositivos conectados.
+- Pendiente prueba manual de Legion Anime en el movil con logs limpios para confirmar si el hoster ya devuelve stream reproducible en vez de HTML.
+
+---
+
+Fecha: 2026-07-07
 Tarea: Preparar release KitsuX 1.0.5 y corregir enlaces del README
 Cambios:
 - Se corrigieron los enlaces de descarga del README para apuntar a assets reales `Kitsu-X-v1.0.5-*.apk`, evitando los 404 provocados por nombres `app-*-release.apk`.

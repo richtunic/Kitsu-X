@@ -6,6 +6,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import tachiyomi.core.common.preference.Preference
+import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
 import tachiyomi.domain.category.manga.interactor.GetMangaCategories
 import tachiyomi.domain.category.model.Category
@@ -15,8 +17,6 @@ import tachiyomi.domain.entries.manga.interactor.GetLibraryManga
 import tachiyomi.domain.entries.manga.model.Manga
 import tachiyomi.domain.history.anime.interactor.GetAnimeHistory
 import tachiyomi.domain.history.manga.interactor.GetMangaHistory
-import tachiyomi.domain.history.anime.interactor.RemoveAnimeHistory
-import tachiyomi.domain.history.manga.interactor.RemoveMangaHistory
 import tachiyomi.domain.items.episode.interactor.GetEpisode
 import tachiyomi.domain.items.chapter.interactor.GetChapter
 import eu.kanade.domain.ui.UiPreferences
@@ -68,14 +68,18 @@ class KitsuXHomeScreenModel(
     private val animeDownloadManager: AnimeDownloadManager = Injekt.get(),
     private val mangaDownloadManager: MangaDownloadManager = Injekt.get(),
     private val uiPreferences: UiPreferences = Injekt.get(),
+    private val preferenceStore: PreferenceStore = Injekt.get(),
 ) : ScreenModel {
 
     private val animeCategoriesFlow = getAnimeCategories.subscribe()
     private val mangaCategoriesFlow = getMangaCategories.subscribe()
 
-    private val removeAnimeHistory: RemoveAnimeHistory = Injekt.get()
-    private val removeMangaHistory: RemoveMangaHistory = Injekt.get()
     private val getAnime: GetAnime = Injekt.get()
+    private val getManga: GetManga = Injekt.get()
+    private val hiddenContinueItemsPreference = preferenceStore.getStringSet(
+        Preference.appStateKey("kitsux_hidden_continue_items"),
+        emptySet(),
+    )
     private val activeContinueActions = ConcurrentHashMap.newKeySet<String>()
 
     private val jikanFlow = combine(
@@ -109,13 +113,20 @@ class KitsuXHomeScreenModel(
         ::Pair
     )
 
+    private val homeAuxiliaryFlow = combine(
+        categoriesAndJikanAndPrefsFlow,
+        hiddenContinueItemsPreference.changes(),
+        ::Pair,
+    )
+
     val state: StateFlow<KitsuXHomeState> = combine(
         getLibraryAnime.subscribe(),
         getLibraryManga.subscribe(),
         getAnimeHistory.subscribe(""),
         getMangaHistory.subscribe(""),
-        categoriesAndJikanAndPrefsFlow
-    ) { libraryAnime, libraryManga, animeHistory, mangaHistory, combinedData ->
+        homeAuxiliaryFlow
+    ) { libraryAnime, libraryManga, animeHistory, mangaHistory, auxiliaryData ->
+        val (combinedData, hiddenContinueItems) = auxiliaryData
         val (categoriesAndJikan, prefsTriple) = combinedData
         val (categoriesPair, jikanData) = categoriesAndJikan
         val (animeCategories, mangaCategories) = categoriesPair
@@ -178,6 +189,9 @@ class KitsuXHomeScreenModel(
 
             mangaHistoryLatest.forEach { hist ->
                 val libManga = libraryManga.find { it.id == hist.mangaId }
+                val manga = libManga?.manga ?: getManga.await(hist.mangaId)
+                if (manga == null) return@forEach
+
                 val hasUpdates = libManga?.let { it.unreadCount > 0 } ?: false
                 val unreadVal = libManga?.unreadCount?.toInt() ?: 0
 
@@ -186,49 +200,46 @@ class KitsuXHomeScreenModel(
                 val isChapterPending = chapter != null && !chapter.read
                 val hasNewChapters = hasUpdates || unreadVal > 0
                 val targetChapter = chapter?.takeUnless { it.read }
-                    ?: if (hasNewChapters && libManga != null) {
-                        getChaptersByMangaId.await(libManga.id, applyScanlatorFilter = true)
-                            .getNextUnread(libManga.manga, mangaDownloadManager)
+                    ?: if (hasNewChapters || libManga == null) {
+                        getChaptersByMangaId.await(manga.id, applyScanlatorFilter = true)
+                            .getNextUnread(manga, mangaDownloadManager)
                     } else {
                         null
                     }
 
-                if (targetChapter != null && (isChapterPending || hasNewChapters)) {
+                if (targetChapter != null && (isChapterPending || hasNewChapters || libManga == null)) {
+                    val isNewChapter = chapter?.id != targetChapter.id
                     val chapterProgress = when {
                         chapter == null -> 0f
-                        chapter.read -> 0f
+                        chapter.read || isNewChapter -> 0f
                         chapter.lastPageRead > 0L -> {
                             (chapter.lastPageRead.toFloat() / (chapter.lastPageRead + 3).toFloat()).coerceIn(0.1f, 0.9f)
                         }
                         else -> 0f
                     }
-                    val chapterProgressText = if (chapter?.read == true) {
+                    val chapterProgressText = if (isNewChapter) {
                         context.stringResource(MR.strings.kitsux_home_new_badge)
                     } else {
-                        "Ch ${hist.chapterNumber.toInt()}"
+                        "Ch ${targetChapter.chapterNumber.toInt()}"
                     }
+                    val mediaItem = manga.toMediaItem().copy(
+                        hasUpdates = hasUpdates || isNewChapter,
+                        unseenCount = unreadVal,
+                        isStarted = true,
+                    )
 
                     continueReading.add(
                         ContinueWatchingItem(
                             id = hist.mangaId,
-                            title = hist.title,
-                            thumbnailUrl = hist.coverData.url,
+                            title = manga.title,
+                            thumbnailUrl = manga.thumbnailUrl,
                             isAnime = false,
                             lastSeen = hist.readAt?.time ?: 0L,
                             progressText = chapterProgressText,
                             episodeProgress = chapterProgress,
                             targetItemId = targetChapter.id,
-                            mediaItem = KitsuXMediaItem(
-                                id = hist.mangaId,
-                                title = hist.title,
-                                thumbnailUrl = hist.coverData.url,
-                                description = "",
-                                genres = emptyList(),
-                                isAnime = false,
-                                hasUpdates = hasUpdates,
-                                unseenCount = unreadVal
-                            ),
-                            hasUpdates = hasUpdates,
+                            mediaItem = mediaItem,
+                            hasUpdates = hasUpdates || isNewChapter,
                             unseenCount = unreadVal
                         )
                     )
@@ -287,11 +298,13 @@ class KitsuXHomeScreenModel(
 
             val sortedContinueWatching = continueWatching
                 .filter { it.isAnime }
+                .filterNot { it.hiddenContinueKey() in hiddenContinueItems }
                 .distinctBy { it.id }
                 .sortedByDescending { it.lastSeen }
                 .take(15)
             val sortedContinueReading = continueReading
                 .filter { !it.isAnime }
+                .filterNot { it.hiddenContinueKey() in hiddenContinueItems }
                 .distinctBy { it.id }
                 .sortedByDescending { it.lastSeen }
                 .take(15)
@@ -593,14 +606,10 @@ class KitsuXHomeScreenModel(
         }
     }
 
-    fun removeFromContinueWatching(continueItem: ContinueWatchingItem) {
-        screenModelScope.launch {
-            if (continueItem.isAnime) {
-                removeAnimeHistory.await(continueItem.id)
-            } else {
-                removeMangaHistory.await(continueItem.id)
-            }
-        }
+    fun hideContinueItem(continueItem: ContinueWatchingItem) {
+        hiddenContinueItemsPreference.set(
+            hiddenContinueItemsPreference.get() + continueItem.hiddenContinueKey(),
+        )
     }
 
     fun continueWatchingOrReading(
@@ -752,6 +761,11 @@ data class ContinueWatchingItem(
     val episodeProgress: Float = 0f,
     val targetItemId: Long? = null,
 )
+
+private fun ContinueWatchingItem.hiddenContinueKey(): String {
+    val type = if (isAnime) "anime" else "manga"
+    return "$type:$id:${targetItemId ?: 0L}"
+}
 
 data class KitsuXMediaItem(
     val id: Long,

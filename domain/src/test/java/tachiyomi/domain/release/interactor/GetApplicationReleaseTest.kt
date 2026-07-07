@@ -19,12 +19,16 @@ class GetApplicationReleaseTest {
     private lateinit var getApplicationRelease: GetApplicationRelease
     private lateinit var releaseService: ReleaseService
     private lateinit var preference: Preference<Long>
+    private lateinit var stringPreference: Preference<String>
 
     @BeforeEach
     fun beforeEach() {
         val preferenceStore = mockk<PreferenceStore>()
         preference = mockk()
+        stringPreference = mockk()
         every { preferenceStore.getLong(any(), any()) } returns preference
+        every { preferenceStore.getString(any(), any()) } returns stringPreference
+        every { stringPreference.get() } returns ""
         releaseService = mockk()
 
         getApplicationRelease = GetApplicationRelease(releaseService, preferenceStore)
@@ -113,7 +117,7 @@ class GetApplicationReleaseTest {
     }
 
     @Test
-    fun `When now is before three days expect no new update`() = runTest {
+    fun `When now is before automatic check interval expect no new update`() = runTest {
         every { preference.get() } returns Instant.now().toEpochMilli()
         every { preference.set(any()) }.answers { }
 

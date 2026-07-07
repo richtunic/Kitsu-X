@@ -1459,6 +1459,47 @@ class PlayerViewModel @JvmOverloads constructor(
         return true
     }
 
+    fun onVideoPlaybackFailed() {
+        if (isEpisodeOnline() != true) return
+
+        val (failedHosterIndex, failedVideoIndex) = selectedHosterVideoIndex.value
+        if (failedHosterIndex < 0 || failedVideoIndex < 0) return
+
+        viewModelScope.launchIO {
+            val failedHosterState = (_hosterState.value.getOrNull(failedHosterIndex) as? HosterState.Ready)
+                ?: return@launchIO
+            val failedVideo = failedHosterState.videoList.getOrNull(failedVideoIndex)
+                ?: return@launchIO
+
+            _hosterState.updateAt(
+                failedHosterIndex,
+                failedHosterState.getChangedAt(failedVideoIndex, failedVideo, Video.State.ERROR),
+            )
+            _selectedHosterVideoIndex.update { _ -> Pair(-1, -1) }
+
+            val (nextHosterIndex, nextVideoIndex) = HosterLoader.selectBestVideo(_hosterState.value)
+            if (nextHosterIndex == -1) {
+                updateIsLoadingEpisode(false)
+                isLoading.update { false }
+                return@launchIO
+            }
+
+            val nextVideo = (_hosterState.value[nextHosterIndex] as? HosterState.Ready)
+                ?.videoList
+                ?.getOrNull(nextVideoIndex)
+                ?: run {
+                    updateIsLoadingEpisode(false)
+                    isLoading.update { false }
+                    return@launchIO
+                }
+
+            val success = loadVideo(currentSource.value, nextVideo, nextHosterIndex, nextVideoIndex)
+            if (!success) {
+                updateIsLoadingEpisode(false)
+            }
+        }
+    }
+
     private fun shouldStartFirstReadyVideo(source: AnimeSource): Boolean {
         return (source as? AnimeHttpSource)?.baseUrl
             ?.contains("animeonline.ninja", ignoreCase = true) == true

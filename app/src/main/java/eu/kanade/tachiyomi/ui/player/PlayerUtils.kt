@@ -46,6 +46,14 @@ internal fun Uri.resolveUri(context: Context): String? {
     return filepath
 }
 
+internal fun String.normalizeVideoUrl(): String {
+    return if (startsWith("//")) {
+        "https:$this"
+    } else {
+        this
+    }
+}
+
 internal fun Uri.getFileName(context: Context): String? {
     return context.contentResolver.query(this, null, null, null, null)?.use { cursor ->
         val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)

@@ -19,10 +19,10 @@ class GetApplicationRelease(
     suspend fun await(arguments: Arguments): Result {
         val now = Instant.now()
 
-        // Limit checks to once every 3 days at most
+        // Automatic checks should surface GitHub releases quickly without requiring a manual check.
         if (!arguments.forceCheck &&
             now.isBefore(
-                Instant.ofEpochMilli(lastChecked.get()).plus(3, ChronoUnit.DAYS),
+                Instant.ofEpochMilli(lastChecked.get()).plus(AUTOMATIC_CHECK_INTERVAL_HOURS, ChronoUnit.HOURS),
             )
         ) {
             return Result.NoNewUpdate
@@ -98,6 +98,7 @@ class GetApplicationRelease(
         val commitCount: Int,
         val versionName: String,
         val repository: String,
+        val installedAbi: String? = null,
         val forceCheck: Boolean = false,
     )
 
@@ -105,5 +106,9 @@ class GetApplicationRelease(
         data class NewUpdate(val release: Release) : Result
         data object NoNewUpdate : Result
         data object OsTooOld : Result
+    }
+
+    private companion object {
+        const val AUTOMATIC_CHECK_INTERVAL_HOURS = 1L
     }
 }

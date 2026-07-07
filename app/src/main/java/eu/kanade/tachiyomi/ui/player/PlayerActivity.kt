@@ -748,6 +748,10 @@ class PlayerActivity : BaseActivity() {
         }
     }
 
+    internal fun onPlaybackLoadFailed() {
+        viewModel.onVideoPlaybackFailed()
+    }
+
     fun createPipParams(): PictureInPictureParams {
         val builder = PictureInPictureParams.Builder()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -1101,8 +1105,9 @@ class PlayerActivity : BaseActivity() {
     }
 
     fun parseVideoUrl(videoUrl: String?): String? {
-        return videoUrl?.toUri()?.resolveUri(this)
-            ?: videoUrl
+        val normalizedUrl = videoUrl?.normalizeVideoUrl()
+        return normalizedUrl?.toUri()?.resolveUri(this)
+            ?: normalizedUrl
     }
 
     fun setHttpOptions(video: Video) {

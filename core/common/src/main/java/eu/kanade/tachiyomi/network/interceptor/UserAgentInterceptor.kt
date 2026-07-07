@@ -11,18 +11,16 @@ class UserAgentInterceptor(
         val originalRequest = chain.request()
         val userAgent = originalRequest.header("User-Agent")
         val overrideUserAgent = AnimeOnlineCloudflareCompat.userAgentFor(originalRequest.url)
-        val thirdPartyUserAgent = AnimeOnlineCloudflareCompat.thirdPartyUserAgentFor(userAgent)
 
         return if (
             overrideUserAgent != null ||
-            thirdPartyUserAgent != null ||
             userAgent.isNullOrEmpty() ||
             userAgent == DEFAULT_EXTENSION_USER_AGENT
         ) {
             val newRequest = originalRequest
                 .newBuilder()
                 .removeHeader("User-Agent")
-                .addHeader("User-Agent", overrideUserAgent ?: thirdPartyUserAgent ?: defaultUserAgentProvider())
+                .addHeader("User-Agent", overrideUserAgent ?: defaultUserAgentProvider())
                 .build()
             chain.proceed(newRequest)
         } else {

@@ -237,7 +237,7 @@ fun HomeScreenContent(
                             title = stringResource(MR.strings.kitsux_home_new_episodes_chapters),
                             items = state.newReleases,
                             onContinueClick = onContinueClick,
-                            onContinueLongClick = { itemToRemove = it },
+                            onContinueLongClick = {},
                         )
                     }
                 }

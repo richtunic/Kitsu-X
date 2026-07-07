@@ -79,6 +79,9 @@ object KitsuXIntelSystem {
     private val lastSeenChapterProgress = mutableMapOf<Long, Long>() // chapterId -> lastPageRead
     private val completedEpisodeIds = mutableSetOf<Long>()
     private val completedChapterIds = mutableSetOf<Long>()
+    private var similarToLastWatchedJob: Job? = null
+    private val malIdLookupJobs = mutableMapOf<String, Deferred<Long?>>()
+    private val malIdLookupLock = Any()
 
     // Exposed flows for the UI
     val recommendedAnime = MutableStateFlow<List<KitsuXMediaItem>>(emptyList())
@@ -223,8 +226,12 @@ object KitsuXIntelSystem {
         }
     }
 
-    private suspend fun fetchSimilarToLastWatchedCached() {
-        combine(
+    private fun fetchSimilarToLastWatchedCached() {
+        if (similarToLastWatchedJob?.isActive == true) {
+            return
+        }
+
+        similarToLastWatchedJob = combine(
             getAnimeHistory.subscribe(""),
             getMangaHistory.subscribe(""),
             ::Pair
@@ -279,6 +286,26 @@ object KitsuXIntelSystem {
             return cached.toLongOrNull()
         }
 
+        val lookupJob = synchronized(malIdLookupLock) {
+            malIdLookupJobs[cacheKey] ?: scope.async {
+                fetchMalIdByTitleFromNetwork(cacheKey, title, isAnime)
+            }.also {
+                malIdLookupJobs[cacheKey] = it
+            }
+        }
+
+        return try {
+            lookupJob.await()
+        } finally {
+            synchronized(malIdLookupLock) {
+                if (malIdLookupJobs[cacheKey] === lookupJob) {
+                    malIdLookupJobs.remove(cacheKey)
+                }
+            }
+        }
+    }
+
+    private suspend fun fetchMalIdByTitleFromNetwork(cacheKey: String, title: String, isAnime: Boolean): Long? {
         delay(API_DELAY)
         try {
             val typePath = if (isAnime) "anime" else "manga"

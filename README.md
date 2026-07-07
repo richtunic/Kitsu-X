@@ -29,15 +29,15 @@ Kitsu X es un fork moderno y optimizado de Aniyomi/Mihon para dispositivos Andro
 ---
 
 <!-- START_DOWNLOADS_ES -->
-### 📥 Descargas (Última versión: `v1.0.5`)
+### 📥 Descargas (Última versión: `v1.0.6`)
 
 Para instalar Kitsu X, tu dispositivo debe contar con **Android 8.0 o superior**.
 
-* **APK Universal**: [Descargar Kitsu-X-v1.0.5-universal.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.5/Kitsu-X-v1.0.5-universal.apk)
-* **APK arm64-v8a**: [Descargar Kitsu-X-v1.0.5-arm64-v8a.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.5/Kitsu-X-v1.0.5-arm64-v8a.apk)
-* **APK armeabi-v7a**: [Descargar Kitsu-X-v1.0.5-armeabi-v7a.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.5/Kitsu-X-v1.0.5-armeabi-v7a.apk)
-* **APK x86**: [Descargar Kitsu-X-v1.0.5-x86.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.5/Kitsu-X-v1.0.5-x86.apk)
-* **APK x86_64**: [Descargar Kitsu-X-v1.0.5-x86_64.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.5/Kitsu-X-v1.0.5-x86_64.apk)
+* **APK Universal**: [Descargar Kitsu-X-v1.0.6-universal.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.6/Kitsu-X-v1.0.6-universal.apk)
+* **APK arm64-v8a**: [Descargar Kitsu-X-v1.0.6-arm64-v8a.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.6/Kitsu-X-v1.0.6-arm64-v8a.apk)
+* **APK armeabi-v7a**: [Descargar Kitsu-X-v1.0.6-armeabi-v7a.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.6/Kitsu-X-v1.0.6-armeabi-v7a.apk)
+* **APK x86**: [Descargar Kitsu-X-v1.0.6-x86.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.6/Kitsu-X-v1.0.6-x86.apk)
+* **APK x86_64**: [Descargar Kitsu-X-v1.0.6-x86_64.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.6/Kitsu-X-v1.0.6-x86_64.apk)
 
 *Para ver versiones anteriores o el historial completo de cambios, visita la sección de [Releases](https://github.com/richtunic/Kitsu-X/releases).*
 <!-- END_DOWNLOADS_ES -->
@@ -84,15 +84,15 @@ Kitsu X is a modern, optimized fork of Aniyomi/Mihon for Android devices. While 
 ---
 
 <!-- START_DOWNLOADS_EN -->
-### 📥 Download (Latest version: `v1.0.5`)
+### 📥 Download (Latest version: `v1.0.6`)
 
 To run Kitsu X, your device must have **Android 8.0 or higher**.
 
-* **Universal APK**: [Download Kitsu-X-v1.0.5-universal.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.5/Kitsu-X-v1.0.5-universal.apk)
-* **arm64-v8a APK**: [Download Kitsu-X-v1.0.5-arm64-v8a.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.5/Kitsu-X-v1.0.5-arm64-v8a.apk)
-* **armeabi-v7a APK**: [Download Kitsu-X-v1.0.5-armeabi-v7a.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.5/Kitsu-X-v1.0.5-armeabi-v7a.apk)
-* **x86 APK**: [Download Kitsu-X-v1.0.5-x86.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.5/Kitsu-X-v1.0.5-x86.apk)
-* **x86_64 APK**: [Download Kitsu-X-v1.0.5-x86_64.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.5/Kitsu-X-v1.0.5-x86_64.apk)
+* **Universal APK**: [Download Kitsu-X-v1.0.6-universal.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.6/Kitsu-X-v1.0.6-universal.apk)
+* **arm64-v8a APK**: [Download Kitsu-X-v1.0.6-arm64-v8a.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.6/Kitsu-X-v1.0.6-arm64-v8a.apk)
+* **armeabi-v7a APK**: [Download Kitsu-X-v1.0.6-armeabi-v7a.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.6/Kitsu-X-v1.0.6-armeabi-v7a.apk)
+* **x86 APK**: [Download Kitsu-X-v1.0.6-x86.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.6/Kitsu-X-v1.0.6-x86.apk)
+* **x86_64 APK**: [Download Kitsu-X-v1.0.6-x86_64.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.0.6/Kitsu-X-v1.0.6-x86_64.apk)
 
 *To see older versions or the changelog, check the [Releases](https://github.com/richtunic/Kitsu-X/releases) page.*
 <!-- END_DOWNLOADS_EN -->

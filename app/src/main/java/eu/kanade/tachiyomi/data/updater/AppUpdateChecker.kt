@@ -24,7 +24,8 @@ class AppUpdateChecker {
                     BuildConfig.COMMIT_COUNT.toInt(),
                     BuildConfig.VERSION_NAME,
                     GITHUB_REPO,
-                    forceCheck,
+                    installedAbi = context.installedApkAbi(),
+                    forceCheck = forceCheck,
                 ),
             )
 
@@ -37,6 +38,18 @@ class AppUpdateChecker {
 
             result
         }
+    }
+}
+
+private fun Context.installedApkAbi(): String? {
+    val nativeLibraryDir = applicationInfo.nativeLibraryDir ?: return null
+    return when {
+        nativeLibraryDir.contains("arm64", ignoreCase = true) -> "arm64-v8a"
+        nativeLibraryDir.contains("armeabi", ignoreCase = true) ||
+            nativeLibraryDir.contains("/arm", ignoreCase = true) -> "armeabi-v7a"
+        nativeLibraryDir.contains("x86_64", ignoreCase = true) -> "x86_64"
+        nativeLibraryDir.contains("x86", ignoreCase = true) -> "x86"
+        else -> null
     }
 }
 

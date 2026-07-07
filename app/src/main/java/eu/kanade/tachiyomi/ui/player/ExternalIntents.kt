@@ -126,7 +126,7 @@ class ExternalIntents {
             makeErrorToast(context, Exception("Video URL is empty."))
             return null
         } else {
-            val uri = resolvedVideo.videoUrl.toUri()
+            val uri = resolvedVideo.videoUrl.normalizeVideoUrl().toUri()
 
             val isOnDevice = if (anime.source == LocalAnimeSource.ID) {
                 true

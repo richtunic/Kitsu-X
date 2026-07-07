@@ -58,7 +58,10 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.util.Consumer
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.NavigatorDisposeBehavior
@@ -450,23 +453,28 @@ class MainActivity : BaseActivity() {
     private fun CheckForUpdates() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
+        val lifecycleOwner = LocalLifecycleOwner.current
 
         // App updates
-        LaunchedEffect(Unit) {
+        LaunchedEffect(lifecycleOwner) {
             if (updaterEnabled && !BuildConfig.DEBUG) {
-                try {
-                    val result = AppUpdateChecker().checkForUpdate(context, forceCheck = false)
-                    if (result is GetApplicationRelease.Result.NewUpdate) {
-                        val updateScreen = NewUpdateScreen(
-                            versionName = result.release.version,
-                            changelogInfo = result.release.info,
-                            releaseLink = result.release.releaseLink,
-                            downloadLink = result.release.downloadLink,
-                        )
-                        navigator.push(updateScreen)
+                lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                    try {
+                        val result = AppUpdateChecker().checkForUpdate(context, forceCheck = false)
+                        if (result is GetApplicationRelease.Result.NewUpdate &&
+                            navigator.lastItem !is NewUpdateScreen
+                        ) {
+                            val updateScreen = NewUpdateScreen(
+                                versionName = result.release.version,
+                                changelogInfo = result.release.info,
+                                releaseLink = result.release.releaseLink,
+                                downloadLink = result.release.downloadLink,
+                            )
+                            navigator.push(updateScreen)
+                        }
+                    } catch (e: Exception) {
+                        logcat(LogPriority.ERROR, e)
                     }
-                } catch (e: Exception) {
-                    logcat(LogPriority.ERROR, e)
                 }
             }
         }

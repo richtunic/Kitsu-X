@@ -10,7 +10,9 @@ Contrato de publicación:
 - `name`: usar versión limpia igual a `versionName`, por ejemplo `1.0.5`.
 - Assets: subir APKs con la ABI en el nombre (`arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86`) y opcionalmente un APK `universal`.
 
-La selección del APK recorre `Build.SUPPORTED_ABIS`, cae a `universal` si no hay match y finalmente al primer `.apk` disponible. No se agregaron canales configurables por usuario en esta fase; si se retoman, hacerlo como fase separada con preferencias y UI en ajustes.
+La selección del APK prioriza la ABI de la app instalada inferida desde `nativeLibraryDir`, luego recorre únicamente ABIs publicados por KitsuX (`arm64-v8a`, `armeabi-v7a`, `x86_64`, `x86`) según `Build.SUPPORTED_ABIS`, cae a `universal` si no hay match y no descarga un APK arbitrario si no existe asset compatible. No se agregaron canales configurables por usuario en esta fase; si se retoman, hacerlo como fase separada con preferencias y UI en ajustes.
+
+El chequeo automático de app updates corre cuando la app entra o vuelve a `RESUMED`, con un intervalo corto de 1 hora para que una nueva versión en GitHub aparezca sin que el usuario tenga que buscar manualmente. El rechazo de una versión (`No ahora`) se sigue respetando por 5 días para no molestar.
 
 Release notes:
 - Publicar siempre body bilingue con secciones `## es` y `## en`.
@@ -35,6 +37,10 @@ El hero debe resolver primero si la obra existe en la biblioteca local. Si exist
 
 ## Nota UX: Home continuar vs novedades
 `Continuar viendo`/leyendo debe mostrar solo obras comenzadas (`hasStarted` o historial real), no obras recién añadidas a seguimiento. Las obras en seguimiento con episodios/capítulos pendientes se muestran en un carrusel separado de novedades, con etiqueta temporal tipo `Hoy`, `Ayer` o `Hace N días`.
+
+La pulsacion larga para eliminar aplica solo a `Continuar viendo` y `Continuar leyendo`. Debe ocultar la tarjeta puntual con preferencia local, sin borrar historial ni progreso. La clave incluye tipo, obra y episodio/capitulo objetivo para permitir que contenido nuevo vuelva a aparecer.
+
+Las filas de continuar deben poder mostrar contenido con historial aunque no este en biblioteca. Para manga, resolver la obra local con `GetManga` y buscar el siguiente capitulo no leido cuando no existan contadores de biblioteca.
 
 
 ## Nota técnica: autocategorización de obras

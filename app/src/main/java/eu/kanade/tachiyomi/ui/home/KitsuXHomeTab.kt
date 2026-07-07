@@ -119,7 +119,7 @@ data object KitsuXHomeTab : Tab {
                     screenModel.continueWatchingOrReading(context, continueItem, navigator)
                 },
                 onRemoveContinueItem = { continueItem ->
-                    screenModel.removeFromContinueWatching(continueItem)
+                    screenModel.hideContinueItem(continueItem)
                 },
                 onRefresh = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
