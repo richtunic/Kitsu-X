@@ -33,7 +33,7 @@ class AndroidCookieJar : CookieJar {
                 "https://ww3.animeonline.ninja",
                 "https://animeonline.ninja",
                 "https://animeninja.online",
-                "https://www.animeninja.online"
+                "https://www.animeninja.online",
             )
             var updated = false
             for (cookieName in cfCookies) {
@@ -44,7 +44,9 @@ class AndroidCookieJar : CookieJar {
                             if (altHttpUrl.host == url.host) continue
                             val altCookies = manager.getCookie(altUrl)
                             if (altCookies != null && altCookies.contains(cookieName)) {
-                                val cookieValue = altCookies.split(";").firstOrNull { it.trim().startsWith("$cookieName=") }
+                                val cookieValue = altCookies.split(";").firstOrNull {
+                                    it.trim().startsWith("$cookieName=")
+                                }
                                 if (cookieValue != null) {
                                     manager.setCookie(url.toString(), cookieValue.trim())
                                     updated = true

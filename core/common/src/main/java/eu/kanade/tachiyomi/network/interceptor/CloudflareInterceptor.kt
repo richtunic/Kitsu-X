@@ -31,11 +31,12 @@ class CloudflareInterceptor(
 
     override fun shouldIntercept(response: Response): Boolean {
         // Check if Cloudflare anti-bot is on
-        return response.code in ERROR_CODES && (
-            response.header("Server") in SERVER_CHECK ||
-            response.header("Server")?.lowercase()?.contains("cloudflare") == true ||
-            response.header("cf-ray") != null
-        )
+        return response.code in ERROR_CODES &&
+            (
+                response.header("Server") in SERVER_CHECK ||
+                    response.header("Server")?.lowercase()?.contains("cloudflare") == true ||
+                    response.header("cf-ray") != null
+                )
     }
 
     override fun intercept(chain: Interceptor.Chain, request: Request, response: Response): Response {
