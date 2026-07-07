@@ -13,8 +13,11 @@ class TrustMangaExtension(
 
     suspend fun isTrusted(pkgInfo: PackageInfo, fingerprints: List<String>): Boolean {
         val trustedFingerprints = mangaExtensionRepoRepository.getAll().map { it.signingKeyFingerprint }.toHashSet()
-        val key = "${pkgInfo.packageName}:${PackageInfoCompat.getLongVersionCode(pkgInfo)}:${fingerprints.last()}"
-        return trustedFingerprints.any { fingerprints.contains(it) } || key in preferences.trustedExtensions().get()
+        val pkgName = pkgInfo.packageName
+        val versionCode = PackageInfoCompat.getLongVersionCode(pkgInfo)
+        val trustedExtensions = preferences.trustedExtensions().get()
+        return trustedFingerprints.any { it in fingerprints } ||
+            fingerprints.any { "$pkgName:$versionCode:$it" in trustedExtensions }
     }
 
     fun trust(pkgName: String, versionCode: Long, signatureHash: String) {

@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.extension.manga.api
 
 import android.content.Context
 import eu.kanade.tachiyomi.extension.ExtensionUpdateNotifier
+import eu.kanade.tachiyomi.extension.api.FlexibleLongSerializer
 import eu.kanade.tachiyomi.extension.manga.MangaExtensionManager
 import eu.kanade.tachiyomi.extension.manga.model.MangaExtension
 import eu.kanade.tachiyomi.extension.manga.model.MangaLoadResult
@@ -150,11 +151,12 @@ private data class ExtensionJsonObject(
     val code: Long,
     val version: String,
     val nsfw: Int,
-    val sources: List<ExtensionSourceJsonObject>?,
+    val sources: List<ExtensionSourceJsonObject>? = null,
 )
 
 @Serializable
 private data class ExtensionSourceJsonObject(
+    @Serializable(with = FlexibleLongSerializer::class)
     val id: Long,
     val lang: String,
     val name: String,

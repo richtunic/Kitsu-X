@@ -78,6 +78,20 @@ class NetworkHelper(
 
     fun defaultUserAgentProvider(): String {
         val prefValue = preferences.defaultUserAgent().get().trim()
+        if (prefValue == "Brave 1.62.152, Chromium 121.0.6167.101") {
+            val inferred = try {
+                eu.kanade.tachiyomi.util.system.WebViewUtil.getInferredUserAgent(context)
+            } catch (_: Throwable) {
+                null
+            }
+            if (inferred != null) {
+                val chromeRegex = "Chrome/\\d+(\\.\\d+)*".toRegex()
+                if (chromeRegex.containsMatchIn(inferred)) {
+                    return inferred.replace(chromeRegex, "Chrome/121.0.6167.101")
+                }
+            }
+            return "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.6167.101 Mobile Safari/537.36"
+        }
         return if (prefValue == "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0") {
             try {
                 eu.kanade.tachiyomi.util.system.WebViewUtil.getInferredUserAgent(context)

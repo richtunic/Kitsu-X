@@ -87,7 +87,11 @@ class BrowseMangaSourceScreenModel(
 
                 if (listing is Listing.Search) {
                     query = listing.query
-                    listing = Listing.Search(query, source.getFilterList())
+                    listing = if (query.isNullOrEmpty() && source.supportsLatest) {
+                        Listing.Latest
+                    } else {
+                        Listing.Search(query, source.getFilterList())
+                    }
                 }
 
                 it.copy(

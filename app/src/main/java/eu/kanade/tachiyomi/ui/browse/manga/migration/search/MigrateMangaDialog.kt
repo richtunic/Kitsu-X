@@ -31,11 +31,15 @@ import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.source.MangaSource
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.ui.browse.manga.migration.MangaMigrationFlags
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withTimeout
+import logcat.LogPriority
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.manga.interactor.GetMangaCategories
 import tachiyomi.domain.category.manga.interactor.SetMangaCategories
 import tachiyomi.domain.entries.manga.model.Manga
@@ -55,6 +59,7 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.Instant
+import kotlin.time.Duration.Companion.minutes
 
 @Composable
 internal fun MigrateMangaDialog(
@@ -183,20 +188,24 @@ internal class MigrateMangaDialogScreenModel(
         mutableState.update { it.copy(isMigrating = true) }
 
         try {
-            val chapters = source.getChapterList(newManga.toSManga())
+            withTimeout(MIGRATION_TIMEOUT) {
+                val chapters = source.getChapterList(newManga.toSManga())
 
-            migrateMangaInternal(
-                oldSource = prevSource,
-                newSource = source,
-                oldManga = oldManga,
-                newManga = newManga,
-                sourceChapters = chapters,
-                replace = replace,
-                flags = flags,
-            )
-        } catch (_: Throwable) {
-            // Explicitly stop if an error occurred; the dialog normally gets popped at the end
-            // anyway
+                migrateMangaInternal(
+                    oldSource = prevSource,
+                    newSource = source,
+                    oldManga = oldManga,
+                    newManga = newManga,
+                    sourceChapters = chapters,
+                    replace = replace,
+                    flags = flags,
+                )
+            }
+        } catch (e: TimeoutCancellationException) {
+            logcat(LogPriority.WARN, e) { "Timed out migrating manga ${oldManga.id} to ${newManga.source}" }
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e) { "Failed to migrate manga ${oldManga.id} to ${newManga.source}" }
+        } finally {
             mutableState.update { it.copy(isMigrating = false) }
         }
     }
@@ -311,4 +320,8 @@ internal class MigrateMangaDialogScreenModel(
     data class State(
         val isMigrating: Boolean = false,
     )
+
+    private companion object {
+        val MIGRATION_TIMEOUT = 2.minutes
+    }
 }

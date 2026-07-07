@@ -999,6 +999,10 @@
     <string name="kitsux_home_empty_library_description">Add your favorite anime and manga from Explore to see them organized here by category.</string>
     <string name="kitsux_home_continue_watching">Continue watching</string>
     <string name="kitsux_home_continue_reading">Continue reading</string>
+    <string name="kitsux_home_remove_continue_watching_title">Remove from Continue Watching</string>
+    <string name="kitsux_home_remove_continue_watching_description">Are you sure you want to remove \"%1$s\" from Continue Watching?</string>
+    <string name="kitsux_home_remove_continue_reading_title">Remove from Continue Reading</string>
+    <string name="kitsux_home_remove_continue_reading_description">Are you sure you want to remove \"%1$s\" from Continue Reading?</string>
     <string name="kitsux_home_new_episodes_chapters">New episodes</string>
     <string name="kitsux_home_new_badge">NEW</string>
     <string name="kitsux_home_new_count">%d NEW</string>

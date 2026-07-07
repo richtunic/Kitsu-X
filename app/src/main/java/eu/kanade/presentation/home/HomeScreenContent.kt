@@ -2,6 +2,9 @@ package eu.kanade.presentation.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -69,6 +72,7 @@ fun HomeScreenContent(
     onItemClick: (KitsuXMediaItem) -> Unit,
     onHeroClick: (KitsuXMediaItem) -> Unit,
     onContinueClick: (ContinueWatchingItem) -> Unit,
+    onRemoveContinueItem: (ContinueWatchingItem) -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -89,6 +93,49 @@ fun HomeScreenContent(
 
     val scope = rememberCoroutineScope()
     var isRefreshing by remember { mutableStateOf(false) }
+    var itemToRemove by remember { mutableStateOf<ContinueWatchingItem?>(null) }
+    val continueWatchingItems = state.continueWatching.filter { it.isAnime }
+    val continueReadingItems = state.continueReading.filter { !it.isAnime }
+
+    itemToRemove?.let { item ->
+        AlertDialog(
+            onDismissRequest = { itemToRemove = null },
+            title = {
+                Text(
+                    text = stringResource(
+                        if (item.isAnime) MR.strings.kitsux_home_remove_continue_watching_title
+                        else MR.strings.kitsux_home_remove_continue_reading_title
+                    ),
+                    color = Color.White
+                )
+            },
+            text = {
+                Text(
+                    text = stringResource(
+                        if (item.isAnime) MR.strings.kitsux_home_remove_continue_watching_description
+                        else MR.strings.kitsux_home_remove_continue_reading_description,
+                        item.title
+                    ),
+                    color = Color.White
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onRemoveContinueItem(item)
+                        itemToRemove = null
+                    }
+                ) {
+                    Text(text = stringResource(MR.strings.action_remove))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { itemToRemove = null }) {
+                    Text(text = stringResource(MR.strings.action_cancel))
+                }
+            }
+        )
+    }
 
     PullRefresh(
         refreshing = isRefreshing,
@@ -103,7 +150,7 @@ fun HomeScreenContent(
         },
         modifier = modifier,
     ) {
-        if (state.continueWatching.isEmpty() && state.newReleases.isEmpty() && state.categories.isEmpty()) {
+        if (continueWatchingItems.isEmpty() && continueReadingItems.isEmpty() && state.newReleases.isEmpty() && state.categories.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -161,11 +208,25 @@ fun HomeScreenContent(
                 }
 
                 // 1. Continue Watching Row
-                if (state.continueWatching.isNotEmpty()) {
+                if (continueWatchingItems.isNotEmpty()) {
                     item {
                         ContinueWatchingSection(
-                            items = state.continueWatching,
+                            title = stringResource(MR.strings.kitsux_home_continue_watching),
+                            items = continueWatchingItems,
                             onContinueClick = onContinueClick,
+                            onContinueLongClick = { itemToRemove = it },
+                        )
+                    }
+                }
+
+                // 2. Continue Reading Row
+                if (continueReadingItems.isNotEmpty()) {
+                    item {
+                        ContinueWatchingSection(
+                            title = stringResource(MR.strings.kitsux_home_continue_reading),
+                            items = continueReadingItems,
+                            onContinueClick = onContinueClick,
+                            onContinueLongClick = { itemToRemove = it },
                         )
                     }
                 }
@@ -176,6 +237,7 @@ fun HomeScreenContent(
                             title = stringResource(MR.strings.kitsux_home_new_episodes_chapters),
                             items = state.newReleases,
                             onContinueClick = onContinueClick,
+                            onContinueLongClick = { itemToRemove = it },
                         )
                     }
                 }
@@ -202,6 +264,7 @@ fun ContinueWatchingSection(
     title: String? = null,
     items: List<ContinueWatchingItem>,
     onContinueClick: (ContinueWatchingItem) -> Unit,
+    onContinueLongClick: (ContinueWatchingItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -223,7 +286,10 @@ fun ContinueWatchingSection(
                         .width(180.dp)
                         .clip(RoundedCornerShape(6.dp))
                         .background(Color(0xFF141414))
-                        .clickable { onContinueClick(continueItem) },
+                        .combinedClickable(
+                            onClick = { onContinueClick(continueItem) },
+                            onLongClick = { onContinueLongClick(continueItem) }
+                        ),
                 ) {
                     Column {
                         // Poster thumb aspect ratio (16:9)

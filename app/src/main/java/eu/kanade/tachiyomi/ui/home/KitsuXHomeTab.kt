@@ -118,6 +118,9 @@ data object KitsuXHomeTab : Tab {
                 onContinueClick = { continueItem ->
                     screenModel.continueWatchingOrReading(context, continueItem, navigator)
                 },
+                onRemoveContinueItem = { continueItem ->
+                    screenModel.removeFromContinueWatching(continueItem)
+                },
                 onRefresh = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                         PermissionChecker.checkSelfPermission(

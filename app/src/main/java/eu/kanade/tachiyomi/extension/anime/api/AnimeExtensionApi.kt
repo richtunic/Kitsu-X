@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.extension.anime.api
 
 import android.content.Context
 import eu.kanade.tachiyomi.extension.ExtensionUpdateNotifier
+import eu.kanade.tachiyomi.extension.api.FlexibleLongSerializer
 import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
 import eu.kanade.tachiyomi.extension.anime.model.AnimeExtension
 import eu.kanade.tachiyomi.extension.anime.model.AnimeLoadResult
@@ -154,11 +155,12 @@ private data class AnimeExtensionJsonObject(
     val code: Long,
     val version: String,
     val nsfw: Int,
-    val sources: List<AnimeExtensionSourceJsonObject>?,
+    val sources: List<AnimeExtensionSourceJsonObject>? = null,
 )
 
 @Serializable
 private data class AnimeExtensionSourceJsonObject(
+    @Serializable(with = FlexibleLongSerializer::class)
     val id: Long,
     val lang: String,
     val name: String,

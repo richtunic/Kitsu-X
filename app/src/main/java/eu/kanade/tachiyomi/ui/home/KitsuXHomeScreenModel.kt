@@ -15,6 +15,8 @@ import tachiyomi.domain.entries.manga.interactor.GetLibraryManga
 import tachiyomi.domain.entries.manga.model.Manga
 import tachiyomi.domain.history.anime.interactor.GetAnimeHistory
 import tachiyomi.domain.history.manga.interactor.GetMangaHistory
+import tachiyomi.domain.history.anime.interactor.RemoveAnimeHistory
+import tachiyomi.domain.history.manga.interactor.RemoveMangaHistory
 import tachiyomi.domain.items.episode.interactor.GetEpisode
 import tachiyomi.domain.items.chapter.interactor.GetChapter
 import eu.kanade.domain.ui.UiPreferences
@@ -49,6 +51,7 @@ import tachiyomi.domain.library.anime.LibraryAnime
 import tachiyomi.domain.library.manga.LibraryManga
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.ConcurrentHashMap
 
 class KitsuXHomeScreenModel(
     private val context: Context,
@@ -61,12 +64,19 @@ class KitsuXHomeScreenModel(
     private val getEpisode: GetEpisode = Injekt.get(),
     private val getChapter: GetChapter = Injekt.get(),
     private val getEpisodesByAnimeId: GetEpisodesByAnimeId = Injekt.get(),
+    private val getChaptersByMangaId: GetChaptersByMangaId = Injekt.get(),
     private val animeDownloadManager: AnimeDownloadManager = Injekt.get(),
+    private val mangaDownloadManager: MangaDownloadManager = Injekt.get(),
     private val uiPreferences: UiPreferences = Injekt.get(),
 ) : ScreenModel {
 
     private val animeCategoriesFlow = getAnimeCategories.subscribe()
     private val mangaCategoriesFlow = getMangaCategories.subscribe()
+
+    private val removeAnimeHistory: RemoveAnimeHistory = Injekt.get()
+    private val removeMangaHistory: RemoveMangaHistory = Injekt.get()
+    private val getAnime: GetAnime = Injekt.get()
+    private val activeContinueActions = ConcurrentHashMap.newKeySet<String>()
 
     private val jikanFlow = combine(
         KitsuXIntelSystem.heroBannerAnimeList,
@@ -113,6 +123,7 @@ class KitsuXHomeScreenModel(
 
         // 1. Process continue watching items (mix anime and manga history + library items with unseen count)
         val continueWatching = mutableListOf<ContinueWatchingItem>()
+        val continueReading = mutableListOf<ContinueWatchingItem>()
         val addedMediaIds = mutableSetOf<Pair<Long, Boolean>>() // Pair(mediaId, isAnime)
 
         if (showAnime) {
@@ -121,20 +132,36 @@ class KitsuXHomeScreenModel(
                 .take(15)
 
             animeHistoryLatest.forEach { hist ->
-                val libAnime = libraryAnime.find { it.id == hist.animeId } ?: return@forEach
+                val libAnime = libraryAnime.find { it.id == hist.animeId }
+                val anime = libAnime?.anime ?: getAnime.await(hist.animeId)
+                if (anime == null) return@forEach
+
+                val tempLibAnime = libAnime ?: LibraryAnime(
+                    anime = anime,
+                    category = 0,
+                    totalCount = 1,
+                    seenCount = 1,
+                    bookmarkCount = 0,
+                    fillermarkCount = 0,
+                    latestUpload = 0,
+                    episodeFetchedAt = 0,
+                    lastSeen = hist.seenAt?.time ?: 0L,
+                )
+
                 val currentEpisode = getEpisode.await(hist.episodeId)
                 val targetEpisode = currentEpisode?.takeUnless { it.seen }
-                    ?: getEpisodesByAnimeId.await(libAnime.id).getNextUnseen(libAnime.anime, animeDownloadManager)
+                    ?: getEpisodesByAnimeId.await(anime.id).getNextUnseen(anime, animeDownloadManager)
 
                 targetEpisode?.let { episode ->
                     val isNewEpisode = currentEpisode?.id != episode.id
                     continueWatching.add(
                         episode.toContinueWatchingItem(
-                            anime = libAnime,
+                            anime = tempLibAnime,
                             lastSeen = if (isNewEpisode) {
-                                maxOf(libAnime.episodeFetchedAt, libAnime.latestUpload)
+                                maxOf(tempLibAnime.episodeFetchedAt, tempLibAnime.latestUpload).takeIf { it > 0 }
+                                    ?: (hist.seenAt?.time ?: 0L)
                             } else {
-                                hist.seenAt?.time ?: libAnime.lastSeen
+                                hist.seenAt?.time ?: tempLibAnime.lastSeen
                             },
                             isNewEpisode = isNewEpisode,
                         ),
@@ -156,42 +183,57 @@ class KitsuXHomeScreenModel(
 
                 // Calculate manga chapter progress from lastPageRead
                 val chapter = getChapter.await(hist.chapterId)
-                val chapterProgress = when {
-                    chapter == null -> 0f
-                    chapter.read -> 1f
-                    chapter.lastPageRead > 0L -> {
-                        // Estimate: show at least 10% if started, up to 90% (no totalPages available)
-                        // We cap at 0.9 since we can't know the exact total
-                        (chapter.lastPageRead.toFloat() / (chapter.lastPageRead + 3).toFloat()).coerceIn(0.1f, 0.9f)
+                val isChapterPending = chapter != null && !chapter.read
+                val hasNewChapters = hasUpdates || unreadVal > 0
+                val targetChapter = chapter?.takeUnless { it.read }
+                    ?: if (hasNewChapters && libManga != null) {
+                        getChaptersByMangaId.await(libManga.id, applyScanlatorFilter = true)
+                            .getNextUnread(libManga.manga, mangaDownloadManager)
+                    } else {
+                        null
                     }
-                    else -> 0f
-                }
-                val chapterProgressText = "Ch ${hist.chapterNumber.toInt()}"
 
-                continueWatching.add(
-                    ContinueWatchingItem(
-                        id = hist.mangaId,
-                        title = hist.title,
-                        thumbnailUrl = hist.coverData.url,
-                        isAnime = false,
-                        lastSeen = hist.readAt?.time ?: 0L,
-                        progressText = chapterProgressText,
-                        episodeProgress = chapterProgress,
-                        mediaItem = KitsuXMediaItem(
+                if (targetChapter != null && (isChapterPending || hasNewChapters)) {
+                    val chapterProgress = when {
+                        chapter == null -> 0f
+                        chapter.read -> 0f
+                        chapter.lastPageRead > 0L -> {
+                            (chapter.lastPageRead.toFloat() / (chapter.lastPageRead + 3).toFloat()).coerceIn(0.1f, 0.9f)
+                        }
+                        else -> 0f
+                    }
+                    val chapterProgressText = if (chapter?.read == true) {
+                        context.stringResource(MR.strings.kitsux_home_new_badge)
+                    } else {
+                        "Ch ${hist.chapterNumber.toInt()}"
+                    }
+
+                    continueReading.add(
+                        ContinueWatchingItem(
                             id = hist.mangaId,
                             title = hist.title,
                             thumbnailUrl = hist.coverData.url,
-                            description = "",
-                            genres = emptyList(),
                             isAnime = false,
+                            lastSeen = hist.readAt?.time ?: 0L,
+                            progressText = chapterProgressText,
+                            episodeProgress = chapterProgress,
+                            targetItemId = targetChapter.id,
+                            mediaItem = KitsuXMediaItem(
+                                id = hist.mangaId,
+                                title = hist.title,
+                                thumbnailUrl = hist.coverData.url,
+                                description = "",
+                                genres = emptyList(),
+                                isAnime = false,
+                                hasUpdates = hasUpdates,
+                                unseenCount = unreadVal
+                            ),
                             hasUpdates = hasUpdates,
                             unseenCount = unreadVal
-                        ),
-                        hasUpdates = hasUpdates,
-                        unseenCount = unreadVal
+                        )
                     )
-                )
-                addedMediaIds.add(Pair(hist.mangaId, false))
+                    addedMediaIds.add(Pair(hist.mangaId, false))
+                }
             }
         }
 
@@ -219,9 +261,12 @@ class KitsuXHomeScreenModel(
         if (showManga) {
             libraryManga.forEach { libItem ->
                     if (libItem.hasStarted && libItem.unreadCount > 0 && !addedMediaIds.contains(Pair(libItem.id, false))) {
+                    val nextChapter = getChaptersByMangaId.await(libItem.id, applyScanlatorFilter = true)
+                        .getNextUnread(libItem.manga, mangaDownloadManager)
+                        ?: return@forEach
                     val mediaItem = libItem.manga.toMediaItem().copy(hasUpdates = true, unseenCount = libItem.unreadCount.toInt())
                     val lastSeenTime = if (libItem.chapterFetchedAt > 0L) libItem.chapterFetchedAt else libItem.latestUpload
-                    continueWatching.add(
+                    continueReading.add(
                         ContinueWatchingItem(
                             id = libItem.id,
                             title = libItem.manga.title,
@@ -231,7 +276,8 @@ class KitsuXHomeScreenModel(
                             progressText = context.stringResource(MR.strings.kitsux_home_new_badge),
                             mediaItem = mediaItem,
                             hasUpdates = true,
-                            unseenCount = libItem.unreadCount.toInt()
+                            unseenCount = libItem.unreadCount.toInt(),
+                            targetItemId = nextChapter.id,
                         )
                     )
                     addedMediaIds.add(Pair(libItem.id, false))
@@ -239,7 +285,16 @@ class KitsuXHomeScreenModel(
             }
         }
 
-            val sortedContinue = continueWatching.sortedByDescending { it.lastSeen }.take(15)
+            val sortedContinueWatching = continueWatching
+                .filter { it.isAnime }
+                .distinctBy { it.id }
+                .sortedByDescending { it.lastSeen }
+                .take(15)
+            val sortedContinueReading = continueReading
+                .filter { !it.isAnime }
+                .distinctBy { it.id }
+                .sortedByDescending { it.lastSeen }
+                .take(15)
             val newReleases = mutableListOf<ContinueWatchingItem>()
 
             if (showAnime) {
@@ -378,7 +433,8 @@ class KitsuXHomeScreenModel(
                     } else {
                         emptyList()
                     },
-                    continueWatching = sortedContinue,
+                    continueWatching = sortedContinueWatching,
+                    continueReading = sortedContinueReading,
                     newReleases = sortedNewReleases,
                     categories = allCategories,
                     isLoading = false
@@ -484,6 +540,7 @@ class KitsuXHomeScreenModel(
         lastSeen = lastSeen,
         progressText = progressLabel,
         episodeProgress = progress,
+        targetItemId = id,
         mediaItem = mediaItem,
         hasUpdates = isNewEpisode,
         unseenCount = 0,
@@ -536,93 +593,118 @@ class KitsuXHomeScreenModel(
         }
     }
 
+    fun removeFromContinueWatching(continueItem: ContinueWatchingItem) {
+        screenModelScope.launch {
+            if (continueItem.isAnime) {
+                removeAnimeHistory.await(continueItem.id)
+            } else {
+                removeMangaHistory.await(continueItem.id)
+            }
+        }
+    }
+
     fun continueWatchingOrReading(
         context: Context,
         continueItem: ContinueWatchingItem,
         navigator: cafe.adriel.voyager.navigator.Navigator
     ) {
+        val continueKey = "${continueItem.isAnime}_${continueItem.id}"
+        if (!activeContinueActions.add(continueKey)) return
+
         screenModelScope.launch {
-            if (continueItem.isAnime) {
-                val animeId = continueItem.id
-                var targetEpisodeId: Long? = null
-                
-                val lastHist = getAnimeHistory.await(animeId).firstOrNull()
-                if (lastHist != null) {
-                    val episode = getEpisode.await(lastHist.episodeId)
-                    if (episode != null && !episode.seen) {
-                        targetEpisodeId = episode.id
+            try {
+                if (continueItem.isAnime) {
+                    val animeId = continueItem.id
+                    var targetEpisodeId: Long? = continueItem.targetItemId
+
+                    val lastHist = if (targetEpisodeId == null) {
+                        getAnimeHistory.await(animeId).firstOrNull()
+                    } else {
+                        null
                     }
-                }
-                
-                if (targetEpisodeId == null) {
-                    val getAnime = Injekt.get<GetAnime>()
-                    val getEpisodesByAnimeId = Injekt.get<GetEpisodesByAnimeId>()
-                    val downloadManager = Injekt.get<AnimeDownloadManager>()
-                    val anime = getAnime.await(animeId)
-                    if (anime != null) {
-                        val nextUnseen = getEpisodesByAnimeId.await(anime.id).getNextUnseen(anime, downloadManager)
-                        if (nextUnseen != null) {
-                            targetEpisodeId = nextUnseen.id
+                    if (lastHist != null) {
+                        val episode = getEpisode.await(lastHist.episodeId)
+                        if (episode != null && !episode.seen) {
+                            targetEpisodeId = episode.id
                         }
                     }
-                }
-                
-            if (targetEpisodeId != null) {
-                    withContext(Dispatchers.Main) {
-                        val playerPreferences = Injekt.get<PlayerPreferences>()
-                        val extPlayer = playerPreferences.alwaysUseExternalPlayer().get()
-                        MainActivity.startPlayerActivity(context, animeId, targetEpisodeId, extPlayer)
+
+                    if (targetEpisodeId == null) {
+                        val getAnime = Injekt.get<GetAnime>()
+                        val getEpisodesByAnimeId = Injekt.get<GetEpisodesByAnimeId>()
+                        val downloadManager = Injekt.get<AnimeDownloadManager>()
+                        val anime = getAnime.await(animeId)
+                        if (anime != null) {
+                            val nextUnseen = getEpisodesByAnimeId.await(anime.id).getNextUnseen(anime, downloadManager)
+                            if (nextUnseen != null) {
+                                targetEpisodeId = nextUnseen.id
+                            }
+                        }
+                    }
+
+                    if (targetEpisodeId != null) {
+                        withContext(Dispatchers.Main) {
+                            val playerPreferences = Injekt.get<PlayerPreferences>()
+                            val extPlayer = playerPreferences.alwaysUseExternalPlayer().get()
+                            MainActivity.startPlayerActivity(context, animeId, targetEpisodeId, extPlayer)
+                        }
+                    } else {
+                        withContext(Dispatchers.Main) {
+                            navigator.push(eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen(animeId))
+                        }
                     }
                 } else {
-                    withContext(Dispatchers.Main) {
-                        navigator.push(eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen(animeId))
+                    val mangaId = continueItem.id
+                    var targetChapterId: Long? = continueItem.targetItemId
+
+                    val lastHist = if (targetChapterId == null) {
+                        getMangaHistory.await(mangaId).firstOrNull()
+                    } else {
+                        null
                     }
-                }
-            } else {
-                val mangaId = continueItem.id
-                var targetChapterId: Long? = null
-                
-                val lastHist = getMangaHistory.await(mangaId).firstOrNull()
-                if (lastHist != null) {
-                    val chapter = getChapter.await(lastHist.chapterId)
-                    if (chapter != null && !chapter.read) {
-                        targetChapterId = chapter.id
-                    }
-                }
-                
-                if (targetChapterId == null) {
-                    val getManga = Injekt.get<GetManga>()
-                    val getChaptersByMangaId = Injekt.get<GetChaptersByMangaId>()
-                    val downloadManager = Injekt.get<MangaDownloadManager>()
-                    val manga = getManga.await(mangaId)
-                    if (manga != null) {
-                        val nextUnread = getChaptersByMangaId.await(manga.id, applyScanlatorFilter = true)
-                            .getNextUnread(manga, downloadManager)
-                        if (nextUnread != null) {
-                            targetChapterId = nextUnread.id
+                    if (lastHist != null) {
+                        val chapter = getChapter.await(lastHist.chapterId)
+                        if (chapter != null && !chapter.read) {
+                            targetChapterId = chapter.id
                         }
                     }
-                }
-                
-                if (targetChapterId == null && lastHist != null) {
-                    targetChapterId = lastHist.chapterId
-                }
-                
-                if (targetChapterId != null) {
-                    withContext(Dispatchers.Main) {
-                        context.startActivity(
-                            ReaderActivity.newIntent(
-                                context,
-                                mangaId,
-                                targetChapterId,
+
+                    if (targetChapterId == null) {
+                        val getManga = Injekt.get<GetManga>()
+                        val getChaptersByMangaId = Injekt.get<GetChaptersByMangaId>()
+                        val downloadManager = Injekt.get<MangaDownloadManager>()
+                        val manga = getManga.await(mangaId)
+                        if (manga != null) {
+                            val nextUnread = getChaptersByMangaId.await(manga.id, applyScanlatorFilter = true)
+                                .getNextUnread(manga, downloadManager)
+                            if (nextUnread != null) {
+                                targetChapterId = nextUnread.id
+                            }
+                        }
+                    }
+
+                    if (targetChapterId == null && lastHist != null) {
+                        targetChapterId = lastHist.chapterId
+                    }
+
+                    if (targetChapterId != null) {
+                        withContext(Dispatchers.Main) {
+                            context.startActivity(
+                                ReaderActivity.newIntent(
+                                    context,
+                                    mangaId,
+                                    targetChapterId,
+                                )
                             )
-                        )
-                    }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        navigator.push(eu.kanade.tachiyomi.ui.entries.manga.MangaScreen(mangaId))
+                        }
+                    } else {
+                        withContext(Dispatchers.Main) {
+                            navigator.push(eu.kanade.tachiyomi.ui.entries.manga.MangaScreen(mangaId))
+                        }
                     }
                 }
+            } finally {
+                activeContinueActions.remove(continueKey)
             }
         }
     }
@@ -645,6 +727,7 @@ class KitsuXHomeScreenModel(
 data class KitsuXHomeState(
     val heroBannerItems: List<KitsuXMediaItem> = emptyList(),
     val continueWatching: List<ContinueWatchingItem> = emptyList(),
+    val continueReading: List<ContinueWatchingItem> = emptyList(),
     val newReleases: List<ContinueWatchingItem> = emptyList(),
     val categories: List<KitsuXCategoryRow> = emptyList(),
     val isLoading: Boolean = true,
@@ -667,6 +750,7 @@ data class ContinueWatchingItem(
     val unseenCount: Int = 0,
     /** Real progress 0.0..1.0. 0f = unknown/not started, 1f = completed. */
     val episodeProgress: Float = 0f,
+    val targetItemId: Long? = null,
 )
 
 data class KitsuXMediaItem(

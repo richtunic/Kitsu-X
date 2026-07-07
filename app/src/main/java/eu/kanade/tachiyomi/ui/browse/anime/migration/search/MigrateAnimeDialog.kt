@@ -42,11 +42,15 @@ import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.track.EnhancedAnimeTracker
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.ui.browse.anime.migration.AnimeMigrationFlags
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withTimeout
+import logcat.LogPriority
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.lang.withUIContext
+import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
 import tachiyomi.domain.category.anime.interactor.SetAnimeCategories
 import tachiyomi.domain.entries.anime.model.Anime
@@ -66,6 +70,7 @@ import tachiyomi.presentation.core.screens.LoadingScreen
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.time.Instant
+import kotlin.time.Duration.Companion.minutes
 
 @Composable
 internal fun MigrateAnimeDialog(
@@ -235,20 +240,24 @@ internal class MigrateAnimeDialogScreenModel(
         mutableState.update { it.copy(isMigrating = true) }
 
         try {
-            val episodes = source.getEpisodeList(newAnime.toSAnime())
+            withTimeout(MIGRATION_TIMEOUT) {
+                val episodes = source.getEpisodeList(newAnime.toSAnime())
 
-            migrateAnimeInternal(
-                oldSource = prevSource,
-                newSource = source,
-                oldAnime = oldAnime,
-                newAnime = newAnime,
-                sourceEpisodes = episodes,
-                replace = replace,
-                flags = flags,
-            )
-        } catch (_: Throwable) {
-            // Explicitly stop if an error occurred; the dialog normally gets popped at the end
-            // anyway
+                migrateAnimeInternal(
+                    oldSource = prevSource,
+                    newSource = source,
+                    oldAnime = oldAnime,
+                    newAnime = newAnime,
+                    sourceEpisodes = episodes,
+                    replace = replace,
+                    flags = flags,
+                )
+            }
+        } catch (e: TimeoutCancellationException) {
+            logcat(LogPriority.WARN, e) { "Timed out migrating anime ${oldAnime.id} to ${newAnime.source}" }
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e) { "Failed to migrate anime ${oldAnime.id} to ${newAnime.source}" }
+        } finally {
             mutableState.update { it.copy(isMigrating = false) }
         }
     }
@@ -372,4 +381,8 @@ internal class MigrateAnimeDialogScreenModel(
     data class State(
         val isMigrating: Boolean = false,
     )
+
+    private companion object {
+        val MIGRATION_TIMEOUT = 2.minutes
+    }
 }

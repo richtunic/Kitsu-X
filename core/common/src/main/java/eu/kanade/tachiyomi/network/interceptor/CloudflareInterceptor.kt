@@ -2,8 +2,8 @@ package eu.kanade.tachiyomi.network.interceptor
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat
 import eu.kanade.tachiyomi.network.AndroidCookieJar
 import eu.kanade.tachiyomi.util.system.isOutdated
 import eu.kanade.tachiyomi.util.system.toast
+import okhttp3.Cookie
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
 import okhttp3.Request
@@ -41,7 +42,9 @@ class CloudflareInterceptor(
         try {
             response.close()
             cookieManager.remove(request.url, COOKIE_NAMES, 0)
-            resolveWithWebView(request)
+            val oldCookie = cookieManager.get(request.url)
+                .firstOrNull { it.name == "cf_clearance" }
+            resolveWithWebView(request, oldCookie)
 
             return chain.proceed(request)
         }
@@ -55,7 +58,7 @@ class CloudflareInterceptor(
     }
 
     @SuppressLint("SetJavaScriptEnabled")
-    private fun resolveWithWebView(originalRequest: Request) {
+    private fun resolveWithWebView(originalRequest: Request, oldCookie: Cookie?) {
         // We need to lock this thread until the WebView finds the challenge solution url, because
         // OkHttp doesn't support asynchronous interceptors.
         val latch = CountDownLatch(1)
@@ -74,21 +77,30 @@ class CloudflareInterceptor(
 
             webview?.webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView, url: String) {
-                fun isCloudFlareBypassed(): Boolean {
-                    return cookieManager.get(origRequestUrl.toHttpUrl())
-                        .firstOrNull { it.name == "cf_clearance" }
-                        .let { it != null }
-                }
+                    fun isCloudFlareBypassed(): Boolean {
+                        return cookieManager.get(origRequestUrl.toHttpUrl())
+                            .firstOrNull { it.name == "cf_clearance" }
+                            .let { it != null && it != oldCookie }
+                    }
 
                     if (isCloudFlareBypassed()) {
                         cloudflareBypassed = true
                         latch.countDown()
                     }
+
+                    if (url == origRequestUrl && !challengeFound) {
+                        // The first request didn't return the challenge, abort.
+                        latch.countDown()
+                    }
                 }
 
-                override fun onReceivedError(view: WebView, request: WebResourceRequest, error: WebResourceError) {
-                    if (request.isForMainFrame) {
-                        if (error.errorCode in ERROR_CODES) {
+                override fun onReceivedHttpError(
+                    view: WebView?,
+                    request: WebResourceRequest?,
+                    errorResponse: WebResourceResponse?,
+                ) {
+                    if (request?.isForMainFrame == true) {
+                        if (errorResponse?.statusCode in ERROR_CODES) {
                             // Found the Cloudflare challenge page.
                             challengeFound = true
                         } else {

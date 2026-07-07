@@ -168,7 +168,7 @@ private fun SourceItem(
     BaseMangaSourceItem(
         modifier = modifier,
         source = source,
-        onClickItem = { onClickItem(source, Listing.Popular) },
+        onClickItem = { onClickItem(source, if (source.supportsLatest) Listing.Latest else Listing.Popular) },
         onLongClickItem = { onLongClickItem(source) },
         action = {
             if (source.supportsLatest) {

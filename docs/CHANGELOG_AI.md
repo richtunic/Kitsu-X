@@ -1,5 +1,94 @@
 # CHANGELOG_AI
 
+Fecha: 2026-07-07
+Tarea: Preparar release KitsuX 1.0.5 y corregir enlaces del README
+Cambios:
+- Se corrigieron los enlaces de descarga del README para apuntar a assets reales `Kitsu-X-v1.0.5-*.apk`, evitando los 404 provocados por nombres `app-*-release.apk`.
+- Se actualizo el script generador de bloques de descarga para mantener el mismo formato de assets en futuras releases.
+- Se compilaron APKs release firmados para universal, arm64-v8a, armeabi-v7a, x86 y x86_64.
+- Se agregaron notas de release bilingues para GitHub con checksums SHA-256.
+Archivos:
+- [README.md](file:///Users/richtunic/Documents/Proyectos/KitsuX/README.md)
+- [update_readme_downloads.py](file:///Users/richtunic/Documents/Proyectos/KitsuX/.github/scripts/update_readme_downloads.py)
+- [release-notes-v1.0.5.md](file:///Users/richtunic/Documents/Proyectos/KitsuX/docs/release-notes-v1.0.5.md)
+Validacion:
+- `./gradlew :app:assembleRelease -Penable-updater` ejecutado correctamente.
+
+---
+
+Fecha: 2026-07-07
+Tarea: Corregir confianza persistente de extensiones
+Cambios:
+- La validacion de extensiones confiables en anime y manga ahora compara la entrada guardada contra cualquier huella SHA-256 actual del APK, no solo contra la ultima huella de la lista.
+- Esto evita que una extension marcada como confiable vuelva a aparecer como no confiable cuando Android devuelve historial o multiples firmantes en distinto orden.
+Archivos:
+- [TrustAnimeExtension.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/domain/extension/anime/interactor/TrustAnimeExtension.kt)
+- [TrustMangaExtension.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/domain/extension/manga/interactor/TrustMangaExtension.kt)
+Validacion:
+- `./gradlew :app:compileDebugKotlin` ejecutado correctamente.
+
+---
+
+Fecha: 2026-07-07
+Tarea: Compatibilidad manga con repos actuales y bypass Cloudflare alineado con Mihon
+Cambios:
+- Se clono Mihon en `/private/tmp/mihon` para comparar el flujo real sin sobrescribir KitsuX.
+- Se corrigio `CloudflareInterceptor` para detectar errores HTTP del WebView con `onReceivedHttpError`, conservar la cookie `cf_clearance` anterior y desbloquear cuando no aparece challenge, siguiendo el comportamiento de Mihon.
+- Se agrego `FlexibleLongSerializer` para aceptar IDs de fuentes de extensiones como numero o string en indices legacy actuales.
+- Se aplico el parser flexible tanto a extensiones de Manga como de Anime, preservando compatibilidad con Aniyomi.
+- Se hizo mas robusto el update manual de extensiones: si el paquete instalado no existe en el mapa disponible local, se refresca el repo antes de fallar y se emite estado `Error` en vez de completar silenciosamente.
+- Se agrego timeout de 2 minutos a la migracion de Anime y Manga para evitar que una fuente colgada deje el overlay de carga indefinidamente.
+- Se optimizo el tap de `Continuar viendo/leyendo`: las cards ahora guardan el episodio/capitulo objetivo y el handler evita taps duplicados mientras abre el player/lector.
+- Se separaron las capas de Home: `Continuar viendo` queda solo para Anime y `Continuar leyendo` solo para Manga; ambas se ocultan cuando no hay contenido con historial/progreso real.
+- Se normalizo la entrada a fuentes: al abrir una fuente se muestra `Latest` por defecto cuando la extension lo soporta, con fallback a `Popular`.
+Archivos:
+- [CloudflareInterceptor.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/core/common/src/main/java/eu/kanade/tachiyomi/network/interceptor/CloudflareInterceptor.kt)
+- [NetworkHelper.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/core/common/src/main/java/eu/kanade/tachiyomi/network/NetworkHelper.kt)
+- [FlexibleLongSerializer.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/extension/api/FlexibleLongSerializer.kt)
+- [MangaExtensionApi.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/extension/manga/api/MangaExtensionApi.kt)
+- [AnimeExtensionApi.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/extension/anime/api/AnimeExtensionApi.kt)
+- [MangaExtensionManager.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/extension/manga/MangaExtensionManager.kt)
+- [AnimeExtensionManager.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/extension/anime/AnimeExtensionManager.kt)
+- [MigrateMangaDialog.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/ui/browse/manga/migration/search/MigrateMangaDialog.kt)
+- [MigrateAnimeDialog.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/ui/browse/anime/migration/search/MigrateAnimeDialog.kt)
+- [KitsuXHomeScreenModel.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/ui/home/KitsuXHomeScreenModel.kt)
+- [HomeScreenContent.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/presentation/home/HomeScreenContent.kt)
+- [MangaSourcesScreen.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/presentation/browse/manga/MangaSourcesScreen.kt)
+- [AnimeSourcesScreen.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/presentation/browse/anime/AnimeSourcesScreen.kt)
+- [BrowseMangaSourceScreenModel.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/ui/browse/manga/source/browse/BrowseMangaSourceScreenModel.kt)
+- [BrowseAnimeSourceScreenModel.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/ui/browse/anime/source/browse/BrowseAnimeSourceScreenModel.kt)
+Validacion:
+- `./gradlew :core:common:compileDebugKotlin :app:compileDebugKotlin` ejecutado correctamente.
+- `./gradlew :app:compileDebugKotlin` ejecutado correctamente tras los fixes de updates/migracion.
+- `./gradlew :app:compileDebugKotlin` ejecutado correctamente tras optimizar el tap de continuar.
+Notas:
+- No se porto todo Mihon porque KitsuX depende de Aniyomi y un reemplazo completo del motor de fuentes/extensiones seria alto riesgo. El fix se limito a diferencias concretas que afectan repos y Cloudflare.
+- En Olympus, los logs mostraron `HTTP 525` al pedir capitulos en `dashboard.olympusxyz.com`; se confirmo que era una extension desactualizada y se dejo que futuras correcciones dependan de updates de la extension.
+
+---
+
+Fecha: 2026-07-05
+Tarea: Release KitsuX 1.0.5 con continuar leyendo separado y fixes de extensiones
+Cambios:
+- Bump de versión estable a `versionName = 1.0.5` y `versionCode = 6`.
+- Separación de "Continuar viendo" (Anime) y "Continuar leyendo" (Manga) en dos filas distintas en la pantalla de inicio con reglas de filtrado específicas para manga.
+- Fix de deserialización (MissingFieldException) en metadatos de repositorios de extensiones (como Keiyoushi's repo.json) haciendo `shortName` y `sources` opcionales.
+- Fix en la generación de User-Agent por defecto para la opción de Brave, adaptándolo a un formato móvil de Android que coincide con la huella TLS (TLS fingerprint) del dispositivo, evitando errores HTTP 500 y 525 de Cloudflare.
+Archivos:
+- [app/build.gradle.kts](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/build.gradle.kts)
+- [ExtensionRepoDto.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/domain/src/main/java/mihon/domain/extensionrepo/service/ExtensionRepoDto.kt)
+- [MangaExtensionApi.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/extension/manga/api/MangaExtensionApi.kt)
+- [AnimeExtensionApi.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/extension/anime/api/AnimeExtensionApi.kt)
+- [NetworkHelper.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/core/common/src/main/java/eu/kanade/tachiyomi/network/NetworkHelper.kt)
+- [KitsuXHomeScreenModel.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/ui/home/KitsuXHomeScreenModel.kt)
+- [HomeScreenContent.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/presentation/home/HomeScreenContent.kt)
+- [base strings.xml](file:///Users/richtunic/Documents/Proyectos/KitsuX/i18n/src/commonMain/moko-resources/base/strings.xml)
+- [es strings.xml](file:///Users/richtunic/Documents/Proyectos/KitsuX/i18n/src/commonMain/moko-resources/es/strings.xml)
+Validacion:
+- `./gradlew compileDebugKotlin` completado exitosamente.
+
+---
+
 Fecha: 2026-06-23
 Tarea: Release KitsuX 1.0.4 con changelog bilingue localizado
 Cambios:

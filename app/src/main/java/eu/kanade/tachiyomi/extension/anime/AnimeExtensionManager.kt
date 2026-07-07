@@ -20,7 +20,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import logcat.LogPriority
@@ -252,8 +253,21 @@ class AnimeExtensionManager(
      * @param extension The anime extension to be updated.
      */
     fun updateExtension(extension: AnimeExtension.Installed): Flow<InstallStep> {
-        val availableExt = availableExtensionsMapFlow.value[extension.pkgName] ?: return emptyFlow()
-        return installExtension(availableExt)
+        return flow {
+            var availableExt = availableExtensionsMapFlow.value[extension.pkgName]
+            if (availableExt == null) {
+                emit(InstallStep.Pending)
+                findAvailableExtensions()
+                availableExt = availableExtensionsMapFlow.value[extension.pkgName]
+            }
+
+            if (availableExt == null) {
+                emit(InstallStep.Error)
+                return@flow
+            }
+
+            emitAll(installExtension(availableExt))
+        }
     }
 
     fun cancelInstallUpdateExtension(extension: AnimeExtension) {
