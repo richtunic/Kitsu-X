@@ -15,6 +15,7 @@ shortcutHelper.setFilePath("./shortcuts.xml")
 
 android {
     namespace = "eu.kanade.tachiyomi"
+    val releaseKeystoreFile = rootProject.file("kitsux.keystore")
 
     defaultConfig {
         applicationId = "io.kitsux.app"
@@ -44,7 +45,7 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = rootProject.file("kitsux.keystore")
+            storeFile = releaseKeystoreFile
             storePassword = "kitsux123"
             keyAlias = "kitsux"
             keyPassword = "kitsux123"
@@ -64,7 +65,7 @@ android {
             proguardFiles("proguard-android-optimize.txt", "proguard-rules.pro")
 
             buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLastCommitTime = true)}\"")
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("release").takeIf { releaseKeystoreFile.exists() }
         }
 
         val commonMatchingFallbacks = listOf(release.name)
