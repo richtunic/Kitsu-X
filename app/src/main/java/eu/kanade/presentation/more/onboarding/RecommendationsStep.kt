@@ -32,7 +32,7 @@ internal class RecommendationsStep : OnboardingStep {
             SwitchPreferenceWidget(
                 title = stringResource(MR.strings.pref_show_recommendations),
                 checked = showRecommendations,
-                onCheckedChanged = { showRecommendationsPref.set(it) }
+                onCheckedChanged = { showRecommendationsPref.set(it) },
             )
         }
     }

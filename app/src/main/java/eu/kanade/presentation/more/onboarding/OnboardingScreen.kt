@@ -33,17 +33,17 @@ fun OnboardingScreen(
 
     var currentStep by rememberSaveable { mutableIntStateOf(0) }
     val steps = remember {
-            listOf(
-                ContentTypeStep(),
-                RecommendationsStep(),
-                HeroBannerStep(),
-                AutoCategorizationStep(),
-                ExtensionsRepoStep(onSuccess = { currentStep++ }),
-                InstallPermissionStep(),
-                NotificationPermissionStep(),
-                BatteryOptimizationStep(),
-                FinalStep(),
-            )
+        listOf(
+            ContentTypeStep(),
+            RecommendationsStep(),
+            HeroBannerStep(),
+            AutoCategorizationStep(),
+            ExtensionsRepoStep(onSuccess = { currentStep++ }),
+            InstallPermissionStep(),
+            NotificationPermissionStep(),
+            BatteryOptimizationStep(),
+            FinalStep(),
+        )
     }
     val isLastStep = currentStep == steps.lastIndex
 

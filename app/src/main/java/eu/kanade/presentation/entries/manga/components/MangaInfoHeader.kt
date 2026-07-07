@@ -16,11 +16,11 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -66,10 +66,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
@@ -87,7 +86,6 @@ import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import tachiyomi.domain.entries.manga.model.Manga
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.TextButton
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -394,13 +392,13 @@ private fun MangaAndSourceTitlesSmall(
     doSearch: (query: String, global: Boolean) -> Unit,
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     ) {
         // Backdrop Image Box
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(280.dp)
+                .height(280.dp),
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -412,7 +410,7 @@ private fun MangaAndSourceTitlesSmall(
                 modifier = Modifier
                     .fillMaxSize()
                     .alpha(0.85f)
-                    .clickableNoIndication(onClick = onCoverClick)
+                    .clickableNoIndication(onClick = onCoverClick),
             )
 
             // Dark gradient overlay
@@ -424,28 +422,28 @@ private fun MangaAndSourceTitlesSmall(
                             colors = listOf(
                                 Color.Transparent,
                                 Color.Black.copy(alpha = 0.5f),
-                                Color.Black
+                                Color.Black,
                             ),
-                            startY = 0f
-                        )
-                    )
+                            startY = 0f,
+                        ),
+                    ),
             )
 
             // Overlaid Title at bottom left of backdrop
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
                 Text(
                     text = manga.title.ifBlank { stringResource(MR.strings.unknown_title) },
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp
+                        letterSpacing = (-0.5).sp,
                     ),
                     color = Color.White,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -455,12 +453,12 @@ private fun MangaAndSourceTitlesSmall(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             // One-line Metadata separated by bullet
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 // Status tag
                 val statusText = when (manga.status) {
@@ -475,7 +473,7 @@ private fun MangaAndSourceTitlesSmall(
                 Text(
                     text = statusText,
                     color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                 )
 
                 Text(text = "•", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
@@ -487,7 +485,7 @@ private fun MangaAndSourceTitlesSmall(
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.clickableNoIndication {
                         doSearch(sourceName, false)
-                    }
+                    },
                 )
 
                 if (manga.author?.isNotBlank() == true) {
@@ -500,7 +498,7 @@ private fun MangaAndSourceTitlesSmall(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.clickableNoIndication {
                             doSearch(manga.author!!, true)
-                        }
+                        },
                     )
                 }
             }

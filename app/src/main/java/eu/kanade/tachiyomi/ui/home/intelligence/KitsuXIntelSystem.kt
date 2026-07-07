@@ -5,35 +5,37 @@ import eu.kanade.tachiyomi.network.GET
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.ui.home.KitsuXMediaItem
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
 import logcat.LogPriority
-import okhttp3.OkHttpClient
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.entries.anime.interactor.GetAnime
-import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.entries.anime.interactor.GetLibraryAnime
+import tachiyomi.domain.entries.manga.interactor.GetLibraryManga
 import tachiyomi.domain.entries.manga.interactor.GetManga
-import tachiyomi.domain.entries.manga.model.Manga
 import tachiyomi.domain.history.anime.interactor.GetAnimeHistory
 import tachiyomi.domain.history.manga.interactor.GetMangaHistory
 import tachiyomi.domain.items.chapter.interactor.GetChapter
 import tachiyomi.domain.items.episode.interactor.GetEpisode
-import tachiyomi.domain.entries.anime.interactor.GetLibraryAnime
-import tachiyomi.domain.entries.manga.interactor.GetLibraryManga
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.net.URLEncoder
-import java.util.Date
 
 object KitsuXIntelSystem {
 
@@ -69,7 +71,7 @@ object KitsuXIntelSystem {
         "suspense" to 41,
         "comedia" to 4,
         "acción" to 1,
-        "fantasía" to 10
+        "fantasía" to 10,
     )
 
     // In-memory states to prevent duplicate updates
@@ -234,7 +236,7 @@ object KitsuXIntelSystem {
         similarToLastWatchedJob = combine(
             getAnimeHistory.subscribe(""),
             getMangaHistory.subscribe(""),
-            ::Pair
+            ::Pair,
         ).onEach { (animeHistory, mangaHistory) ->
             val latestAnime = animeHistory.firstOrNull()
             val latestManga = mangaHistory.firstOrNull()
@@ -328,8 +330,8 @@ object KitsuXIntelSystem {
 
     // --- Scoring Actions ---
 
-fun onMediaViewed(genres: List<String>) {
-    genres.mapNotNull(::normalizeRecommendationGenre).forEach { genre ->
+    fun onMediaViewed(genres: List<String>) {
+        genres.mapNotNull(::normalizeRecommendationGenre).forEach { genre ->
             val points = when (genre.lowercase()) {
                 "romance" -> 5
                 "comedy", "comedia" -> 3
@@ -506,7 +508,7 @@ fun onMediaViewed(genres: List<String>) {
                     genres = media.genres.map { it.name },
                     rating = String.format("%.1f", media.score ?: 8.8),
                     isAnime = isAnime,
-                    isRecommendation = true
+                    isRecommendation = true,
                 )
             }
         } catch (e: Exception) {
@@ -527,7 +529,7 @@ fun onMediaViewed(genres: List<String>) {
                     genres = emptyList(),
                     rating = "8.5",
                     isAnime = isAnime,
-                    isRecommendation = true
+                    isRecommendation = true,
                 )
             }
         } catch (e: Exception) {
@@ -553,11 +555,11 @@ fun onMediaViewed(genres: List<String>) {
             try {
                 animeLibrary.forEach { libItem ->
                     libItem.anime.genre?.forEach { genre ->
-                    val normalizedGenre = normalizeRecommendationGenre(genre)
-                    if (normalizedGenre != null) {
+                        val normalizedGenre = normalizeRecommendationGenre(genre)
+                        if (normalizedGenre != null) {
                             val cursor = sqlDb.rawQuery(
                                 "SELECT score FROM user_genre_profile WHERE genre = ?",
-                                arrayOf(normalizedGenre)
+                                arrayOf(normalizedGenre),
                             )
                             var currentScore = 0
                             if (cursor.moveToFirst()) {
@@ -574,18 +576,23 @@ fun onMediaViewed(genres: List<String>) {
                                 put("genre", normalizedGenre)
                                 put("score", currentScore + points)
                             }
-                            sqlDb.insertWithOnConflict("user_genre_profile", null, values, android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE)
+                            sqlDb.insertWithOnConflict(
+                                "user_genre_profile",
+                                null,
+                                values,
+                                android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE,
+                            )
                         }
                     }
                 }
 
                 mangaLibrary.forEach { libItem ->
                     libItem.manga.genre?.forEach { genre ->
-                    val normalizedGenre = normalizeRecommendationGenre(genre)
-                    if (normalizedGenre != null) {
+                        val normalizedGenre = normalizeRecommendationGenre(genre)
+                        if (normalizedGenre != null) {
                             val cursor = sqlDb.rawQuery(
                                 "SELECT score FROM user_genre_profile WHERE genre = ?",
-                                arrayOf(normalizedGenre)
+                                arrayOf(normalizedGenre),
                             )
                             var currentScore = 0
                             if (cursor.moveToFirst()) {
@@ -602,7 +609,12 @@ fun onMediaViewed(genres: List<String>) {
                                 put("genre", normalizedGenre)
                                 put("score", currentScore + points)
                             }
-                            sqlDb.insertWithOnConflict("user_genre_profile", null, values, android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE)
+                            sqlDb.insertWithOnConflict(
+                                "user_genre_profile",
+                                null,
+                                values,
+                                android.database.sqlite.SQLiteDatabase.CONFLICT_REPLACE,
+                            )
                         }
                     }
                 }
@@ -654,7 +666,7 @@ fun onMediaViewed(genres: List<String>) {
 
 @Serializable
 private data class JikanResponse<T>(
-    val data: T
+    val data: T,
 )
 
 @Serializable
@@ -665,36 +677,36 @@ private data class JikanMedia(
     val score: Double? = null,
     val popularity: Int? = null,
     val images: JikanImages? = null,
-    val genres: List<JikanGenre> = emptyList()
+    val genres: List<JikanGenre> = emptyList(),
 )
 
 @Serializable
 private data class JikanImages(
-    val jpg: JikanImageUrls? = null
+    val jpg: JikanImageUrls? = null,
 )
 
 @Serializable
 private data class JikanImageUrls(
     @SerialName("large_image_url") val largeImageUrl: String? = null,
-    @SerialName("image_url") val imageUrl: String? = null
+    @SerialName("image_url") val imageUrl: String? = null,
 )
 
 @Serializable
 private data class JikanGenre(
     @SerialName("mal_id") val malId: Long,
-    val name: String
+    val name: String,
 )
 
 @Serializable
 private data class JikanRecommendation(
-    val entry: JikanRecommendationEntry
+    val entry: JikanRecommendationEntry,
 )
 
 @Serializable
 private data class JikanRecommendationEntry(
     @SerialName("mal_id") val malId: Long,
     val title: String,
-    val images: JikanImages? = null
+    val images: JikanImages? = null,
 )
 
 private fun String.capitalize(): String {

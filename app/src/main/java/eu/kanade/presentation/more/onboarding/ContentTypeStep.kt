@@ -35,12 +35,12 @@ internal class ContentTypeStep : OnboardingStep {
             SwitchPreferenceWidget(
                 title = "Anime",
                 checked = showAnime,
-                onCheckedChanged = { showAnimePref.set(it) }
+                onCheckedChanged = { showAnimePref.set(it) },
             )
             SwitchPreferenceWidget(
                 title = "Manga",
                 checked = showManga,
-                onCheckedChanged = { showMangaPref.set(it) }
+                onCheckedChanged = { showMangaPref.set(it) },
             )
         }
     }

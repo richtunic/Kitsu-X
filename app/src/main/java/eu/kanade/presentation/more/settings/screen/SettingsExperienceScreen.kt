@@ -3,7 +3,6 @@ package eu.kanade.presentation.more.settings.screen
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
-import tachiyomi.presentation.core.util.collectAsState as collectPreferencesAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -21,6 +20,7 @@ import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import tachiyomi.presentation.core.util.collectAsState as collectPreferencesAsState
 
 object SettingsExperienceScreen : SearchableSettings {
 
@@ -54,30 +54,30 @@ object SettingsExperienceScreen : SearchableSettings {
                             preference = showAnimePref,
                             title = stringResource(MR.strings.pref_show_anime),
                             subtitle = stringResource(MR.strings.pref_show_anime_summary),
-                        )
+                        ),
                     )
                     add(
                         Preference.PreferenceItem.SwitchPreference(
                             preference = showMangaPref,
                             title = stringResource(MR.strings.pref_show_manga),
                             subtitle = stringResource(MR.strings.pref_show_manga_summary),
-                        )
+                        ),
                     )
-                add(
-                    Preference.PreferenceItem.SwitchPreference(
-                        preference = uiPreferences.showRecommendations(),
-                        title = stringResource(MR.strings.pref_show_recommendations),
-                        subtitle = stringResource(MR.strings.pref_show_recommendations_summary),
+                    add(
+                        Preference.PreferenceItem.SwitchPreference(
+                            preference = uiPreferences.showRecommendations(),
+                            title = stringResource(MR.strings.pref_show_recommendations),
+                            subtitle = stringResource(MR.strings.pref_show_recommendations_summary),
+                        ),
                     )
-                )
-                add(
-                    Preference.PreferenceItem.SwitchPreference(
-                        preference = uiPreferences.showHeroBanner(),
-                        title = stringResource(MR.strings.kitsux_pref_show_hero_banner),
-                        subtitle = stringResource(MR.strings.kitsux_pref_show_hero_banner_summary),
+                    add(
+                        Preference.PreferenceItem.SwitchPreference(
+                            preference = uiPreferences.showHeroBanner(),
+                            title = stringResource(MR.strings.kitsux_pref_show_hero_banner),
+                            subtitle = stringResource(MR.strings.kitsux_pref_show_hero_banner_summary),
+                        ),
                     )
-                )
-                if (showAnime) {
+                    if (showAnime) {
                         add(
                             Preference.PreferenceItem.TextPreference(
                                 title = stringResource(AYMR.strings.label_anime_extension_repos),
@@ -89,7 +89,7 @@ object SettingsExperienceScreen : SearchableSettings {
                                 onClick = {
                                     navigator.push(AnimeExtensionReposScreen())
                                 },
-                            )
+                            ),
                         )
                     }
                     if (showManga) {
@@ -104,11 +104,11 @@ object SettingsExperienceScreen : SearchableSettings {
                                 onClick = {
                                     navigator.push(MangaExtensionReposScreen())
                                 },
-                            )
+                            ),
                         )
                     }
-                }.toPersistentList()
-            )
+                }.toPersistentList(),
+            ),
         )
     }
 }

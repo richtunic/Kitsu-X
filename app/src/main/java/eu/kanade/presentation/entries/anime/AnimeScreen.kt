@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
@@ -16,34 +17,30 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -54,6 +51,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
@@ -61,8 +59,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastAll
 import androidx.compose.ui.util.fastAny
 import androidx.compose.ui.util.fastMap
@@ -430,7 +430,9 @@ private fun AnimeScreenSmallImpl(
             floatingActionButton = {
                 val isFABVisible = remember(episodes) {
                     derivedStateOf {
-                        episodes.fastAny { !it.episode.seen } && !isAnySelected && itemListState.firstVisibleItemIndex > 1
+                        episodes.fastAny { !it.episode.seen } &&
+                            !isAnySelected &&
+                            itemListState.firstVisibleItemIndex > 1
                     }
                 }.value
                 AnimatedVisibility(
@@ -506,7 +508,7 @@ private fun AnimeScreenSmallImpl(
                             modifier = Modifier
                                 .ignorePadding(offsetGridPaddingPx)
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
                         ) {
                             if (episodes.isNotEmpty()) {
                                 val isWatching = remember(state.episodes) {
@@ -516,25 +518,25 @@ private fun AnimeScreenSmallImpl(
                                     onClick = onContinueWatching,
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = Color(0xFFE50914), // KitsuX Red
-                                        contentColor = Color.White
+                                        contentColor = Color.White,
                                     ),
                                     shape = RoundedCornerShape(4.dp),
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(48.dp)
+                                        .height(48.dp),
                                 ) {
                                     Icon(
                                         imageVector = Icons.Filled.PlayArrow,
                                         contentDescription = null,
-                                        modifier = Modifier.size(24.dp)
+                                        modifier = Modifier.size(24.dp),
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = if (isWatching) "Reanudar" else "Empezar a ver",
                                         style = MaterialTheme.typography.titleMedium.copy(
                                             fontWeight = FontWeight.Bold,
-                                            letterSpacing = 0.5.sp
-                                        )
+                                            letterSpacing = 0.5.sp,
+                                        ),
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -547,12 +549,12 @@ private fun AnimeScreenSmallImpl(
                                 onAddToLibraryClicked = onAddToLibraryClicked,
                                 onWebViewClicked = onWebViewClicked,
                                 onWebViewLongClicked = onWebViewLongClicked,
-                            onTrackingClicked = onTrackingClicked,
-                            onEditIntervalClicked = onEditIntervalClicked,
-                            onEditCategory = onEditCategoryClicked,
-                            onMarkCompletedClicked = onMarkCompletedClicked,
-                            modifier = Modifier
-                        )
+                                onTrackingClicked = onTrackingClicked,
+                                onEditIntervalClicked = onEditIntervalClicked,
+                                onEditCategory = onEditCategoryClicked,
+                                onMarkCompletedClicked = onMarkCompletedClicked,
+                                modifier = Modifier,
+                            )
                         }
                     }
 
@@ -596,14 +598,14 @@ private fun AnimeScreenSmallImpl(
                         )
                     }
 
-        when (state.anime.fetchType) {
-            FetchType.Seasons -> {
-                sharedSeasons(
-                                    anime = state.anime,
-                                    seasons = seasons,
-                                    containerHeight = containerHeightPx - toolbarHeight,
-                                    onSeasonClicked = onSeasonClicked,
-                                    onClickContinueWatching = onClickContinueWatching,
+                    when (state.anime.fetchType) {
+                        FetchType.Seasons -> {
+                            sharedSeasons(
+                                anime = state.anime,
+                                seasons = seasons,
+                                containerHeight = containerHeightPx - toolbarHeight,
+                                onSeasonClicked = onSeasonClicked,
+                                onClickContinueWatching = onClickContinueWatching,
                                 listItemModifier = Modifier.ignorePadding(offsetGridPaddingPx),
                             )
                         }
@@ -923,9 +925,9 @@ fun AnimeScreenLargeImpl(
                                 )
                             }
 
-        when (state.anime.fetchType) {
-            FetchType.Seasons -> {
-                sharedSeasons(
+                            when (state.anime.fetchType) {
+                                FetchType.Seasons -> {
+                                    sharedSeasons(
                                         anime = state.anime,
                                         seasons = seasons,
                                         containerHeight = containerHeightPx - topBarHeight,

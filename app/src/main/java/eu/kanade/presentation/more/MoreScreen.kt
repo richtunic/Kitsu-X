@@ -77,7 +77,7 @@ fun MoreScreen(
                 )
             }
 
-        item { HorizontalDivider() }
+            item { HorizontalDivider() }
 
             item {
                 TextPreferenceWidget(

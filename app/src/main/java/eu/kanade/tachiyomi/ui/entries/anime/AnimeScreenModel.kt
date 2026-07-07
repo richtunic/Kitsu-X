@@ -13,7 +13,6 @@ import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.util.addOrRemove
 import eu.kanade.core.util.insertSeparators
-import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.domain.entries.anime.interactor.SetAnimeViewerFlags
 import eu.kanade.domain.entries.anime.interactor.SyncSeasonsWithSource
 import eu.kanade.domain.entries.anime.interactor.UpdateAnime
@@ -27,6 +26,7 @@ import eu.kanade.domain.track.anime.interactor.RefreshAnimeTracks
 import eu.kanade.domain.track.anime.interactor.TrackEpisode
 import eu.kanade.domain.track.model.AutoTrackState
 import eu.kanade.domain.track.service.TrackPreferences
+import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.entries.DownloadAction
 import eu.kanade.presentation.entries.anime.components.EpisodeDownloadAction
 import eu.kanade.presentation.util.formattedMessage
@@ -263,7 +263,7 @@ class AnimeScreenModel(
                 )
             }
 
-        // Start observe tracking since it only needs animeId
+            // Start observe tracking since it only needs animeId
             observeTrackers()
 
             // Fetch info-episodes when needed
@@ -392,7 +392,8 @@ class AnimeScreenModel(
                                 val createResult = createAnimeCategoryWithName.await(genreName)
                                 if (createResult is CreateAnimeCategoryWithName.Result.Success) {
                                     val updatedCategories = getCategories()
-                                    genreCategory = updatedCategories.find { it.name.equals(genreName, ignoreCase = true) }
+                                    genreCategory =
+                                        updatedCategories.find { it.name.equals(genreName, ignoreCase = true) }
                                 }
                             }
                             if (genreCategory != null) {
@@ -1701,9 +1702,9 @@ class AnimeScreenModel(
         data class Success(
             val anime: Anime,
             val source: AnimeSource,
-        val isFromSource: Boolean,
-        val episodes: List<EpisodeList.Item>,
-        val seasons: List<AnimeSeasonItem>,
+            val isFromSource: Boolean,
+            val episodes: List<EpisodeList.Item>,
+            val seasons: List<AnimeSeasonItem>,
             val trackingCount: Int = 0,
             val hasLoggedInTrackers: Boolean = false,
             val isRefreshingData: Boolean = false,

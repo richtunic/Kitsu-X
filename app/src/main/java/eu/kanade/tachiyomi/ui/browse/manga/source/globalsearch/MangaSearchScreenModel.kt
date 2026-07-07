@@ -223,7 +223,7 @@ abstract class MangaSearchScreenModel(
         val sourceFilter: MangaSourceFilter = MangaSourceFilter.PinnedOnly,
         val onlyShowHasResults: Boolean = false,
         val items: PersistentMap<CatalogueSource, MangaSearchItemResult> = persistentMapOf(),
-    val activeEasterEgg: StringResource? = null,
+        val activeEasterEgg: StringResource? = null,
     ) {
         val progress: Int = items.count { it.value !is MangaSearchItemResult.Loading }
         val total: Int = items.size

@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -44,7 +45,6 @@ import tachiyomi.presentation.core.components.material.Button
 import tachiyomi.presentation.core.components.material.ButtonDefaults
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.padding
-import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun ControlsButton(
@@ -148,12 +148,12 @@ fun FilledControlsButton(
             onClick = {},
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color(0xFFE50914), // KitsuX Red
-                contentColor = Color.White
-            )
+                contentColor = Color.White,
+            ),
         ) {
             Text(
                 text = text,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
             )
         }
         Box(

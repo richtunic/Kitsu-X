@@ -43,35 +43,44 @@ class KitsuXHelpScreen : Screen() {
             listOf(
                 FaqItem(
                     question = "1. Las extensiones no se pueden instalar o fallan",
-                    answer = "Android bloquea por defecto la instalación de aplicaciones externas. Para solucionarlo:\n\n" +
-                            "• Ve a los Ajustes de Android -> Aplicaciones -> Acceso especial -> Instalar aplicaciones desconocidas, y activa el permiso para KitsuX.\n" +
-                            "• Asegúrate de haber configurado los repositorios en Configuración -> Experiencia."
+                    answer =
+                    "Android bloquea por defecto la instalación de aplicaciones externas. Para solucionarlo:\n\n" +
+                        "• Ve a los Ajustes de Android -> Aplicaciones -> Acceso especial -> " +
+                        "Instalar aplicaciones desconocidas, y activa el permiso para KitsuX.\n" +
+                        "• Asegúrate de haber configurado los repositorios en Configuración -> Experiencia.",
                 ),
                 FaqItem(
                     question = "2. Error de Cloudflare / HTTP 403",
-                    answer = "Las fuentes/servidores usan protección contra bots para evitar saturaciones. Para resolverlo:\n\n" +
-                            "• Entra a la ficha de la serie que da el error.\n" +
-                            "• Toca el botón de tres puntos superiores y selecciona 'Abrir en WebView'.\n" +
-                            "• Resuelve el captcha si es necesario y espera a que cargue la página."
+                    answer = "Las fuentes/servidores usan protección contra bots para evitar saturaciones. " +
+                        "Para resolverlo:\n\n" +
+                        "• Entra a la ficha de la serie que da el error.\n" +
+                        "• Toca el botón de tres puntos superiores y selecciona " +
+                        "'Abrir en WebView'.\n" +
+                        "• Resuelve el captcha si es necesario y espera a que cargue la página.",
                 ),
                 FaqItem(
                     question = "3. El video se congela, tiene pantalla negra o audio desincronizado",
-                    answer = "Esto sucede por incompatibilidades con la decodificación por hardware de tu dispositivo. Prueba lo siguiente:\n\n" +
-                            "• Ve a Configuración -> Reproductor y cambia la opción 'Decodificación por hardware' a 'Software'.\n" +
-                            "• Activa el uso de un reproductor externo como VLC o MPV en la configuración."
+                    answer =
+                    "Esto sucede por incompatibilidades con la decodificación por hardware de tu dispositivo. " +
+                        "Prueba lo siguiente:\n\n" +
+                        "• Ve a Configuración -> Reproductor y cambia la opción " +
+                        "'Decodificación por hardware' a 'Software'.\n" +
+                        "• Activa el uso de un reproductor externo como VLC o MPV en la configuración.",
                 ),
                 FaqItem(
                     question = "4. Error al importar o exportar copias de seguridad",
-                    answer = "Los archivos de backup pueden corromperse o dar error si cambias de arquitectura o versión. Solución:\n\n" +
-                            "• Asegúrate de que ambas instalaciones estén actualizadas a la misma versión.\n" +
-                            "• Guarda el archivo en el almacenamiento interno en lugar de carpetas protegidas del sistema."
+                    answer =
+                    "Los archivos de backup pueden corromperse o dar error si cambias de arquitectura o versión. " +
+                        "Solución:\n\n" +
+                        "• Asegúrate de que ambas instalaciones estén actualizadas a la misma versión.\n" +
+                        "• Guarda el archivo en el almacenamiento interno en lugar de carpetas protegidas del sistema.",
                 ),
                 FaqItem(
                     question = "5. No se actualiza la biblioteca o fallan las descargas automáticas",
                     answer = "Android restringe los procesos en segundo plano para ahorrar batería. Solución:\n\n" +
-                            "• Entra a los ajustes de batería de tu dispositivo.\n" +
-                            "• Busca KitsuX y marca la opción 'Sin restricciones' u optimización de batería desactivada."
-                )
+                        "• Entra a los ajustes de batería de tu dispositivo.\n" +
+                        "• Busca KitsuX y marca la opción 'Sin restricciones' u optimización de batería desactivada.",
+                ),
             )
         }
 
@@ -79,22 +88,22 @@ class KitsuXHelpScreen : Screen() {
             topBar = {
                 AppBar(
                     title = "Ayuda y Soporte KitsuX",
-                    navigateUp = { navigator.pop() }
+                    navigateUp = { navigator.pop() },
                 )
-            }
+            },
         ) { contentPadding ->
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(contentPadding),
                 contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 item {
                     Text(
                         text = "Problemas Frecuentes",
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        modifier = Modifier.padding(bottom = 8.dp),
                     )
                 }
                 items(faqs) { faq ->
@@ -107,7 +116,7 @@ class KitsuXHelpScreen : Screen() {
 
 private data class FaqItem(
     val question: String,
-    val answer: String
+    val answer: String,
 )
 
 @Composable
@@ -119,26 +128,26 @@ private fun FaqCard(faq: FaqItem) {
             .fillMaxWidth()
             .clickable { expanded = !expanded }
             .animateContentSize(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     text = faq.question,
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
                 )
                 Icon(
                     imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = null
+                    contentDescription = null,
                 )
             }
             if (expanded) {
@@ -146,7 +155,7 @@ private fun FaqCard(faq: FaqItem) {
                     text = faq.answer,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(top = 12.dp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

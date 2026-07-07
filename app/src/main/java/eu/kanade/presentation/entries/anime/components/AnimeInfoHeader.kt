@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -88,7 +87,6 @@ import eu.kanade.tachiyomi.data.coil.useBackground
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.TextButton
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -399,13 +397,13 @@ private fun AnimeAndSourceTitlesSmall(
     doSearch: (query: String, global: Boolean) -> Unit,
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     ) {
         // Backdrop Image Box
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(280.dp)
+                .height(280.dp),
         ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -417,7 +415,7 @@ private fun AnimeAndSourceTitlesSmall(
                 modifier = Modifier
                     .fillMaxSize()
                     .alpha(0.85f)
-                    .clickableNoIndication(onClick = onCoverClick)
+                    .clickableNoIndication(onClick = onCoverClick),
             )
 
             // Dark gradient overlay
@@ -429,28 +427,28 @@ private fun AnimeAndSourceTitlesSmall(
                             colors = listOf(
                                 Color.Transparent,
                                 Color.Black.copy(alpha = 0.5f),
-                                Color.Black
+                                Color.Black,
                             ),
-                            startY = 0f
-                        )
-                    )
+                            startY = 0f,
+                        ),
+                    ),
             )
 
             // Overlaid Title at bottom left of backdrop
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomStart)
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
                 Text(
                     text = anime.title.ifBlank { stringResource(MR.strings.unknown_title) },
                     style = MaterialTheme.typography.headlineMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp
+                        letterSpacing = (-0.5).sp,
                     ),
                     color = Color.White,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -460,12 +458,12 @@ private fun AnimeAndSourceTitlesSmall(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             // One-line Metadata separated by bullet
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 // Status tag
                 val statusText = when (anime.status) {
@@ -480,7 +478,7 @@ private fun AnimeAndSourceTitlesSmall(
                 Text(
                     text = statusText,
                     color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                 )
 
                 Text(text = "•", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
@@ -492,7 +490,7 @@ private fun AnimeAndSourceTitlesSmall(
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.clickableNoIndication {
                         doSearch(sourceName, false)
-                    }
+                    },
                 )
 
                 if (anime.author?.isNotBlank() == true) {
@@ -505,7 +503,7 @@ private fun AnimeAndSourceTitlesSmall(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.clickableNoIndication {
                             doSearch(anime.author!!, true)
-                        }
+                        },
                     )
                 }
             }

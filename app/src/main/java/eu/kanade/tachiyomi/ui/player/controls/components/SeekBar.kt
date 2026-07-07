@@ -109,7 +109,7 @@ fun SeekbarWithTimers(
             modifier = Modifier.weight(1f),
             colors = SeekerDefaults.seekerColors(
                 progressColor = Color(0xFFE50914), // KitsuX Red
-                thumbColor = Color(0xFFE50914),    // KitsuX Red
+                thumbColor = Color(0xFFE50914), // KitsuX Red
                 trackColor = Color.White.copy(alpha = 0.24f),
                 readAheadColor = Color.White.copy(alpha = 0.45f),
             ),

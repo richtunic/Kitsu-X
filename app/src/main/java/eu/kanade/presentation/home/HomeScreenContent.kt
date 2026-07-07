@@ -3,8 +3,6 @@ package eu.kanade.presentation.home
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,21 +16,24 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.foundation.border
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,31 +41,28 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.seconds
-import tachiyomi.presentation.core.components.material.PullRefresh
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.statusBarsPadding
-import eu.kanade.presentation.entries.components.ItemCover
 import coil3.compose.AsyncImage
-import androidx.compose.ui.layout.ContentScale
+import eu.kanade.presentation.entries.components.ItemCover
 import eu.kanade.tachiyomi.ui.home.ContinueWatchingItem
-import eu.kanade.tachiyomi.ui.home.KitsuXCategoryRow
 import eu.kanade.tachiyomi.ui.home.KitsuXHomeState
 import eu.kanade.tachiyomi.ui.home.KitsuXMediaItem
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.i18n.stringResource
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun HomeScreenContent(
@@ -103,20 +101,26 @@ fun HomeScreenContent(
             title = {
                 Text(
                     text = stringResource(
-                        if (item.isAnime) MR.strings.kitsux_home_remove_continue_watching_title
-                        else MR.strings.kitsux_home_remove_continue_reading_title
+                        if (item.isAnime) {
+                            MR.strings.kitsux_home_remove_continue_watching_title
+                        } else {
+                            MR.strings.kitsux_home_remove_continue_reading_title
+                        },
                     ),
-                    color = Color.White
+                    color = Color.White,
                 )
             },
             text = {
                 Text(
                     text = stringResource(
-                        if (item.isAnime) MR.strings.kitsux_home_remove_continue_watching_description
-                        else MR.strings.kitsux_home_remove_continue_reading_description,
-                        item.title
+                        if (item.isAnime) {
+                            MR.strings.kitsux_home_remove_continue_watching_description
+                        } else {
+                            MR.strings.kitsux_home_remove_continue_reading_description
+                        },
+                        item.title,
                     ),
-                    color = Color.White
+                    color = Color.White,
                 )
             },
             confirmButton = {
@@ -124,7 +128,7 @@ fun HomeScreenContent(
                     onClick = {
                         onRemoveContinueItem(item)
                         itemToRemove = null
-                    }
+                    },
                 ) {
                     Text(text = stringResource(MR.strings.action_remove))
                 }
@@ -133,7 +137,7 @@ fun HomeScreenContent(
                 TextButton(onClick = { itemToRemove = null }) {
                     Text(text = stringResource(MR.strings.action_cancel))
                 }
-            }
+            },
         )
     }
 
@@ -150,7 +154,11 @@ fun HomeScreenContent(
         },
         modifier = modifier,
     ) {
-        if (continueWatchingItems.isEmpty() && continueReadingItems.isEmpty() && state.newReleases.isEmpty() && state.categories.isEmpty()) {
+        if (continueWatchingItems.isEmpty() &&
+            continueReadingItems.isEmpty() &&
+            state.newReleases.isEmpty() &&
+            state.categories.isEmpty()
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -162,27 +170,27 @@ fun HomeScreenContent(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
                 ) {
                     Text(
                         text = "🍿",
-                        fontSize = 64.sp
+                        fontSize = 64.sp,
                     )
                     Text(
                         text = stringResource(MR.strings.kitsux_home_empty_library_title),
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.1.sp
+                            letterSpacing = 0.1.sp,
                         ),
                         color = Color.White,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
                     )
                     Text(
                         text = stringResource(MR.strings.kitsux_home_empty_library_description),
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.Gray,
                         textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 16.dp)
+                        modifier = Modifier.padding(horizontal = 16.dp),
                     )
                 }
             }
@@ -202,7 +210,7 @@ fun HomeScreenContent(
                         HeroBannerSection(
                             items = state.heroBannerItems,
                             onClick = onHeroClick,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                         )
                     }
                 }
@@ -288,7 +296,7 @@ fun ContinueWatchingSection(
                         .background(Color(0xFF141414))
                         .combinedClickable(
                             onClick = { onContinueClick(continueItem) },
-                            onLongClick = { onContinueLongClick(continueItem) }
+                            onLongClick = { onContinueLongClick(continueItem) },
                         ),
                 ) {
                     Column {
@@ -337,9 +345,9 @@ fun ContinueWatchingSection(
                                         .padding(horizontal = 6.dp, vertical = 2.dp),
                                 ) {
                                     val text = if (continueItem.unseenCount > 0) {
-                                            stringResource(MR.strings.kitsux_home_new_count, continueItem.unseenCount)
+                                        stringResource(MR.strings.kitsux_home_new_count, continueItem.unseenCount)
                                     } else {
-                                            stringResource(MR.strings.kitsux_home_new_badge)
+                                        stringResource(MR.strings.kitsux_home_new_badge)
                                     }
                                     Text(
                                         text = text,
@@ -358,7 +366,7 @@ fun ContinueWatchingSection(
                                     .clip(RoundedCornerShape(3.dp))
                                     .background(Color.Black.copy(alpha = 0.7f))
                                     .padding(horizontal = 6.dp, vertical = 2.dp),
-                                ) {
+                            ) {
                                 Text(
                                     text = continueItem.progressText,
                                     color = Color.White,
@@ -396,8 +404,9 @@ fun ContinueWatchingSection(
                             modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 2.dp),
                         )
                         // Subtitle with type and progress info
+                        val mediaType = if (continueItem.isAnime) "Anime" else "Manga"
                         Text(
-                            text = if (continueItem.isAnime) "Anime • ${continueItem.progressText}" else "Manga • ${continueItem.progressText}",
+                            text = "$mediaType • ${continueItem.progressText}",
                             color = Color.Gray,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Medium,
@@ -436,19 +445,19 @@ fun MediaSection(
                 Column(
                     modifier = Modifier
                         .width(125.dp)
-                        .clickable { onItemClick(item) }
+                        .clickable { onItemClick(item) },
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .aspectRatio(0.67f) // 2:3 aspect ratio
-                            .clip(RoundedCornerShape(6.dp))
+                            .clip(RoundedCornerShape(6.dp)),
                     ) {
                         ItemCover.Book(
                             data = item.thumbnailUrl,
                             modifier = Modifier.fillMaxSize(),
                         )
-                        
+
                         // Show "NUEVO" badge on category elements if there are updates
                         if (item.hasUpdates) {
                             Box(
@@ -460,7 +469,7 @@ fun MediaSection(
                                     .padding(horizontal = 4.dp, vertical = 2.dp),
                             ) {
                                 Text(
-                                        text = stringResource(MR.strings.kitsux_home_new_badge),
+                                    text = stringResource(MR.strings.kitsux_home_new_badge),
                                     color = Color.White,
                                     fontSize = 8.sp,
                                     fontWeight = FontWeight.Bold,
@@ -468,9 +477,9 @@ fun MediaSection(
                             }
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(6.dp))
-                    
+
                     // Title below the poster (bold, max 2 lines)
                     Text(
                         text = item.title,
@@ -479,11 +488,11 @@ fun MediaSection(
                         fontWeight = FontWeight.Bold,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        lineHeight = 16.sp
+                        lineHeight = 16.sp,
                     )
-                    
+
                     Spacer(modifier = Modifier.height(2.dp))
-                    
+
                     // Subtitle / type (Anime or Manga)
                     Text(
                         text = if (item.isAnime) "Anime" else "Manga",
@@ -491,7 +500,7 @@ fun MediaSection(
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
             }
@@ -522,7 +531,7 @@ fun HeroBannerSection(
     if (items.isEmpty()) return
 
     val pagerState = rememberPagerState(pageCount = { items.size })
-    
+
     // Auto-scroll loop
     LaunchedEffect(pagerState) {
         while (true) {
@@ -539,17 +548,17 @@ fun HeroBannerSection(
             .fillMaxWidth()
             .height(280.dp)
             .clip(RoundedCornerShape(8.dp))
-            .background(Color(0xFF141414))
+            .background(Color(0xFF141414)),
     ) {
         HorizontalPager(
             state = pagerState,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) { page ->
             val item = items[page]
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clickable { onClick(item) }
+                    .clickable { onClick(item) },
             ) {
                 // Image
                 AsyncImage(
@@ -568,10 +577,10 @@ fun HeroBannerSection(
                                 colors = listOf(
                                     Color.Black.copy(alpha = 0.2f),
                                     Color.Black.copy(alpha = 0.6f),
-                                    Color.Black
-                                )
-                            )
-                        )
+                                    Color.Black,
+                                ),
+                            ),
+                        ),
                 )
 
                 // Info Column
@@ -580,30 +589,30 @@ fun HeroBannerSection(
                         .align(Alignment.BottomStart)
                         .padding(bottom = 16.dp, start = 16.dp, end = 72.dp)
                         .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     // Rating Badges
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
                         Box(
                             modifier = Modifier
                                 .background(Color(0xFFE50914), RoundedCornerShape(3.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                                .padding(horizontal = 6.dp, vertical = 2.dp),
                         ) {
                             Text(
                                 text = "POPULAR",
                                 color = Color.White,
                                 fontSize = 8.sp,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
                             )
                         }
                         Text(
                             text = "★ ${item.rating}",
                             color = Color(0xFFFFB300),
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
                         )
                     }
 
@@ -614,7 +623,7 @@ fun HeroBannerSection(
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
                     )
 
                     // Genres
@@ -624,7 +633,7 @@ fun HeroBannerSection(
                             color = Color.LightGray,
                             fontSize = 11.sp,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
                         )
                     }
 
@@ -636,14 +645,14 @@ fun HeroBannerSection(
                             fontSize = 11.sp,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            lineHeight = 15.sp
+                            lineHeight = 15.sp,
                         )
                     }
 
                     // Action Buttons
                     Row(
                         modifier = Modifier.padding(top = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
                         // Play / Search Button
                         Row(
@@ -652,29 +661,30 @@ fun HeroBannerSection(
                                 .clickable { onClick(item) }
                                 .padding(horizontal = 14.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             Icon(
                                 imageVector = Icons.Default.PlayArrow,
                                 contentDescription = null,
                                 tint = Color.White,
-                                modifier = Modifier.size(14.dp)
+                                modifier = Modifier.size(14.dp),
                             )
-                                Text(
-                                    text = when {
-                                        item.isStarted && item.isAnime -> stringResource(MR.strings.kitsux_home_continue_watching)
-                                        item.isStarted -> stringResource(MR.strings.kitsux_home_continue_reading)
-                                        else -> stringResource(MR.strings.kitsux_home_watch_now)
-                                    },
-                                    color = Color.White,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
+                            Text(
+                                text = when {
+                                    item.isStarted && item.isAnime -> stringResource(
+                                        MR.strings.kitsux_home_continue_watching,
+                                    )
+                                    item.isStarted -> stringResource(MR.strings.kitsux_home_continue_reading)
+                                    else -> stringResource(MR.strings.kitsux_home_watch_now)
+                                },
+                                color = Color.White,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
                             )
                         }
-
+                    }
+                }
             }
-        }
-    }
         }
 
         // Indicators (dots) at the bottom right
@@ -683,7 +693,7 @@ fun HeroBannerSection(
                 .align(Alignment.BottomEnd)
                 .padding(bottom = 16.dp, end = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(5.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             repeat(items.size) { index ->
                 val active = pagerState.currentPage == index
@@ -691,7 +701,7 @@ fun HeroBannerSection(
                     modifier = Modifier
                         .size(if (active) 8.dp else 6.dp)
                         .clip(RoundedCornerShape(4.dp))
-                        .background(if (active) Color(0xFFE50914) else Color.Gray.copy(alpha = 0.5f))
+                        .background(if (active) Color(0xFFE50914) else Color.Gray.copy(alpha = 0.5f)),
                 )
             }
         }

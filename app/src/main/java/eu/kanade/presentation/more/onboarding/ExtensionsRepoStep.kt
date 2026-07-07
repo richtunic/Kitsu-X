@@ -19,18 +19,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.i18n.stringResource
+import eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager
+import eu.kanade.tachiyomi.extension.manga.MangaExtensionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import mihon.domain.extensionrepo.anime.interactor.CreateAnimeExtensionRepo
 import mihon.domain.extensionrepo.manga.interactor.CreateMangaExtensionRepo
+import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
 internal class ExtensionsRepoStep(
-    private val onSuccess: () -> Unit
+    private val onSuccess: () -> Unit,
 ) : OnboardingStep {
 
     private val createMangaExtensionRepo: CreateMangaExtensionRepo = Injekt.get()
@@ -57,7 +59,7 @@ internal class ExtensionsRepoStep(
                 .fillMaxWidth()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             OutlinedTextField(
                 value = url,
@@ -71,7 +73,7 @@ internal class ExtensionsRepoStep(
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isAdding,
-                isError = errorText != null
+                isError = errorText != null,
             )
 
             if (errorText != null) {
@@ -79,7 +81,7 @@ internal class ExtensionsRepoStep(
                     text = errorText!!,
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.align(Alignment.Start)
+                    modifier = Modifier.align(Alignment.Start),
                 )
             }
 
@@ -88,7 +90,7 @@ internal class ExtensionsRepoStep(
                     text = successText!!,
                     color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.align(Alignment.Start)
+                    modifier = Modifier.align(Alignment.Start),
                 )
             }
 
@@ -102,19 +104,19 @@ internal class ExtensionsRepoStep(
                             val resManga = withContext(Dispatchers.IO) { createMangaExtensionRepo.await(url) }
                             val resAnime = withContext(Dispatchers.IO) { createAnimeExtensionRepo.await(url) }
                             isAdding = false
-                            
+
                             val isMangaOk = resManga is CreateMangaExtensionRepo.Result.Success ||
-                                            resManga is CreateMangaExtensionRepo.Result.RepoAlreadyExists ||
-                                            resManga is CreateMangaExtensionRepo.Result.DuplicateFingerprint
+                                resManga is CreateMangaExtensionRepo.Result.RepoAlreadyExists ||
+                                resManga is CreateMangaExtensionRepo.Result.DuplicateFingerprint
                             val isAnimeOk = resAnime is CreateAnimeExtensionRepo.Result.Success ||
-                                            resAnime is CreateAnimeExtensionRepo.Result.RepoAlreadyExists ||
-                                            resAnime is CreateAnimeExtensionRepo.Result.DuplicateFingerprint
+                                resAnime is CreateAnimeExtensionRepo.Result.RepoAlreadyExists ||
+                                resAnime is CreateAnimeExtensionRepo.Result.DuplicateFingerprint
 
                             if (isMangaOk || isAnimeOk) {
                                 withContext(Dispatchers.IO) {
                                     try {
-                                        Injekt.get<eu.kanade.tachiyomi.extension.manga.MangaExtensionManager>().findAvailableExtensions()
-                                        Injekt.get<eu.kanade.tachiyomi.extension.anime.AnimeExtensionManager>().findAvailableExtensions()
+                                        Injekt.get<MangaExtensionManager>().findAvailableExtensions()
+                                        Injekt.get<AnimeExtensionManager>().findAvailableExtensions()
                                     } catch (e: Exception) {
                                         // Ignore
                                     }
@@ -133,13 +135,13 @@ internal class ExtensionsRepoStep(
                     }
                 },
                 enabled = !isAdding && url.isNotBlank(),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 if (isAdding) {
                     CircularProgressIndicator(
                         color = MaterialTheme.colorScheme.onPrimary,
                         modifier = Modifier.size(18.dp),
-                        strokeWidth = 2.dp
+                        strokeWidth = 2.dp,
                     )
                 } else {
                     Text(stringResource(MR.strings.kitsux_extension_repo_add))

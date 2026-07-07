@@ -99,7 +99,7 @@ class KitsuXIntelDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE
         try {
             val cursor = db.rawQuery(
                 "SELECT $COL_PROF_SCORE FROM $TABLE_PROFILE WHERE $COL_PROF_GENRE = ?",
-                arrayOf(normalizedGenre)
+                arrayOf(normalizedGenre),
             )
             var currentScore = 0
             if (cursor.moveToFirst()) {
@@ -114,7 +114,9 @@ class KitsuXIntelDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE
 
             db.insertWithOnConflict(TABLE_PROFILE, null, values, SQLiteDatabase.CONFLICT_REPLACE)
             db.setTransactionSuccessful()
-            logcat(LogPriority.DEBUG) { "Incremented genre score for '$normalizedGenre' by $points. New score: ${currentScore + points}" }
+            logcat(LogPriority.DEBUG) {
+                "Incremented genre score for '$normalizedGenre' by $points. New score: ${currentScore + points}"
+            }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to increment genre score" }
         } finally {
@@ -152,7 +154,7 @@ class KitsuXIntelDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE
         val db = readableDatabase
         val cursor = db.rawQuery(
             "SELECT $COL_CACHE_DATA, $COL_CACHE_UPDATED FROM $TABLE_CACHE WHERE $COL_CACHE_KEY = ?",
-            arrayOf(key)
+            arrayOf(key),
         )
         if (cursor.moveToFirst()) {
             val updated = cursor.getLong(1)
@@ -176,7 +178,7 @@ class KitsuXIntelDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE
         genresJson: String,
         score: Double,
         popularity: Int,
-        synopsis: String?
+        synopsis: String?,
     ) {
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -199,7 +201,7 @@ class KitsuXIntelDatabase(context: Context) : SQLiteOpenHelper(context, DATABASE
         val db = readableDatabase
         val cursor = db.rawQuery(
             "SELECT * FROM $TABLE_METADATA WHERE $COL_META_ID = ?",
-            arrayOf(contentId)
+            arrayOf(contentId),
         )
         if (cursor.moveToFirst()) {
             val updated = cursor.getLong(cursor.getColumnIndexOrThrow(COL_META_UPDATED))

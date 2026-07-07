@@ -223,7 +223,7 @@ abstract class AnimeSearchScreenModel(
         val sourceFilter: AnimeSourceFilter = AnimeSourceFilter.PinnedOnly,
         val onlyShowHasResults: Boolean = false,
         val items: PersistentMap<AnimeCatalogueSource, AnimeSearchItemResult> = persistentMapOf(),
-    val activeEasterEgg: StringResource? = null,
+        val activeEasterEgg: StringResource? = null,
     ) {
         val progress: Int = items.count { it.value !is AnimeSearchItemResult.Loading }
         val total: Int = items.size

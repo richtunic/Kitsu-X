@@ -159,9 +159,9 @@ fun WebViewScreenContent(
 
                 val isTargetHost = currentHost.isNotEmpty() && (
                     requestHost == currentHost ||
-                    requestHost.endsWith(".$currentHost") ||
-                    currentHost.endsWith(".$requestHost")
-                )
+                        requestHost.endsWith(".$currentHost") ||
+                        currentHost.endsWith(".$requestHost")
+                    )
 
                 if (!isTargetHost) {
                     return null

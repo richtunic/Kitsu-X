@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
-import android.os.Looper
 import android.webkit.WebView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
@@ -166,8 +165,13 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
 
         // Migrate old default User-Agent if stored in preferences
         val preferenceStore = Injekt.get<PreferenceStore>()
-        val defaultUserAgentPref = preferenceStore.getString("default_user_agent", "Brave 1.62.152, Chromium 121.0.6167.101")
-        if (defaultUserAgentPref.get() == "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0") {
+        val defaultUserAgentPref = preferenceStore.getString(
+            "default_user_agent",
+            "Brave 1.62.152, Chromium 121.0.6167.101",
+        )
+        if (defaultUserAgentPref.get() ==
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:136.0) Gecko/20100101 Firefox/136.0"
+        ) {
             defaultUserAgentPref.set("Brave 1.62.152, Chromium 121.0.6167.101")
         }
 

@@ -1,6 +1,5 @@
 package eu.kanade.presentation.more.onboarding
 
-import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.foundation.layout.Column
