@@ -248,7 +248,8 @@ class KitsuXHomeScreenModel(
         // Add library items that have new/unseen episodes/chapters but are NOT in history yet
         if (showAnime) {
             libraryAnime.forEach { libItem ->
-                if (libItem.hasStarted && libItem.unseenCount > 0 &&
+                if (libItem.hasStarted &&
+                    libItem.unseenCount > 0 &&
                     !addedMediaIds.contains(Pair(libItem.id, true))
                 ) {
                     val nextEpisode = getEpisodesByAnimeId.await(libItem.id)
@@ -270,7 +271,8 @@ class KitsuXHomeScreenModel(
 
         if (showManga) {
             libraryManga.forEach { libItem ->
-                if (libItem.hasStarted && libItem.unreadCount > 0 &&
+                if (libItem.hasStarted &&
+                    libItem.unreadCount > 0 &&
                     !addedMediaIds.contains(Pair(libItem.id, false))
                 ) {
                     val nextChapter = getChaptersByMangaId.await(libItem.id, applyScanlatorFilter = true)
