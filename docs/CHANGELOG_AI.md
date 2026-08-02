@@ -1,5 +1,73 @@
 # CHANGELOG_AI
 
+Fecha: 2026-08-01
+Tarea: Preparar release KitsuX 1.0.7
+Cambios:
+- Se incrementó la aplicación a `versionName 1.0.7` y `versionCode 8`.
+- Se prepararon notas bilingües para GitHub que resumen repositorios unificados, compatibilidad moderna de manga, actualización persistente de biblioteca, notificaciones detalladas, bandeja de novedades y actualización de extensiones en lote.
+- Las notas incluyen el comentario solicitado: `Se añadieron nuevos bugs para solucionar en versiones posteriores` y su equivalente en inglés.
+Archivos:
+- `app/build.gradle.kts`
+- `docs/release-notes-v1.0.7.md`
+Validación:
+- `./gradlew spotlessCheck --rerun-tasks` ejecutado correctamente.
+- `./gradlew :app:testReleaseUnitTest :app:assembleRelease -Penable-updater` ejecutado correctamente.
+- Los cinco APK muestran `versionName 1.0.7`, `versionCode 8`, firma APK v2 válida y checksums SHA-256 documentados.
+
+---
+
+Fecha: 2026-08-01
+Tarea: Añadir bandeja de novedades y actualización de extensiones en lote
+Cambios:
+- Home agrupa los estrenos recientes de la biblioteca en `Hoy`, `Ayer` y `Esta semana` y conserva el acceso directo al siguiente episodio o capítulo pendiente.
+- Las obras sin fecha válida o con más de seis días no aparecen en la bandeja, pero permanecen disponibles en Biblioteca.
+- Anime y manga muestran `Actualizar todas` cuando existen extensiones pendientes y solicitan una confirmación global antes de comenzar.
+- El lote toma todas las extensiones instaladas con actualización, aunque haya una búsqueda activa, las procesa una por una y bloquea ejecuciones simultáneas.
+- Cada elemento reutiliza el instalador configurado: Package Installer conserva la confirmación del sistema y el instalador privado rechaza downgrades, APK sin firma y firmas diferentes a la instalada.
+Archivos:
+- `app/src/main/java/eu/kanade/tachiyomi/ui/home/KitsuXHomeScreenModel.kt`
+- `app/src/main/java/eu/kanade/presentation/home/HomeScreenContent.kt`
+- `app/src/main/java/eu/kanade/tachiyomi/ui/browse/anime/extension/AnimeExtensionsScreenModel.kt`
+- `app/src/main/java/eu/kanade/tachiyomi/ui/browse/manga/extension/MangaExtensionsScreenModel.kt`
+- `app/src/main/java/eu/kanade/tachiyomi/ui/browse/anime/extension/AnimeExtensionsTab.kt`
+- `app/src/main/java/eu/kanade/tachiyomi/ui/browse/manga/extension/MangaExtensionsTab.kt`
+- `app/src/main/java/eu/kanade/presentation/browse/anime/AnimeExtensionsScreen.kt`
+- `app/src/main/java/eu/kanade/presentation/browse/manga/MangaExtensionsScreen.kt`
+- `i18n/src/commonMain/moko-resources/base/strings.xml`
+- `i18n/src/commonMain/moko-resources/es/strings.xml`
+Validación:
+- `./gradlew spotlessCheck` ejecutado correctamente.
+- `./gradlew :app:compileDebugKotlin` ejecutado correctamente.
+- `./gradlew :app:assembleDebug` ejecutado correctamente; se conservan advertencias D8/Kotlin metadata preexistentes.
+- APK arm64 instalado con `adb install -r` en Galaxy S23 Ultra.
+- Home abrió con la biblioteca existente y mantuvo los accesos de continuación. El dispositivo no tenía estrenos fechados en los últimos seis días, por lo que la bandeja permaneció oculta según el estado vacío previsto.
+- La validación interactiva del diálogo de extensiones quedó limitada para no interrumpir el uso activo del teléfono; el diálogo, el bloqueo del lote y el flujo de firma se validaron en código y compilación.
+
+---
+
+Fecha: 2026-08-01
+Tarea: Resumir resultados de actualizacion de biblioteca en notificaciones
+Cambios:
+- Las actualizaciones de anime y manga notifican la cantidad total de episodios o capitulos nuevos, incluso cuando el resultado es cero.
+- La vista expandida ordena las obras con contenido nuevo y su cantidad, despues las omitidas y finalmente las que fallaron.
+- Los errores ya no generan un segundo resumen duplicado; el registro completo queda disponible mediante la accion `Mostrar errores` del mismo resumen.
+- El resumen solo se marca como notificacion de grupo cuando existen obras con contenido nuevo, evitando que Android oculte resultados con cero novedades.
+- Se conserva la preferencia de privacidad: al ocultar contenido de notificaciones solo se muestran los contadores.
+Archivos:
+- [AnimeLibraryUpdateJob.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/data/library/anime/AnimeLibraryUpdateJob.kt)
+- [AnimeLibraryUpdateNotifier.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/data/library/anime/AnimeLibraryUpdateNotifier.kt)
+- [MangaLibraryUpdateJob.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/data/library/manga/MangaLibraryUpdateJob.kt)
+- [MangaLibraryUpdateNotifier.kt](file:///Users/richtunic/Documents/Proyectos/KitsuX/app/src/main/java/eu/kanade/tachiyomi/data/library/manga/MangaLibraryUpdateNotifier.kt)
+- [strings.xml base](file:///Users/richtunic/Documents/Proyectos/KitsuX/i18n/src/commonMain/moko-resources/base/strings.xml)
+- [strings.xml es](file:///Users/richtunic/Documents/Proyectos/KitsuX/i18n/src/commonMain/moko-resources/es/strings.xml)
+Validacion:
+- `git diff --check` ejecutado correctamente.
+- `./gradlew :app:compileDebugKotlin` ejecutado correctamente.
+- `./gradlew :app:assembleDebug` ejecutado correctamente; se conservan advertencias D8/Kotlin metadata preexistentes.
+- APK arm64 instalado con `adb install -r` en Galaxy S23 Ultra. Una actualizacion manual publico `0 nuevos capitulos`, `1 omitidos`, `0 con error` y el detalle expandido `OMITIDOS · 1` seguido de `Lucky Mia!`.
+
+---
+
 Fecha: 2026-07-07
 Tarea: Preparar release KitsuX 1.0.6
 Cambios:

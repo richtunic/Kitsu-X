@@ -90,6 +90,7 @@ class MangaLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
     private val notifier = MangaLibraryUpdateNotifier(context)
 
     private var mangaToUpdate: List<LibraryManga> = mutableListOf()
+    private val skippedUpdates = mutableListOf<Pair<Manga, String?>>()
 
     override suspend fun doWork(): Result {
         if (tags.contains(WORK_NAME_AUTO)) {
@@ -180,7 +181,6 @@ class MangaLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
         }
 
         val restrictions = libraryPreferences.autoUpdateItemRestrictions().get()
-        val skippedUpdates = mutableListOf<Pair<Manga, String?>>()
         val (_, fetchWindowUpperBound) = mangaFetchInterval.getWindow(ZonedDateTime.now())
 
         mangaToUpdate = listToUpdate
@@ -313,19 +313,17 @@ class MangaLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
 
         notifier.cancelProgressNotification()
 
+        val errorLogUri = failedUpdates
+            .takeIf { it.isNotEmpty() }
+            ?.let(::writeErrorFile)
+            ?.getUriCompat(context)
+
+        notifier.showUpdateNotifications(newUpdates, skippedUpdates, failedUpdates, errorLogUri)
+
         if (newUpdates.isNotEmpty()) {
-            notifier.showUpdateNotifications(newUpdates)
             if (hasDownloads.get()) {
                 downloadManager.startDownloads()
             }
-        }
-
-        if (failedUpdates.isNotEmpty()) {
-            val errorFile = writeErrorFile(failedUpdates)
-            notifier.showUpdateErrorNotification(
-                failedUpdates.size,
-                errorFile.getUriCompat(context),
-            )
         }
     }
 

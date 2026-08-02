@@ -161,76 +161,74 @@ class AnimeLibraryUpdateNotifier(
     }
 
     /**
-     * Shows notification containing update entries that failed with action to open full log.
-     *
-     * @param failed Number of entries that failed to update.
-     * @param uri Uri for error log file containing all titles that failed.
-     */
-    fun showUpdateErrorNotification(failed: Int, uri: Uri) {
-        if (failed == 0) {
-            return
-        }
-
-        context.notify(
-            Notifications.ID_LIBRARY_ERROR,
-            Notifications.CHANNEL_LIBRARY_ERROR,
-        ) {
-            setContentTitle(context.stringResource(MR.strings.notification_update_error, failed))
-            setContentText(context.stringResource(MR.strings.action_show_errors))
-            setSmallIcon(R.drawable.ic_kitsux_notification)
-
-            setContentIntent(NotificationReceiver.openErrorLogPendingActivity(context, uri))
-        }
-    }
-
-    /**
      * Shows the notification containing the result of the update done by the service.
      *
      * @param updates a list of anime with new updates.
+     * @param skipped anime excluded by the library update restrictions.
+     * @param failed anime that could not be updated.
+     * @param errorLogUri error log shown from the notification when failures exist.
      */
-    fun showUpdateNotifications(updates: List<Pair<Anime, Array<Episode>>>) {
+    fun showUpdateNotifications(
+        updates: List<Pair<Anime, Array<Episode>>>,
+        skipped: List<Pair<Anime, String?>>,
+        failed: List<Pair<Anime, String?>>,
+        errorLogUri: Uri?,
+    ) {
+        val newEpisodeCount = updates.sumOf { it.second.size }
+
         // Parent group notification
         context.notify(
             Notifications.ID_NEW_EPISODES,
             Notifications.CHANNEL_NEW_CHAPTERS_EPISODES,
         ) {
-            setContentTitle(context.stringResource(AYMR.strings.notification_new_episodes))
-            if (updates.size == 1 && !securityPreferences.hideNotificationContent().get()) {
-                setContentText(updates.first().first.title.chop(NOTIF_TITLE_MAX_LEN))
-            } else {
-                setContentText(
-                    context.resources.getQuantityString(
-                        R.plurals.notification_new_episodes_summary,
-                        updates.size,
-                        updates.size,
+            setContentTitle(
+                context.resources.getQuantityString(
+                    R.plurals.notification_episodes_generic,
+                    newEpisodeCount,
+                    newEpisodeCount,
+                ),
+            )
+            setContentText(
+                context.stringResource(
+                    MR.strings.notification_update_result_counts,
+                    updates.size,
+                    skipped.size,
+                    failed.size,
+                ),
+            )
+
+            if (!securityPreferences.hideNotificationContent().get()) {
+                setStyle(
+                    NotificationCompat.BigTextStyle().bigText(
+                        buildUpdateSummary(updates, skipped, failed),
                     ),
                 )
-
-                if (!securityPreferences.hideNotificationContent().get()) {
-                    setStyle(
-                        NotificationCompat.BigTextStyle().bigText(
-                            updates.joinToString("\n") {
-                                it.first.title.chop(NOTIF_TITLE_MAX_LEN)
-                            },
-                        ),
-                    )
-                }
             }
 
             setSmallIcon(R.drawable.ic_kitsux_notification)
             setLargeIcon(notificationBitmap)
 
-            setGroup(Notifications.GROUP_NEW_EPISODES)
-            setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
-            setGroupSummary(true)
+            if (updates.isNotEmpty()) {
+                setGroup(Notifications.GROUP_NEW_EPISODES)
+                setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_SUMMARY)
+                setGroupSummary(true)
+            }
             priority = NotificationCompat.PRIORITY_HIGH
 
             setContentIntent(getNotificationIntent())
             setAutoCancel(true)
+
+            if (errorLogUri != null) {
+                addAction(
+                    R.drawable.ic_warning_white_24dp,
+                    context.stringResource(MR.strings.action_show_errors),
+                    NotificationReceiver.openErrorLogPendingActivity(context, errorLogUri),
+                )
+            }
         }
 
         // Per-anime notification
-        if (!securityPreferences.hideNotificationContent().get()) {
+        if (updates.isNotEmpty() && !securityPreferences.hideNotificationContent().get()) {
             launchUI {
                 context.notify(
                     updates.map { (anime, episodes) ->
@@ -243,6 +241,36 @@ class AnimeLibraryUpdateNotifier(
             }
         }
     }
+
+    private fun buildUpdateSummary(
+        updates: List<Pair<Anime, Array<Episode>>>,
+        skipped: List<Pair<Anime, String?>>,
+        failed: List<Pair<Anime, String?>>,
+    ): String = buildList {
+        if (updates.isNotEmpty()) {
+            add(context.stringResource(MR.strings.notification_update_new_content_section))
+            addAll(
+                updates.sortedBy { it.first.title }.map { (anime, episodes) ->
+                    val count = context.resources.getQuantityString(
+                        R.plurals.notification_episodes_generic,
+                        episodes.size,
+                        episodes.size,
+                    )
+                    "• ${anime.title.chop(NOTIF_TITLE_MAX_LEN)} — $count"
+                },
+            )
+        }
+        if (skipped.isNotEmpty()) {
+            if (isNotEmpty()) add("")
+            add(context.stringResource(MR.strings.notification_update_skipped_section, skipped.size))
+            addAll(skipped.sortedBy { it.first.title }.map { "• ${it.first.title.chop(NOTIF_TITLE_MAX_LEN)}" })
+        }
+        if (failed.isNotEmpty()) {
+            if (isNotEmpty()) add("")
+            add(context.stringResource(MR.strings.notification_update_failed_section, failed.size))
+            addAll(failed.sortedBy { it.first.title }.map { "• ${it.first.title.chop(NOTIF_TITLE_MAX_LEN)}" })
+        }
+    }.joinToString("\n")
 
     private suspend fun createNewEpisodesNotification(anime: Anime, episodes: Array<Episode>): Notification {
         val icon = getAnimeIcon(anime)

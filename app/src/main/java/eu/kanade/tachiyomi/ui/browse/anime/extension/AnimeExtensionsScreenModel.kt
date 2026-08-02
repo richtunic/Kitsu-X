@@ -32,6 +32,7 @@ import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.seconds
 
 class AnimeExtensionsScreenModel(
@@ -42,6 +43,7 @@ class AnimeExtensionsScreenModel(
 ) : StateScreenModel<AnimeExtensionsScreenModel.State>(State()) {
 
     private val currentDownloads = MutableStateFlow<Map<String, InstallStep>>(hashMapOf())
+    private val updatingAll = AtomicBoolean(false)
 
     init {
         val context = Injekt.get<Application>()
@@ -160,11 +162,19 @@ class AnimeExtensionsScreenModel(
 
     fun updateAllExtensions() {
         screenModelScope.launchIO {
-            state.value.items.values.flatten()
-                .map { it.extension }
-                .filterIsInstance<AnimeExtension.Installed>()
-                .filter { it.hasUpdate }
-                .forEach(::updateExtension)
+            if (!updatingAll.compareAndSet(false, true)) return@launchIO
+            mutableState.update { it.copy(isUpdatingAll = true) }
+            try {
+                extensionManager.installedExtensionsFlow.value
+                    .filter { it.hasUpdate }
+                    .sortedBy { it.name.lowercase() }
+                    .forEach { extension ->
+                        extensionManager.updateExtension(extension).collectToInstallUpdate(extension)
+                    }
+            } finally {
+                updatingAll.set(false)
+                mutableState.update { it.copy(isUpdatingAll = false) }
+            }
         }
     }
 
@@ -226,6 +236,7 @@ class AnimeExtensionsScreenModel(
         val isRefreshing: Boolean = false,
         val items: ItemGroups = mutableMapOf(),
         val updates: Int = 0,
+        val isUpdatingAll: Boolean = false,
         val installer: BasePreferences.ExtensionInstaller? = null,
         val searchQuery: String? = null,
     ) {

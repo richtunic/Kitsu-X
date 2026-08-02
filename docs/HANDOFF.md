@@ -1,5 +1,22 @@
 # HANDOFF
 
+## Nota técnica: bandeja de novedades y actualización de extensiones en lote
+Home deriva `newReleaseGroups` del estado local de anime y manga. Los límites se calculan con el inicio del día en la zona horaria del dispositivo: `Hoy`, `Ayer` y los seis días recientes restantes como `Esta semana`. Los grupos vacíos no se dibujan y la bandeja completa se oculta cuando no hay elementos válidos. Cada tarjeta conserva `onContinueClick`, que abre directamente el siguiente episodio o capítulo pendiente.
+
+Las pantallas de extensiones de anime y manga solicitan confirmación antes de `Actualizar todas`. Los ScreenModels toman una instantánea de todas las extensiones instaladas con `hasUpdate`, sin depender del filtro visible, las ordenan por nombre y esperan a que cada flujo termine antes de iniciar el siguiente. Un `AtomicBoolean` impide lotes simultáneos y `isUpdatingAll` deshabilita el botón. Cada actualización pasa por `extensionManager.updateExtension()`: Package Installer conserva el consentimiento y la validación de certificado de Android, y el instalador privado compara versión y firmas con la extensión instalada.
+
+## Nota técnica: actualización automática persistente de biblioteca
+Las bibliotecas de anime y manga usan trabajos periódicos únicos de WorkManager (`AnimeLibraryUpdate-auto` y `LibraryUpdate-auto`). El intervalo predeterminado es de 12 horas, con red Wi-Fi y batería no baja como restricciones iniciales. En Ajustes > Biblioteca se puede elegir `Nunca`, 6, 8, 12, 24, 48, 72 horas o semanal. Los trabajos quedan persistidos por WorkManager, sobreviven cierres de la app y reinicios del dispositivo, y se reprograman cuando el usuario cambia el intervalo o las restricciones. Abrir Home no inicia una actualización automática, mientras que el gesto de refrescar conserva la ejecución manual.
+
+Al finalizar, cada worker publica su resumen de anime o manga con el total de episodios/capitulos nuevos. La notificacion expandida muestra en este orden: obras con contenido nuevo y su cantidad, obras omitidas por las restricciones de actualizacion y obras con error. Si hay errores, `Mostrar errores` abre el registro detallado desde el mismo resumen. Las notificaciones individuales de cada obra con contenido nuevo se conservan; el resumen solo se agrupa cuando esas notificaciones hijas existen para que los resultados con cero novedades sigan visibles. `hideNotificationContent` oculta los titulos y deja solo los contadores.
+
+## Nota técnica: repositorios de extensiones unificados
+La UI muestra un solo apartado de repositorios de extensiones. Al añadir una URL, KitsuX la registra en los motores internos de anime y manga, conserva sus bases separadas por compatibilidad y refresca ambos catálogos. Al abrir el gestor también sincroniza repositorios antiguos que solo existan en uno de los dos motores, permitiendo que las extensiones de manga aparezcan para instalar sin volver a añadir la URL.
+
+Desde las pantallas de extensiones, el gestor se presenta en el menú overflow como `Listados de extensiones`. El botón `Añadir listado de extensiones` solo aparece cuando no hay ningún repositorio configurado; el menú permanece disponible para administrar o agregar más. Un listado solo aporta las extensiones compatibles que realmente publique: por ejemplo, Yūzōnō es de anime y no llena el catálogo de manga.
+
+El motor de manga sigue el campo `index_v2` de `repo.json`, descomprime GZIP cuando el `index.pb` lo requiere y decodifica el catálogo Protobuf, con fallback al `index.min.json` legado. Esto es necesario para Keiyoushi: su índice JSON antiguo solo contiene los avisos `Outdated App` y `Update to Mihon 0.20.1+`, mientras el catálogo vigente está en `https://github.com/keiyoushi/extensions/raw/repo/index.pb`. Las URLs absolutas de APK e icono publicadas por el índice v2 se usan directamente. El cargador acepta extension-lib hasta `1.6`, lee los metadatos `tachiyomix.*` publicados por las extensiones modernas y normaliza su valor `Float` antes de compararlo para conservar extensiones compartidas 1.4 instaladas desde Mihon u otras apps compatibles.
+
 ## Nota técnica: updates Android KitsuX
 El sistema de actualizaciones reutiliza el updater heredado de Aniyomi/Tachiyomi y consulta GitHub Releases según build type:
 - Stable: `richtunic/Kitsu-X`

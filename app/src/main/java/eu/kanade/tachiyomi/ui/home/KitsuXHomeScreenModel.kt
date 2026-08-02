@@ -48,7 +48,6 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.util.Calendar
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
 
 class KitsuXHomeScreenModel(
     private val context: Context,
@@ -333,12 +332,9 @@ class KitsuXHomeScreenModel(
                                 anime = libItem,
                                 lastSeen = maxOf(libItem.episodeFetchedAt, libItem.latestUpload),
                                 isNewEpisode = true,
-                                progressTextOverride = newReleaseLabel(
-                                    timestamp = maxOf(libItem.episodeFetchedAt, libItem.latestUpload),
-                                    fallback = context.stringResource(
-                                        MR.strings.kitsux_home_episode_number,
-                                        episode.episodeNumber.toInt(),
-                                    ),
+                                progressTextOverride = context.stringResource(
+                                    MR.strings.kitsux_home_episode_number,
+                                    episode.episodeNumber.toInt(),
                                 ),
                             ),
                         )
@@ -366,6 +362,7 @@ class KitsuXHomeScreenModel(
             .sortedByDescending { it.lastSeen }
             .distinctBy { "${it.id}_${it.isAnime}" }
             .take(20)
+        val newReleaseGroups = groupNewReleases(sortedNewReleases)
 
         // 2. Group library items by category name
         val animeCategoryMap = animeCategories.associate { it.id to it.name }
@@ -494,7 +491,7 @@ class KitsuXHomeScreenModel(
             },
             continueWatching = sortedContinueWatching,
             continueReading = sortedContinueReading,
-            newReleases = sortedNewReleases,
+            newReleaseGroups = newReleaseGroups,
             categories = allCategories,
             isLoading = false,
         )
@@ -628,28 +625,42 @@ class KitsuXHomeScreenModel(
             thumbnailUrl = manga.thumbnailUrl,
             isAnime = false,
             lastSeen = lastUpdate,
-            progressText = newReleaseLabel(lastUpdate, context.stringResource(MR.strings.kitsux_home_new_badge)),
+            progressText = context.stringResource(MR.strings.kitsux_home_new_badge),
             mediaItem = mediaItem,
             hasUpdates = true,
             unseenCount = unreadCount.toInt(),
         )
     }
 
-    private fun newReleaseLabel(timestamp: Long, fallback: String): String {
-        if (timestamp <= 0L) return fallback
+    private fun groupNewReleases(items: List<ContinueWatchingItem>): List<KitsuXNewReleaseGroup> {
         val startOfToday = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-        val daysAgo = TimeUnit.MILLISECONDS.toDays(startOfToday - timestamp)
-        return when {
-            timestamp >= startOfToday -> context.stringResource(MR.strings.kitsux_home_today)
-            daysAgo == 0L -> context.stringResource(MR.strings.kitsux_home_yesterday)
-            daysAgo in 1L..6L -> context.stringResource(MR.strings.kitsux_home_days_ago, daysAgo + 1)
-            else -> fallback
         }
+        val startOfYesterday = (startOfToday.clone() as Calendar).apply {
+            add(Calendar.DAY_OF_YEAR, -1)
+        }.timeInMillis
+        val startOfWeek = (startOfToday.clone() as Calendar).apply {
+            add(Calendar.DAY_OF_YEAR, -6)
+        }.timeInMillis
+        val today = startOfToday.timeInMillis
+
+        return listOf(
+            KitsuXNewReleaseGroup(
+                title = context.stringResource(MR.strings.kitsux_home_today),
+                items = items.filter { it.lastSeen >= today },
+            ),
+            KitsuXNewReleaseGroup(
+                title = context.stringResource(MR.strings.kitsux_home_yesterday),
+                items = items.filter { it.lastSeen in startOfYesterday until today },
+            ),
+            KitsuXNewReleaseGroup(
+                title = context.stringResource(MR.strings.kitsux_home_this_week),
+                items = items.filter { it.lastSeen in startOfWeek until startOfYesterday },
+            ),
+        ).filter { it.items.isNotEmpty() }
     }
 
     fun hideContinueItem(continueItem: ContinueWatchingItem) {
@@ -783,9 +794,14 @@ data class KitsuXHomeState(
     val heroBannerItems: List<KitsuXMediaItem> = emptyList(),
     val continueWatching: List<ContinueWatchingItem> = emptyList(),
     val continueReading: List<ContinueWatchingItem> = emptyList(),
-    val newReleases: List<ContinueWatchingItem> = emptyList(),
+    val newReleaseGroups: List<KitsuXNewReleaseGroup> = emptyList(),
     val categories: List<KitsuXCategoryRow> = emptyList(),
     val isLoading: Boolean = true,
+)
+
+data class KitsuXNewReleaseGroup(
+    val title: String,
+    val items: List<ContinueWatchingItem>,
 )
 
 data class KitsuXCategoryRow(

@@ -156,7 +156,7 @@ fun HomeScreenContent(
     ) {
         if (continueWatchingItems.isEmpty() &&
             continueReadingItems.isEmpty() &&
-            state.newReleases.isEmpty() &&
+            state.newReleaseGroups.isEmpty() &&
             state.categories.isEmpty()
         ) {
             Box(
@@ -239,14 +239,19 @@ fun HomeScreenContent(
                     }
                 }
 
-                if (state.newReleases.isNotEmpty()) {
+                if (state.newReleaseGroups.isNotEmpty()) {
                     item {
-                        ContinueWatchingSection(
-                            title = stringResource(MR.strings.kitsux_home_new_episodes_chapters),
-                            items = state.newReleases,
-                            onContinueClick = onContinueClick,
-                            onContinueLongClick = {},
-                        )
+                        Column {
+                            SectionTitle(title = stringResource(MR.strings.kitsux_home_news_tray))
+                            state.newReleaseGroups.forEach { group ->
+                                ContinueWatchingSection(
+                                    title = group.title,
+                                    items = group.items,
+                                    onContinueClick = onContinueClick,
+                                    onContinueLongClick = {},
+                                )
+                            }
+                        }
                     }
                 }
 

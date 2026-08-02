@@ -96,6 +96,7 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
     private val notifier = AnimeLibraryUpdateNotifier(context)
 
     private var animeToUpdate: List<LibraryAnime> = mutableListOf()
+    private val skippedUpdates = mutableListOf<Pair<Anime, String?>>()
 
     override suspend fun doWork(): Result {
         if (tags.contains(WORK_NAME_AUTO)) {
@@ -201,7 +202,6 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
         }
 
         val restrictions = libraryPreferences.autoUpdateItemRestrictions().get()
-        val skippedUpdates = mutableListOf<Pair<Anime, String?>>()
         val (_, fetchWindowUpperBound) = animeFetchInterval.getWindow(ZonedDateTime.now())
 
         animeToUpdate = lastToUpdateWithSeasons
@@ -335,19 +335,17 @@ class AnimeLibraryUpdateJob(private val context: Context, workerParams: WorkerPa
 
         notifier.cancelProgressNotification()
 
+        val errorLogUri = failedUpdates
+            .takeIf { it.isNotEmpty() }
+            ?.let(::writeErrorFile)
+            ?.getUriCompat(context)
+
+        notifier.showUpdateNotifications(newUpdates, skippedUpdates, failedUpdates, errorLogUri)
+
         if (newUpdates.isNotEmpty()) {
-            notifier.showUpdateNotifications(newUpdates)
             if (hasDownloads.get()) {
                 downloadManager.startDownloads()
             }
-        }
-
-        if (failedUpdates.isNotEmpty()) {
-            val errorFile = writeErrorFile(failedUpdates)
-            notifier.showUpdateErrorNotification(
-                failedUpdates.size,
-                errorFile.getUriCompat(context),
-            )
         }
     }
 

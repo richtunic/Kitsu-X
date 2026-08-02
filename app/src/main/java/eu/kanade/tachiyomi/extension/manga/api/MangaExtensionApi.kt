@@ -15,6 +15,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.protobuf.ProtoBuf
+import kotlinx.serialization.protobuf.ProtoNumber
 import logcat.LogPriority
 import mihon.domain.extensionrepo.manga.interactor.GetMangaExtensionRepo
 import mihon.domain.extensionrepo.manga.interactor.UpdateMangaExtensionRepo
@@ -24,7 +26,9 @@ import tachiyomi.core.common.preference.PreferenceStore
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.injectLazy
+import java.io.ByteArrayInputStream
 import java.time.Instant
+import java.util.zip.GZIPInputStream
 import kotlin.time.Duration.Companion.days
 
 internal class MangaExtensionApi {
@@ -52,6 +56,27 @@ internal class MangaExtensionApi {
     private suspend fun getExtensions(extRepo: ExtensionRepo): List<MangaExtension.Available> {
         val repoBaseUrl = extRepo.baseUrl
         return try {
+            val modernIndexUrl = runCatching {
+                with(json) {
+                    networkService.client
+                        .newCall(GET("$repoBaseUrl/repo.json"))
+                        .awaitSuccess()
+                        .parseAs<ExtensionRepoManifest>()
+                        .indexV2
+                }
+            }.getOrNull()
+
+            if (modernIndexUrl != null) {
+                val response = networkService.client.newCall(GET(modernIndexUrl)).awaitSuccess()
+                return ProtoBuf.decodeFromByteArray(
+                    ModernExtensionStore.serializer(),
+                    response.body.bytes().decompressGzipIfNeeded(),
+                )
+                    .extensionList
+                    ?.toExtensions(repoBaseUrl)
+                    .orEmpty()
+            }
+
             val response = networkService.client
                 .newCall(GET("$repoBaseUrl/index.min.json"))
                 .awaitSuccess()
@@ -134,12 +159,111 @@ internal class MangaExtensionApi {
     }
 
     fun getApkUrl(extension: MangaExtension.Available): String {
-        return "${extension.repoUrl}/apk/${extension.apkName}"
+        return extension.apkName.takeIf { it.startsWith("https://") }
+            ?: "${extension.repoUrl}/apk/${extension.apkName}"
     }
 
     private fun ExtensionJsonObject.extractLibVersion(): Double {
         return version.substringBeforeLast('.').toDouble()
     }
+}
+
+private fun ByteArray.decompressGzipIfNeeded(): ByteArray {
+    val isGzip = size >= 2 && this[0] == 0x1f.toByte() && this[1] == 0x8b.toByte()
+    return if (isGzip) {
+        GZIPInputStream(ByteArrayInputStream(this)).use { it.readBytes() }
+    } else {
+        this
+    }
+}
+
+@Serializable
+private data class ExtensionRepoManifest(
+    @kotlinx.serialization.SerialName("index_v2") val indexV2: String? = null,
+)
+
+@Serializable
+private data class ModernExtensionStore(
+    @ProtoNumber(101) val extensionList: ModernExtensionList? = null,
+)
+
+@Serializable
+private data class ModernExtensionList(
+    @ProtoNumber(1) val extensions: List<ModernExtension> = emptyList(),
+) {
+    fun toExtensions(repoUrl: String): List<MangaExtension.Available> {
+        return extensions
+            .filter {
+                val libVersion = it.extensionLib.toDoubleOrNull()
+                libVersion != null &&
+                    libVersion >= MangaExtensionLoader.LIB_VERSION_MIN &&
+                    libVersion <= MangaExtensionLoader.LIB_VERSION_MAX
+            }
+            .map { extension ->
+                val languages = extension.sources.map { it.language }.distinct()
+                MangaExtension.Available(
+                    name = extension.name,
+                    pkgName = extension.packageName,
+                    versionName = extension.versionName,
+                    versionCode = extension.versionCode,
+                    libVersion = extension.extensionLib.toDouble(),
+                    lang = languages.singleOrNull() ?: "all",
+                    isNsfw = extension.contentWarning >= ModernContentWarning.MIXED,
+                    sources = extension.sources.map { source ->
+                        MangaExtension.Available.MangaSource(
+                            id = source.id,
+                            lang = source.language,
+                            name = source.name,
+                            baseUrl = source.homeUrl,
+                        )
+                    },
+                    apkName = extension.resources.apkUrl,
+                    iconUrl = extension.resources.iconUrl,
+                    repoUrl = repoUrl,
+                )
+            }
+    }
+}
+
+@Serializable
+private data class ModernExtension(
+    @ProtoNumber(1) val name: String,
+    @ProtoNumber(2) val packageName: String,
+    @ProtoNumber(3) val resources: ModernExtensionResources,
+    @ProtoNumber(4) val extensionLib: String,
+    @ProtoNumber(5) val versionCode: Long,
+    @ProtoNumber(6) val versionName: String,
+    @ProtoNumber(7) val contentWarning: ModernContentWarning,
+    @ProtoNumber(8) val sources: List<ModernExtensionSource> = emptyList(),
+)
+
+@Serializable
+private data class ModernExtensionResources(
+    @ProtoNumber(1) val apkUrl: String,
+    @ProtoNumber(2) val iconUrl: String,
+)
+
+@Serializable
+private data class ModernExtensionSource(
+    @ProtoNumber(1) val id: Long,
+    @ProtoNumber(2) val name: String,
+    @ProtoNumber(3) val language: String,
+    @ProtoNumber(4) val homeUrl: String = "",
+)
+
+@Serializable
+private enum class ModernContentWarning {
+    @ProtoNumber(0)
+    UNSPECIFIED,
+
+    @ProtoNumber(1)
+    SAFE,
+
+    @ProtoNumber(2)
+    MIXED,
+
+    @ProtoNumber(3)
+    NSFW,
 }
 
 @Serializable

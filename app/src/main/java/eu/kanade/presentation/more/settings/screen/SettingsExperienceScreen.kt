@@ -9,13 +9,12 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.more.settings.Preference
-import eu.kanade.presentation.more.settings.screen.browse.AnimeExtensionReposScreen
-import eu.kanade.presentation.more.settings.screen.browse.MangaExtensionReposScreen
+import eu.kanade.presentation.more.settings.screen.browse.UnifiedExtensionReposScreen
 import kotlinx.collections.immutable.toPersistentList
-import mihon.domain.extensionrepo.anime.interactor.GetAnimeExtensionRepoCount
-import mihon.domain.extensionrepo.manga.interactor.GetMangaExtensionRepoCount
+import kotlinx.coroutines.flow.combine
+import mihon.domain.extensionrepo.anime.interactor.GetAnimeExtensionRepo
+import mihon.domain.extensionrepo.manga.interactor.GetMangaExtensionRepo
 import tachiyomi.i18n.MR
-import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
@@ -33,11 +32,13 @@ object SettingsExperienceScreen : SearchableSettings {
         val navigator = LocalNavigator.currentOrThrow
 
         val uiPreferences = remember { Injekt.get<UiPreferences>() }
-        val getMangaExtensionRepoCount = remember { Injekt.get<GetMangaExtensionRepoCount>() }
-        val getAnimeExtensionRepoCount = remember { Injekt.get<GetAnimeExtensionRepoCount>() }
-
-        val mangaReposCount by getMangaExtensionRepoCount.subscribe().collectAsState(0)
-        val animeReposCount by getAnimeExtensionRepoCount.subscribe().collectAsState(0)
+        val getMangaExtensionRepo = remember { Injekt.get<GetMangaExtensionRepo>() }
+        val getAnimeExtensionRepo = remember { Injekt.get<GetAnimeExtensionRepo>() }
+        val reposCount by remember {
+            combine(getAnimeExtensionRepo.subscribeAll(), getMangaExtensionRepo.subscribeAll()) { anime, manga ->
+                (anime + manga).distinctBy { it.baseUrl }.size
+            }
+        }.collectAsState(0)
 
         val showAnimePref = uiPreferences.showAnime()
         val showMangaPref = uiPreferences.showManga()
@@ -77,32 +78,17 @@ object SettingsExperienceScreen : SearchableSettings {
                             subtitle = stringResource(MR.strings.kitsux_pref_show_hero_banner_summary),
                         ),
                     )
-                    if (showAnime) {
+                    if (showAnime || showManga) {
                         add(
                             Preference.PreferenceItem.TextPreference(
-                                title = stringResource(AYMR.strings.label_anime_extension_repos),
+                                title = stringResource(MR.strings.label_extension_repos),
                                 subtitle = pluralStringResource(
                                     MR.plurals.num_repos,
-                                    animeReposCount,
-                                    animeReposCount,
+                                    reposCount,
+                                    reposCount,
                                 ),
                                 onClick = {
-                                    navigator.push(AnimeExtensionReposScreen())
-                                },
-                            ),
-                        )
-                    }
-                    if (showManga) {
-                        add(
-                            Preference.PreferenceItem.TextPreference(
-                                title = stringResource(AYMR.strings.label_manga_extension_repos),
-                                subtitle = pluralStringResource(
-                                    MR.plurals.num_repos,
-                                    mangaReposCount,
-                                    mangaReposCount,
-                                ),
-                                onClick = {
-                                    navigator.push(MangaExtensionReposScreen())
+                                    navigator.push(UnifiedExtensionReposScreen())
                                 },
                             ),
                         )

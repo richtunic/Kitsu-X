@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.items
@@ -47,7 +48,7 @@ import eu.kanade.presentation.browse.BaseBrowseItem
 import eu.kanade.presentation.browse.manga.components.MangaExtensionIcon
 import eu.kanade.presentation.components.WarningBanner
 import eu.kanade.presentation.entries.components.DotSeparatorNoSpaceText
-import eu.kanade.presentation.more.settings.screen.browse.MangaExtensionReposScreen
+import eu.kanade.presentation.more.settings.screen.browse.UnifiedExtensionReposScreen
 import eu.kanade.presentation.util.animateItemFastScroll
 import eu.kanade.presentation.util.rememberRequestPackageInstallsPermissionState
 import eu.kanade.tachiyomi.extension.InstallStep
@@ -73,6 +74,7 @@ import tachiyomi.presentation.core.util.secondaryItemAlpha
 @Composable
 fun MangaExtensionScreen(
     state: MangaExtensionsScreenModel.State,
+    hasExtensionRepos: Boolean,
     contentPadding: PaddingValues,
     searchQuery: String?,
     onLongClickItem: (MangaExtension) -> Unit,
@@ -104,13 +106,17 @@ fun MangaExtensionScreen(
                 EmptyScreen(
                     stringRes = msg,
                     modifier = Modifier.padding(contentPadding),
-                    actions = persistentListOf(
-                        EmptyScreenAction(
-                            stringRes = MR.strings.label_extension_repos,
-                            icon = Icons.Outlined.Settings,
-                            onClick = { navigator.push(MangaExtensionReposScreen()) },
-                        ),
-                    ),
+                    actions = if (hasExtensionRepos) {
+                        persistentListOf()
+                    } else {
+                        persistentListOf(
+                            EmptyScreenAction(
+                                stringRes = MR.strings.action_add_extension_repo,
+                                icon = Icons.Outlined.Settings,
+                                onClick = { navigator.push(UnifiedExtensionReposScreen()) },
+                            ),
+                        )
+                    },
                 )
             }
             else -> {
@@ -126,6 +132,8 @@ fun MangaExtensionScreen(
                     onTrustExtension = onTrustExtension,
                     onOpenExtension = onOpenExtension,
                     onClickUpdateAll = onClickUpdateAll,
+                    onAddRepo = { navigator.push(UnifiedExtensionReposScreen()) },
+                    showAddRepoButton = !hasExtensionRepos,
                 )
             }
         }
@@ -145,6 +153,8 @@ private fun ExtensionContent(
     onTrustExtension: (MangaExtension.Untrusted) -> Unit,
     onOpenExtension: (MangaExtension.Installed) -> Unit,
     onClickUpdateAll: () -> Unit,
+    onAddRepo: () -> Unit,
+    showAddRepoButton: Boolean,
 ) {
     val context = LocalContext.current
     var trustState by remember { mutableStateOf<MangaExtension.Untrusted?>(null) }
@@ -174,7 +184,10 @@ private fun ExtensionContent(
                         val action: @Composable RowScope.() -> Unit =
                             if (header.textRes == MR.strings.ext_updates_pending) {
                                 {
-                                    Button(onClick = { onClickUpdateAll() }) {
+                                    Button(
+                                        onClick = { onClickUpdateAll() },
+                                        enabled = !state.isUpdatingAll,
+                                    ) {
                                         Text(
                                             text = stringResource(MR.strings.ext_update_all),
                                             style = LocalTextStyle.current.copy(
@@ -250,6 +263,19 @@ private fun ExtensionContent(
                         }
                     },
                 )
+            }
+        }
+
+        if (showAddRepoButton) {
+            item(key = "add-extension-repo") {
+                Button(
+                    onClick = onAddRepo,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
+                ) {
+                    Text(stringResource(MR.strings.action_add_extension_repo))
+                }
             }
         }
     }

@@ -36,6 +36,8 @@ import eu.kanade.tachiyomi.data.coil.MangaCoverFetcher
 import eu.kanade.tachiyomi.data.coil.MangaCoverKeyer
 import eu.kanade.tachiyomi.data.coil.MangaKeyer
 import eu.kanade.tachiyomi.data.coil.TachiyomiImageDecoder
+import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
+import eu.kanade.tachiyomi.data.library.manga.MangaLibraryUpdateJob
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.di.AppModule
 import eu.kanade.tachiyomi.di.PreferenceModule
@@ -174,6 +176,9 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         ) {
             defaultUserAgentPref.set("Brave 1.62.152, Chromium 121.0.6167.101")
         }
+
+        AnimeLibraryUpdateJob.setupTask(this)
+        MangaLibraryUpdateJob.setupTask(this)
 
         initializeMigrator()
     }

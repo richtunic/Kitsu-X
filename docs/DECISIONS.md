@@ -1,5 +1,21 @@
 # DECISIONS
 
+Fecha: 2026-08-01
+Decision: Construir la bandeja de novedades desde el estado local de la biblioteca y ejecutar las actualizaciones de extensiones de forma secuencial sobre los instaladores existentes.
+Motivo: La biblioteca ya conserva las fechas necesarias y el toque de las tarjetas ya resuelve el siguiente episodio o capítulo, por lo que no hace falta otra tabla ni sincronización. En extensiones, reutilizar el flujo individual mantiene la confirmación y la validación de firmas sin crear un instalador paralelo menos seguro.
+Alternativas descartadas: Guardar una bandeja duplicada en base de datos (estado redundante), actualizar extensiones en paralelo (varios diálogos y carreras del instalador) y omitir la confirmación global (acción masiva fácil de activar por error).
+Impacto: Home muestra únicamente novedades de hoy a los últimos seis días, agrupadas por fecha local. `Actualizar todas` procesa el catálogo completo de pendientes, no solo el resultado filtrado, y permite como máximo un lote activo por pantalla.
+
+---
+
+Fecha: 2026-08-01
+Decision: Consolidar el resultado de cada actualizacion de biblioteca en su notificacion resumen existente.
+Motivo: Los workers ya separaban contenido nuevo, omitidos y errores, pero solo notificaban el primer grupo, ocultaban los omitidos en logs y duplicaban los errores en otra notificacion. El resumen expandible permite mostrar el total nuevo y ordenar los tres grupos sin introducir almacenamiento ni coordinacion adicional.
+Alternativas descartadas: Crear un servicio coordinador nuevo para fusionar anime y manga (descartado por complejidad y carreras entre WorkManager) y mantener una notificacion de error separada (descartado por duplicar el resultado y romper el orden visual solicitado).
+Impacto: Anime y manga conservan notificaciones resumen independientes y sus notificaciones accionables por obra. Los registros de error siguen accesibles desde `Mostrar errores`; al ocultar contenido sensible solo se exponen contadores.
+
+---
+
 Fecha: 2026-06-23
 Decision: Las notas de release de KitsuX se publican bilingues en GitHub, pero la app muestra solo un idioma.
 Motivo: El usuario pidio commits/releases en espanol e ingles, y una experiencia de app sin duplicar texto. La app interpreta secciones markdown `## es` y `## en`: usuarios con idioma de app en espanol ven `es`; cualquier otro idioma ve `en`.

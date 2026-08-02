@@ -287,6 +287,7 @@
     <string name="pref_library_update_interval">Automatic updates</string>
     <string name="update_never">Off</string>
     <string name="update_6hour">Every 6 hours</string>
+    <string name="update_8hour">Every 8 hours</string>
     <string name="update_12hour">Every 12 hours</string>
     <string name="update_24hour">Daily</string>
     <string name="update_48hour">Every 2 days</string>
@@ -331,6 +332,8 @@
     <string name="ext_updates_pending">Updates pending</string>
     <string name="ext_update">Update</string>
     <string name="ext_update_all">Update all</string>
+    <string name="ext_update_all_confirm_title">Update all extensions?</string>
+    <string name="ext_update_all_confirm_message">KitsuX will process %1$d updates one at a time. The configured installer will keep its confirmation and signature verification.</string>
     <string name="ext_obsolete">Obsolete</string>
     <string name="ext_install">Install</string>
     <string name="ext_pending">Pending</string>
@@ -365,7 +368,8 @@
     <string name="ext_revoke_trust">Revoke trusted unknown extensions</string>
 
     <!-- Extension repos -->
-    <string name="label_extension_repos">Extension repos</string>
+    <string name="label_extension_repos">Extension lists</string>
+    <string name="action_add_extension_repo">Add extension list</string>
     <string name="information_empty_repos">You have no repos set.</string>
     <string name="action_add_repo">Add repo</string>
     <string name="label_add_repo_input">Repo URL</string>
@@ -911,6 +915,10 @@
     <string name="notification_chapters_single_and_more">Chapter %1$s and %2$d more</string>
     <string name="notification_chapters_multiple">Chapters %1$s</string>
     <string name="notification_update_error">%1$d update(s) failed</string>
+    <string name="notification_update_result_counts">%1$d with new content · %2$d skipped · %3$d failed</string>
+    <string name="notification_update_new_content_section">NEW CONTENT</string>
+    <string name="notification_update_skipped_section">SKIPPED · %1$d</string>
+    <string name="notification_update_failed_section">ERRORS · %1$d</string>
     <string name="learn_more">Tap to learn more</string>
     <string name="notification_cover_update_failed">Failed to update cover</string>
     <string name="notification_first_add_to_library">Please add the entry to your library before doing this</string>
@@ -1017,6 +1025,8 @@
     <string name="kitsux_home_minutes_remaining">%d min</string>
     <string name="kitsux_home_today">Today</string>
     <string name="kitsux_home_yesterday">Yesterday</string>
+    <string name="kitsux_home_this_week">This week</string>
+    <string name="kitsux_home_news_tray">New releases</string>
     <string name="kitsux_home_days_ago">%d days ago</string>
     <string name="kitsux_category_completed">Completed</string>
     <string name="kitsux_action_mark_completed">Completed</string>

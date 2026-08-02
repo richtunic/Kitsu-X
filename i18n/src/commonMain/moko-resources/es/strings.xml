@@ -49,6 +49,7 @@
     <string name="pref_library_update_interval">Actualizaciones automáticas</string>
     <string name="update_never">No</string>
     <string name="update_6hour">Cada 6 horas</string>
+    <string name="update_8hour">Cada 8 horas</string>
     <string name="update_12hour">Cada 12 horas</string>
     <string name="update_24hour">Diarias</string>
     <string name="update_48hour">Cada 2 días</string>
@@ -141,6 +142,10 @@
     <string name="decode_image_error">No se pudo cargar la imagen</string>
     <string name="download_queue_error">No se pudieron descargar los capítulos. Puedes volver a intentarlo en la sección de descargas</string>
     <string name="notification_new_chapters">Nuevos capítulos encontrados</string>
+    <string name="notification_update_result_counts">%1$d con contenido nuevo · %2$d omitidos · %3$d con error</string>
+    <string name="notification_update_new_content_section">CONTENIDO NUEVO</string>
+    <string name="notification_update_skipped_section">OMITIDOS · %1$d</string>
+    <string name="notification_update_failed_section">ERRORES · %1$d</string>
     <string name="notification_first_add_to_library">Primero tienes que añadir el título a tu biblioteca</string>
     <string name="file_select_cover">Elige una imagen de portada</string>
     <string name="file_select_backup">Elige una copia de respaldo</string>
@@ -552,6 +557,8 @@
     <string name="update_72hour">Cada 3 días</string>
     <string name="download_queue_size_warning">Advertencia: Las descargas grandes pueden llevar a que las fuentes se vuelvan cada vez más lentas y en casos extremos que los servidores limiten o impidan el acceso a Mihon. Toca aquí para más información.</string>
     <string name="ext_update_all">Actualizar todas</string>
+    <string name="ext_update_all_confirm_title">¿Actualizar todas las extensiones?</string>
+    <string name="ext_update_all_confirm_message">KitsuX procesará %1$d actualizaciones una por una. El instalador configurado conservará su confirmación y verificación de firmas.</string>
     <string name="channel_app_updates">Actualizaciones de la aplicación</string>
     <string name="pref_auto_clear_chapter_cache">Limpiar la caché de capítulos al abrir la aplicación</string>
     <string name="database_clean">Base de datos limpia</string>
@@ -786,7 +793,8 @@
     <string name="action_delete_repo">Borrar repositorio</string>
     <string name="action_add_repo">Añadir un repositorio</string>
     <string name="information_empty_repos">Todavía no has añadido ningún repositorio.</string>
-    <string name="label_extension_repos">Repositorios de extensiones</string>
+    <string name="label_extension_repos">Listados de extensiones</string>
+    <string name="action_add_extension_repo">Añadir listado de extensiones</string>
     <string name="label_add_repo_input">Dirección URL del repositorio</string>
     <string name="onboarding_storage_help_info">¿Acabas de actualizar desde una versión más antigua y no sabes qué hacer? Échale un vistazo a la guía de almacenamiento.</string>
     <string name="onboarding_storage_help_action">Guía de almacenamiento</string>
@@ -881,6 +889,8 @@
     <string name="kitsux_home_minutes_remaining">%d min</string>
     <string name="kitsux_home_today">Hoy</string>
     <string name="kitsux_home_yesterday">Ayer</string>
+    <string name="kitsux_home_this_week">Esta semana</string>
+    <string name="kitsux_home_news_tray">Novedades</string>
     <string name="kitsux_home_days_ago">Hace %d días</string>
     <string name="kitsux_category_completed">Terminados</string>
     <string name="kitsux_action_mark_completed">Terminado</string>
