@@ -155,6 +155,8 @@ class LibraryPreferences(
 
     fun lastUsedAnimeCategory() = preferenceStore.getInt(Preference.appStateKey("last_used_anime_category"), 0)
     fun lastUsedMangaCategory() = preferenceStore.getInt(Preference.appStateKey("last_used_category"), 0)
+    fun animeAllTabIndexMigrated() = preferenceStore.getBoolean(Preference.appStateKey("anime_all_tab_index_migrated"), false)
+    fun mangaAllTabIndexMigrated() = preferenceStore.getBoolean(Preference.appStateKey("manga_all_tab_index_migrated"), false)
 
     fun animeUpdateCategories() =
         preferenceStore.getStringSet(LIBRARY_UPDATE_ANIME_CATEGORIES_PREF_KEY, emptySet())

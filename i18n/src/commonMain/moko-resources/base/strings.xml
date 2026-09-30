@@ -1004,6 +1004,10 @@
     <string name="exception_unknown_host">Couldn\'t reach %s</string>
     <!-- KitsuX -->
     <string name="kitsux_home_tab">Home</string>
+    <string name="kitsux_library_all">All</string>
+    <string name="kitsux_library_watching">Watching</string>
+    <string name="kitsux_library_reading">Reading</string>
+    <string name="kitsux_library_pending">Pending</string>
     <string name="kitsux_home_empty_library_title">Your library is empty</string>
     <string name="kitsux_home_empty_library_description">Add anime or manga from Explore to see it here.</string>
     <string name="kitsux_home_nothing_to_show_title">Nothing to show yet</string>

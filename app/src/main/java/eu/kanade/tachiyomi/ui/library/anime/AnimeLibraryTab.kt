@@ -178,7 +178,7 @@ data object AnimeLibraryTab : Tab {
                     onClickFilter = screenModel::showSettingsDialog,
                     onClickRefresh = {
                         onClickRefresh(
-                            state.categories[screenModel.activeCategoryIndex],
+                            state.categories[screenModel.activeCategoryIndex].takeUnless { it.id == Category.ALL_ID },
                         )
                     },
                     onClickGlobalUpdate = { onClickRefresh(null) },
@@ -252,7 +252,9 @@ data object AnimeLibraryTab : Tab {
                             screenModel.toggleRangeSelection(it)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
-                        onRefresh = onClickRefresh,
+                        onRefresh = { category ->
+                            onClickRefresh(category?.takeUnless { it.id == Category.ALL_ID })
+                        },
                         onGlobalSearchClicked = {
                             navigator.push(
                                 GlobalAnimeSearchScreen(screenModel.state.value.searchQuery ?: ""),
@@ -274,6 +276,7 @@ data object AnimeLibraryTab : Tab {
         when (val dialog = state.dialog) {
             is AnimeLibraryScreenModel.Dialog.SettingsSheet -> run {
                 val category = state.categories.getOrNull(screenModel.activeCategoryIndex)
+                    ?.takeUnless { it.id == Category.ALL_ID }
                 if (category == null) {
                     onDismissRequest()
                     return@run

@@ -356,3 +356,9 @@ Notas:
 - Continuar viendo/leyendo conserva historial confirmado; novedades y añadidos recientemente usan datos locales y eliminan duplicados por ID.
 - Se retiraron las recomendaciones Jikan de Inicio y la inicialización de Jikan al arranque. Se añadieron estados vacíos y textos base/español.
 - `:app:compileDebugKotlin` y `:app:assembleDebug` pasaron offline; `git diff --check` pasó. Pruebas en teléfono y tablet pendientes.
+
+# 2026-09-29 — Fase 3, Biblioteca
+
+- Anime y Manga agregan «Todo» virtual sin duplicados ni cambios de DB; se conserva la selección previa de categoría al desplazar índices guardados.
+- Chips rápidos filtran por progreso y pendientes reales; la cuadrícula automática se adapta al ancho actual de ventana con límite de ocho columnas.
+- Kotlin y APK debug compilaron offline. Pruebas táctiles y responsive en dispositivo pendientes.

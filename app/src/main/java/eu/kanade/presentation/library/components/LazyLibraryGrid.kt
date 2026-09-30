@@ -1,6 +1,7 @@
 package eu.kanade.presentation.library.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -18,14 +19,17 @@ internal fun LazyLibraryGrid(
     contentPadding: PaddingValues,
     content: LazyGridScope.() -> Unit,
 ) {
-    FastScrollLazyVerticalGrid(
-        columns = if (columns == 0) GridCells.Adaptive(128.dp) else GridCells.Fixed(columns),
-        modifier = modifier,
-        contentPadding = contentPadding + PaddingValues(8.dp),
-        verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
-        horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
-        content = content,
-    )
+    BoxWithConstraints(modifier = modifier) {
+        val minCardWidth = if (maxWidth < 600.dp) 112.dp else 148.dp
+        val adaptiveColumns = ((maxWidth - 16.dp).value / minCardWidth.value).toInt().coerceIn(2, 8)
+        FastScrollLazyVerticalGrid(
+            columns = GridCells.Fixed(if (columns == 0) adaptiveColumns else columns),
+            contentPadding = contentPadding + PaddingValues(8.dp),
+            verticalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridVerticalSpacer),
+            horizontalArrangement = Arrangement.spacedBy(CommonEntryItemDefaults.GridHorizontalSpacer),
+            content = content,
+        )
+    }
 }
 
 fun LazyGridScope.globalSearchItem(

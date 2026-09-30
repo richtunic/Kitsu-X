@@ -63,3 +63,10 @@ Fuente de producto: `Kitsu_X_PRD_Gran_Actualizacion.md` (29 de septiembre de 202
 - Novedades: obras con episodios/capítulos pendientes de los últimos siete días, deduplicadas por tipo e ID, con enlace a detalles. Añadidos recientemente aparece después si hay contenido.
 - Inicio ya no consume recomendaciones Jikan ni inicializa consultas externas al arranque. Jikan queda para Explorar en una fase posterior.
 - Kotlin y APK debug compilados offline. Falta revisar UI e interacción real en teléfono/tablet antes de dar por validado el criterio de salida responsive.
+
+## Avance PR 4: Biblioteca
+
+- «Todo» es una categoría virtual de lectura con ID reservado `-1`; las relaciones de categorías reales se conservan y el agregado se deduplica por obra. Refrescar «Todo» equivale al refresco global; ordenar usa la preferencia global.
+- Se desplazan una sola vez los índices guardados mayores que cero para mantener la categoría seleccionada. La opción de grid/lista y las columnas explícitas permanecen; el grid automático responde al ancho visible.
+- Chips rápidos de estado filtran la vista por progreso real de episodios/capítulos. El filtro avanzado, selección múltiple y acciones existentes siguen operativos.
+- Kotlin y APK debug compilaron offline. La verificación en teléfono/tablet y de backups queda pendiente.

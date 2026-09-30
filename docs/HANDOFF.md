@@ -1,5 +1,12 @@
 # HANDOFF
 
+## Gran actualización 2026-09-29: Fase 3, Biblioteca
+
+Anime y Manga tienen una pestaña virtual «Todo» que toma las asociaciones existentes y deduplica por ID. No se modifican tablas ni categorías. Una bandera de preferencia desplaza una vez los índices guardados mayores que cero para conservar la pestaña previa. «Todo» refresca la biblioteca completa y usa el orden global. Ambas pantallas muestran chips rápidos Todo/Viendo o Leyendo/Pendientes/Completados basados en recuentos reales; los filtros avanzados y la elección persistida de cuadrícula/lista se conservan. La cuadrícula automática calcula 2–8 columnas según el ancho visible, y la preferencia explícita de columnas sigue mandando.
+
+`app:compileDebugKotlin` y `app:assembleDebug` pasaron offline. Faltan revisión táctil y de rotación en teléfono/tablet. El siguiente trabajo es Organización 2.0, empezando por impedir que Jikan cree múltiples categorías al añadir una obra y por preservar la elección manual.
+
+
 ## Gran actualización 2026-09-29: Fase 2, Inicio
 
 En el worktree `codex/gran-actualizacion`, Inicio obtiene hero, continuar, novedades y añadidos recientemente desde biblioteca e historial locales. El hero se pagina manualmente, usa artwork de fondo cuando existe y muestra un indicador breve. Las novedades muestran obras pendientes de los últimos siete días y abren detalles. Si no hay biblioteca, el estado vacío ofrece Explorar; si los filtros ocultan todo, lo explica. Se incorporó aquí la corrección de progreso de anime presente en el checkout principal, sin tocar ese checkout.

@@ -17,6 +17,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import eu.kanade.core.preference.PreferenceMutableState
 import eu.kanade.presentation.library.components.LibraryTabs
+import eu.kanade.presentation.library.components.LibraryQuickFilter
+import eu.kanade.presentation.library.components.LibraryQuickFilters
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryItem
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -59,6 +61,7 @@ fun AnimeLibraryContent(
 
         val scope = rememberCoroutineScope()
         var isRefreshing by remember(pagerState.currentPage) { mutableStateOf(false) }
+        var quickFilter by remember { mutableStateOf(LibraryQuickFilter.All) }
 
         if (showPageTabs && categories.size > 1) {
             LaunchedEffect(categories) {
@@ -72,6 +75,12 @@ fun AnimeLibraryContent(
                 getNumberOfItemsForCategory = getNumberOfAnimeForCategory,
             ) { scope.launch { pagerState.animateScrollToPage(it) } }
         }
+
+        LibraryQuickFilters(
+            selected = quickFilter,
+            isAnime = true,
+            onSelect = { quickFilter = it },
+        )
 
         val notSelectionMode = selection.isEmpty()
         val onClickAnime = { anime: LibraryAnime ->
@@ -105,7 +114,17 @@ fun AnimeLibraryContent(
                 onGlobalSearchClicked = onGlobalSearchClicked,
                 getDisplayMode = getDisplayMode,
                 getColumnsForOrientation = getColumnsForOrientation,
-                getLibraryForPage = getAnimeLibraryForPage,
+                getLibraryForPage = { page ->
+                    getAnimeLibraryForPage(page).filter { item ->
+                        when (quickFilter) {
+                            LibraryQuickFilter.All -> true
+                            LibraryQuickFilter.Started -> item.libraryAnime.hasStarted && item.libraryAnime.unseenCount > 0
+                            LibraryQuickFilter.Pending -> item.libraryAnime.unseenCount > 0
+                            LibraryQuickFilter.Completed -> item.libraryAnime.totalCount > 0 &&
+                                item.libraryAnime.unseenCount == 0L
+                        }
+                    }
+                },
                 onClickAnime = onClickAnime,
                 onLongClickAnime = onToggleRangeSelection,
                 onClickContinueWatching = onContinueWatchingClicked,

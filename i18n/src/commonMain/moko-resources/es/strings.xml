@@ -868,6 +868,10 @@
     <string name="pref_mark_duplicate_read_chapter_read_existing">Al terminar de leer un capítulo</string>
     <!-- KitsuX -->
     <string name="kitsux_home_tab">Inicio</string>
+    <string name="kitsux_library_all">Todo</string>
+    <string name="kitsux_library_watching">Viendo</string>
+    <string name="kitsux_library_reading">Leyendo</string>
+    <string name="kitsux_library_pending">Pendientes</string>
     <string name="kitsux_home_empty_library_title">Tu biblioteca está vacía</string>
     <string name="kitsux_home_empty_library_description">Agrega anime o manga desde Explorar para verlo aquí.</string>
     <string name="kitsux_home_nothing_to_show_title">Nada que mostrar por ahora</string>

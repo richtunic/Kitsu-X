@@ -1,6 +1,13 @@
 # DECISIONS
 
 Fecha: 2026-09-29
+Decisión: Añadir una vista virtual «Todo» a Anime y Manga y deduplicar sus obras por ID, sin escribir nuevas relaciones de categoría.
+Motivo: La relación obra-categoría existente admite varias categorías y debe conservarse. Un agregado de lectura resuelve la duplicación visual sin migrar datos.
+Impacto: Los índices guardados de pestañas posteriores a la primera se desplazan una sola vez. La cuadrícula automática usa el ancho visible; los filtros rápidos actúan solo sobre la vista y los filtros avanzados siguen disponibles.
+
+---
+
+Fecha: 2026-09-29
 Decisión: Inicio usa únicamente obras de la biblioteca para el hero y las filas de novedades. Jikan deja de inicializarse al arrancar la app; sus archivos se conservan para una futura fase de Explorar.
 Motivo: El PRD separa consumo personal de descubrimiento y la biblioteca ya proporciona progreso, fechas y novedades sin red ni almacenamiento adicional.
 Impacto: El hero abre detalles o continúa una obra local; las novedades abren detalles. No cambia la base de datos ni el motor de fuentes. Falta comprobar interacción y tamaños en teléfono y tablet.
