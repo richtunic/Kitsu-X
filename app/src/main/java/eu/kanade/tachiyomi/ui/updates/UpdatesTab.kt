@@ -53,7 +53,7 @@ data object UpdatesTab : Tab {
     @Composable
     override fun Content() {
         val context = LocalContext.current
-        val fromMore = currentNavigationStyle() == NavStyle.MOVE_UPDATES_TO_MORE
+        val fromMore = true
 
         val uiPreferences = remember { Injekt.get<UiPreferences>() }
         val showAnime by uiPreferences.showAnime().collectAsState()

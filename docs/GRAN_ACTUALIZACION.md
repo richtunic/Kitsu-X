@@ -35,3 +35,13 @@ Fuente de producto: `Kitsu_X_PRD_Gran_Actualizacion.md` (29 de septiembre de 202
 - Build de `:app:compileDebugKotlin` y `:app:assembleDebug`.
 - Navegación, Back, scroll y accesos secundarios en teléfono compacto, teléfono grande, tablet y pantalla dividida.
 - Prueba en dispositivo de bibliotecas, reproducción, lectura y extensiones. Una compilación no demuestra estas rutas.
+
+## Avance PR 1: navegación
+
+- La lista principal se reduce a Inicio, Anime, Manga, Explorar y Más. Anime/Manga siguen respetando la preferencia existente de ocultarlos.
+- Historial y Actualizaciones están en Más y las rutas programáticas a esas pantallas se abren sobre Más. El contador de novedades aparece en el icono de Más.
+- Barra inferior si el ancho actual es menor que `600dp`; rail desde `600dp`. Se conserva el `Scaffold` y Voyager actuales. La preferencia antigua de estilo de navegación se oculta en Ajustes, pero su dato se conserva para compatibilidad.
+- La etiqueta inglesa `Browse` pasa a `Explore`; la pantalla todavía conserva sus secciones actuales de fuentes y extensiones hasta PR 7.
+- Se copió a esta rama la corrección ya validada en el checkout principal de FlexibleAdapter desde Maven Central, porque el commit base apuntaba a un AAR de JitPack inexistente.
+- `:app:compileDebugKotlin --offline` y `:app:assembleDebug --offline` pasaron. `assembleDebug` emitió avisos D8 de reescritura de metadata Kotlin en clases heredadas; terminó con `BUILD SUCCESSFUL`.
+- `adb devices` no mostró equipos. Falta verificar Back, scroll, accesos y ancho de ventana en dispositivos; por eso Foundations sigue abierta. También faltan tokens visuales, cards y skeletons del PRD, que deben adaptar los componentes existentes.

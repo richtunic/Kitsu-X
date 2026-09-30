@@ -1,5 +1,12 @@
 # HANDOFF
 
+## Gran actualización 2026-09-29: Foundations en progreso
+
+En `codex/gran-actualizacion`, la navegación principal ahora presenta Inicio, Anime, Manga, Explorar y Más; Historial/Actualizaciones viven en Más, con contador en ese icono. Home usa rail desde `600dp` de ancho actual de ventana. La antigua preferencia de navegación queda oculta, no borrada. Se añadió la coordenada Maven Central de FlexibleAdapter en un commit separado para desbloquear el build del commit base.
+
+Validación: `:app:compileDebugKotlin --offline` pasó tras el ajuste final del badge y `:app:assembleDebug --offline` pasó antes de ese ajuste. ADB no listó dispositivos. No dar por cerrada Foundations ni avanzar a Home nuevo hasta probar navegación/Back en móvil y tablet y completar tokens, cards y skeletons. El mapa detallado está en `docs/GRAN_ACTUALIZACION.md`.
+
+
 ## Gran actualización 2026-09-29: fase técnica 0
 
 El PRD `Kitsu_X_PRD_Gran_Actualizacion.md` se inició en el worktree aislado `codex/gran-actualizacion` desde `b829a5838`. Se completó el inventario y el plan en `docs/GRAN_ACTUALIZACION.md`. El checkout principal tiene modificaciones locales previas y no se tocó. No hay cambios de app ni DB en esta fase.

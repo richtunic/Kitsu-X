@@ -28,6 +28,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,7 +40,6 @@ import cafe.adriel.voyager.navigator.tab.TabNavigator
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.util.Screen
-import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.download.DownloadsTab
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
@@ -78,24 +78,20 @@ object HomeScreen : Screen() {
 
     private val uiPreferences: UiPreferences by injectLazy()
     private val defaultTab = KitsuXHomeTab
-    private val moreTab = uiPreferences.navStyle().get().moreTab
-
     @Composable
     override fun Content() {
-        val navStyle by uiPreferences.navStyle().collectAsState()
         val showAnime by uiPreferences.showAnime().collectAsState()
         val showManga by uiPreferences.showManga().collectAsState()
+        val useNavigationRail = LocalConfiguration.current.screenWidthDp >= 600
         val navigator = LocalNavigator.currentOrThrow
 
-        // Build tab list: KitsuXHomeTab always first, then original navStyle tabs
-        val allTabs = remember(navStyle, showAnime, showManga) {
+        val allTabs = remember(showAnime, showManga) {
             buildList<eu.kanade.presentation.util.Tab> {
                 add(KitsuXHomeTab)
-                navStyle.tabs.forEach { tab ->
-                    if (tab == AnimeLibraryTab && !showAnime) return@forEach
-                    if (tab == MangaLibraryTab && !showManga) return@forEach
-                    add(tab)
-                }
+                if (showAnime) add(AnimeLibraryTab)
+                if (showManga) add(MangaLibraryTab)
+                add(BrowseTab)
+                add(MoreTab)
             }
         }
 
@@ -107,7 +103,7 @@ object HomeScreen : Screen() {
             CompositionLocalProvider(LocalNavigator provides navigator) {
                 Scaffold(
                     startBar = {
-                        if (isTabletUi()) {
+                        if (useNavigationRail) {
                             NavigationRail {
                                 allTabs.fastForEach {
                                     NavigationRailItem(it)
@@ -116,12 +112,12 @@ object HomeScreen : Screen() {
                         }
                     },
                     bottomBar = {
-                        if (!isTabletUi()) {
+                        if (!useNavigationRail) {
                             val bottomNavVisible by produceState(initialValue = true) {
                                 showBottomNavEvent.receiveAsFlow().collectLatest { value = it }
                             }
                             AnimatedVisibility(
-                                visible = bottomNavVisible && tabNavigator.current != navStyle.moreTab,
+                                visible = bottomNavVisible,
                                 enter = expandVertically(),
                                 exit = shrinkVertically(),
                             ) {
@@ -183,8 +179,14 @@ object HomeScreen : Screen() {
                         tabNavigator.current = when (it) {
                             is Tab.AnimeLib -> AnimeLibraryTab
                             is Tab.Library -> MangaLibraryTab
-                            is Tab.Updates -> UpdatesTab
-                            is Tab.History -> HistoriesTab
+                            is Tab.Updates -> {
+                                navigator.push(UpdatesTab)
+                                MoreTab
+                            }
+                            is Tab.History -> {
+                                navigator.push(HistoriesTab)
+                                MoreTab
+                            }
                             is Tab.Browse -> {
                                 if (it.toExtensions) {
                                     if (!it.anime) {
@@ -274,7 +276,7 @@ object HomeScreen : Screen() {
         BadgedBox(
             badge = {
                 when {
-                    UpdatesTab::class.isInstance(tab) -> {
+                    MoreTab::class.isInstance(tab) -> {
                         val count by produceState(initialValue = 0) {
                             val pref = Injekt.get<LibraryPreferences>()
                             combine(

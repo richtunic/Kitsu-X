@@ -337,3 +337,9 @@ Notas:
 - Inventariados navegación, responsive, tema, Inicio, biblioteca, Jikan y esquemas de categorías para el nuevo PRD.
 - Creada la rama aislada `codex/gran-actualizacion` desde `b829a5838`; el checkout principal y sus cambios locales quedaron intactos.
 - Registrado el plan por fases y los riesgos de compatibilidad en `docs/GRAN_ACTUALIZACION.md`. No se cambió código ni base de datos.
+
+# 2026-09-29 — Foundations, navegación (avance)
+
+- Navegación principal de hasta cinco destinos y rail desde `600dp` de ancho visible; Historial y Actualizaciones pasan a Más con indicador de novedades.
+- Se retiró de Ajustes el selector de navegación anterior, conservando el valor almacenado. La etiqueta inglesa de Explorar se actualizó.
+- Se trasladó el arreglo de FlexibleAdapter a esta rama para compilar el commit base. `:app:compileDebugKotlin` y `:app:assembleDebug` pasaron sin red; falta prueba en dispositivo.

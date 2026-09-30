@@ -1,6 +1,13 @@
 # DECISIONS
 
 Fecha: 2026-09-29
+Decisión: Usar el ancho visible de la ventana (`600dp`) para elegir barra o rail en Home y conservar Voyager/Scaffold existentes.
+Motivo: `smallestScreenWidthDp` no responde adecuadamente a pantalla dividida y el PRD requiere cinco destinos estables. Historial y Actualizaciones se mantienen accesibles desde Más; la preferencia anterior se oculta sin borrar su valor.
+Impacto: La estructura principal cambia sin migración de DB. El contador de actualizaciones pasa al icono de Más. Falta validación táctil y responsive en dispositivo antes de cerrar Foundations.
+
+---
+
+Fecha: 2026-09-29
 Decisión: Comenzar la gran actualización con inventario y rama aislada; reutilizar Voyager, Scaffold y el tema existentes durante Foundations.
 Motivo: La navegación y las categorías actuales tienen consumidores y preferencias heredadas. Un cambio visual masivo o una migración de datos temprana pondría en riesgo accesos, biblioteca y backups.
 Impacto: `docs/GRAN_ACTUALIZACION.md` documenta el mapa técnico y el orden de cambios. No se cambian todavía rutas, preferencias ni esquemas. Antes de fijar cinco destinos, Historial y Actualizaciones deben quedar accesibles desde Más; el rail debe basarse en el ancho actual de la ventana.
