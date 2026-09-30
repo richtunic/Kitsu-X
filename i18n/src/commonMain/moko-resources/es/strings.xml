@@ -867,8 +867,14 @@
     <string name="pref_behavior">Comportamiento</string>
     <string name="pref_mark_duplicate_read_chapter_read_existing">Al terminar de leer un capítulo</string>
     <!-- KitsuX -->
+    <string name="kitsux_home_tab">Inicio</string>
     <string name="kitsux_home_empty_library_title">Tu biblioteca está vacía</string>
-    <string name="kitsux_home_empty_library_description">Agrega tus animes y mangas favoritos desde Explorar para verlos organizados aquí por categoría.</string>
+    <string name="kitsux_home_empty_library_description">Agrega anime o manga desde Explorar para verlo aquí.</string>
+    <string name="kitsux_home_nothing_to_show_title">Nada que mostrar por ahora</string>
+    <string name="kitsux_home_nothing_to_show_description">Los filtros actuales de biblioteca ocultan el anime y manga disponibles.</string>
+    <string name="kitsux_home_recently_added">Añadidos recientemente</string>
+    <string name="kitsux_home_in_library">En tu biblioteca</string>
+    <string name="kitsux_home_view_details">Ver detalles</string>
     <string name="kitsux_home_continue_watching">Continuar viendo</string>
     <string name="kitsux_home_continue_reading">Continuar leyendo</string>
     <string name="kitsux_home_remove_continue_watching_title">Eliminar de Continuar viendo</string>
@@ -878,6 +884,7 @@
     <string name="kitsux_home_new_episodes_chapters">Nuevos episodios</string>
     <string name="kitsux_home_new_badge">NUEVO</string>
     <string name="kitsux_home_new_count">%d NUEVO</string>
+    <string name="kitsux_home_new_chapters_count">%d capítulos nuevos</string>
     <string name="kitsux_home_watch_now">Ver ahora</string>
     <string name="kitsux_home_my_list">Mi Lista</string>
     <string name="kitsux_home_recommended_for_you">Recomendados para ti</string>

@@ -349,3 +349,10 @@ Notas:
 - Se centralizaron breakpoints y tamaños del layout, se limitó el ancho del hero y se añadió un skeleton accesible para la carga de Inicio.
 - La tarjeta de progreso de Continuar viendo/leyendo se extrajo como componente reutilizable con menú contextual; manga deja de mostrar el icono de reproducción.
 - Compilación Kotlin y APK debug pasaron sin red. No hay dispositivo ni AVD para validar la interacción.
+
+# 2026-09-29 — Fase 2, Inicio
+
+- El hero usa solo biblioteca local, con paginación manual, indicador contextual y acción coherente para continuar o abrir detalles.
+- Continuar viendo/leyendo conserva historial confirmado; novedades y añadidos recientemente usan datos locales y eliminan duplicados por ID.
+- Se retiraron las recomendaciones Jikan de Inicio y la inicialización de Jikan al arranque. Se añadieron estados vacíos y textos base/español.
+- `:app:compileDebugKotlin` y `:app:assembleDebug` pasaron offline; `git diff --check` pasó. Pruebas en teléfono y tablet pendientes.

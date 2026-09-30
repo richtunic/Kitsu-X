@@ -1003,8 +1003,14 @@
     <string name="exception_offline">No Internet connection</string>
     <string name="exception_unknown_host">Couldn\'t reach %s</string>
     <!-- KitsuX -->
+    <string name="kitsux_home_tab">Home</string>
     <string name="kitsux_home_empty_library_title">Your library is empty</string>
-    <string name="kitsux_home_empty_library_description">Add your favorite anime and manga from Explore to see them organized here by category.</string>
+    <string name="kitsux_home_empty_library_description">Add anime or manga from Explore to see it here.</string>
+    <string name="kitsux_home_nothing_to_show_title">Nothing to show yet</string>
+    <string name="kitsux_home_nothing_to_show_description">Your current library filters hide the available anime and manga.</string>
+    <string name="kitsux_home_recently_added">Recently added</string>
+    <string name="kitsux_home_in_library">In your library</string>
+    <string name="kitsux_home_view_details">View details</string>
     <string name="kitsux_home_continue_watching">Continue watching</string>
     <string name="kitsux_home_continue_reading">Continue reading</string>
     <string name="kitsux_home_remove_continue_watching_title">Remove from Continue Watching</string>
@@ -1014,6 +1020,7 @@
     <string name="kitsux_home_new_episodes_chapters">New episodes</string>
     <string name="kitsux_home_new_badge">NEW</string>
     <string name="kitsux_home_new_count">%d NEW</string>
+    <string name="kitsux_home_new_chapters_count">%d new chapters</string>
     <string name="kitsux_home_watch_now">Watch now</string>
     <string name="kitsux_home_my_list">My List</string>
     <string name="kitsux_home_recommended_for_you">Recommended for you</string>

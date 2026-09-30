@@ -26,8 +26,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import eu.kanade.presentation.home.HomeScreenContent
 import eu.kanade.presentation.util.Tab
-import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
-import eu.kanade.tachiyomi.ui.browse.manga.source.globalsearch.GlobalMangaSearchScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.entries.manga.MangaScreen
 import kotlinx.coroutines.launch
@@ -40,7 +38,7 @@ data object KitsuXHomeTab : Tab {
         @Composable
         get() = TabOptions(
             index = 0u,
-            title = "Home",
+            title = tachiyomi.presentation.core.i18n.stringResource(MR.strings.kitsux_home_tab),
             icon = rememberVectorPainter(Icons.Outlined.Home),
         )
 
@@ -74,28 +72,14 @@ data object KitsuXHomeTab : Tab {
                 state = state,
                 modifier = Modifier.padding(contentPadding),
                 onItemClick = { item ->
-                    if (item.isRecommendation) {
-                        if (item.isAnime) {
-                            navigator.push(GlobalAnimeSearchScreen(item.title))
-                        } else {
-                            navigator.push(GlobalMangaSearchScreen(item.title))
-                        }
+                    if (item.isAnime) {
+                        navigator.push(AnimeScreen(item.id))
                     } else {
-                        if (item.isAnime) {
-                            navigator.push(AnimeScreen(item.id))
-                        } else {
-                            navigator.push(MangaScreen(item.id))
-                        }
+                        navigator.push(MangaScreen(item.id))
                     }
                 },
                 onHeroClick = { item ->
-                    if (item.isRecommendation) {
-                        if (item.isAnime) {
-                            navigator.push(GlobalAnimeSearchScreen(item.title))
-                        } else {
-                            navigator.push(GlobalMangaSearchScreen(item.title))
-                        }
-                    } else if (item.isStarted) {
+                    if (item.isStarted) {
                         screenModel.continueWatchingOrReading(
                             context = context,
                             continueItem = ContinueWatchingItem(
@@ -120,6 +104,9 @@ data object KitsuXHomeTab : Tab {
                 },
                 onRemoveContinueItem = { continueItem ->
                     screenModel.hideContinueItem(continueItem)
+                },
+                onExploreClick = {
+                    scope.launch { HomeScreen.openTab(HomeScreen.Tab.Browse()) }
                 },
                 onRefresh = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&

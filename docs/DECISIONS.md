@@ -1,6 +1,13 @@
 # DECISIONS
 
 Fecha: 2026-09-29
+Decisión: Inicio usa únicamente obras de la biblioteca para el hero y las filas de novedades. Jikan deja de inicializarse al arrancar la app; sus archivos se conservan para una futura fase de Explorar.
+Motivo: El PRD separa consumo personal de descubrimiento y la biblioteca ya proporciona progreso, fechas y novedades sin red ni almacenamiento adicional.
+Impacto: El hero abre detalles o continúa una obra local; las novedades abren detalles. No cambia la base de datos ni el motor de fuentes. Falta comprobar interacción y tamaños en teléfono y tablet.
+
+---
+
+Fecha: 2026-09-29
 Decisión: Centralizar solo los tamaños de layout usados y extraer la tarjeta de progreso existente de Home antes de crear un sistema visual paralelo.
 Motivo: El tema, las portadas y los grids ya tienen componentes compartidos. Reutilizarlos reduce el riesgo de duplicar estilos y conserva los temas elegidos por usuarios. Un skeleton estático evita movimiento innecesario durante la carga.
 Impacto: Home mantiene sus callbacks y datos; el menú contextual ofrece continuar o quitar, y quitar abre la misma confirmación. No cambia DB ni integraciones. Queda pendiente validación visual y táctil en móvil/tablet.

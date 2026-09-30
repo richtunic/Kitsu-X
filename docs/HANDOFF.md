@@ -1,5 +1,12 @@
 # HANDOFF
 
+## Gran actualización 2026-09-29: Fase 2, Inicio
+
+En el worktree `codex/gran-actualizacion`, Inicio obtiene hero, continuar, novedades y añadidos recientemente desde biblioteca e historial locales. El hero se pagina manualmente, usa artwork de fondo cuando existe y muestra un indicador breve. Las novedades muestran obras pendientes de los últimos siete días y abren detalles. Si no hay biblioteca, el estado vacío ofrece Explorar; si los filtros ocultan todo, lo explica. Se incorporó aquí la corrección de progreso de anime presente en el checkout principal, sin tocar ese checkout.
+
+Se quitó la inicialización de Jikan al arrancar la app y sus recomendaciones de Inicio. Los archivos de Jikan siguen disponibles para la futura fase de Explorar. `:app:compileDebugKotlin` y `:app:assembleDebug` pasaron en modo offline; `git diff --check` pasó. No hay prueba en teléfono ni tablet todavía, por petición del usuario. Siguiente paso: revisar Inicio, navegación, Back, hero, novedades, filtros y continuación real en teléfono; después abordar Fase 3 Biblioteca.
+
+
 ## Gran actualización 2026-09-29: componentes de Foundations
 
 En el worktree `codex/gran-actualizacion`, Home usa `KitsuXLayoutTokens` para breakpoints y ancho del hero. `HomeLoadingSkeleton` reemplaza la carga con spinner; `MediaProgressCard` se usa en Continuar viendo y leyendo, con menú de continuar/quitar y sin icono de reproducción para manga. Las acciones existentes y los datos no cambiaron.

@@ -55,3 +55,11 @@ Fuente de producto: `Kitsu_X_PRD_Gran_Actualizacion.md` (29 de septiembre de 202
 - `:app:compileDebugKotlin --offline --quiet` y `:app:assembleDebug --offline --quiet` pasaron; el APK arm64 debug se generó. `adb devices -l` no encontró equipo y `emulator -list-avds` no mostró AVD. Foundations aún requiere revisión visual/táctil en móvil y tablet.
 - `:app:spotlessKotlinCheck --offline` no pudo ejecutar ktlint porque `com.pinterest.ktlint:ktlint-cli:1.5.0` no está en la caché local; se revisaron manualmente imports, formato y `git diff --check`.
 - Pendiente en Foundations: evaluar la tarjeta y skeleton en dispositivo, Back y split-screen; adaptar densidad de grids y menús de biblioteca por etapas, sin cambiar aún lógica de negocio.
+
+## Avance PR 3: Inicio local
+
+- Hero: solo obras de biblioteca, ordenadas por progreso/novedades, uso reciente y fecha de incorporación. Paginación manual, artwork de fondo opcional y ancho máximo responsive.
+- Continuar viendo/leyendo: historial local con progreso confirmado; para anime se conserva la corrección del siguiente episodio ya existente en el checkout principal.
+- Novedades: obras con episodios/capítulos pendientes de los últimos siete días, deduplicadas por tipo e ID, con enlace a detalles. Añadidos recientemente aparece después si hay contenido.
+- Inicio ya no consume recomendaciones Jikan ni inicializa consultas externas al arranque. Jikan queda para Explorar en una fase posterior.
+- Kotlin y APK debug compilados offline. Falta revisar UI e interacción real en teléfono/tablet antes de dar por validado el criterio de salida responsive.
