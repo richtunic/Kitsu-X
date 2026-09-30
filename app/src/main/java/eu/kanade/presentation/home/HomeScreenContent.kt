@@ -2,7 +2,6 @@ package eu.kanade.presentation.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -29,7 +28,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -53,7 +51,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import eu.kanade.presentation.components.HomeLoadingSkeleton
+import eu.kanade.presentation.components.MediaProgressCard
 import eu.kanade.presentation.entries.components.ItemCover
+import eu.kanade.presentation.theme.KitsuXLayoutTokens
 import eu.kanade.tachiyomi.ui.home.ContinueWatchingItem
 import eu.kanade.tachiyomi.ui.home.KitsuXHomeState
 import eu.kanade.tachiyomi.ui.home.KitsuXMediaItem
@@ -75,17 +76,7 @@ fun HomeScreenContent(
     modifier: Modifier = Modifier,
 ) {
     if (state.isLoading) {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(Color(0xFF000000)),
-            contentAlignment = Alignment.Center,
-        ) {
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.primary,
-                strokeWidth = 3.dp,
-            )
-        }
+        HomeLoadingSkeleton(modifier)
         return
     }
 
@@ -207,11 +198,15 @@ fun HomeScreenContent(
                 // Hero Banner Section (Slider)
                 if (state.heroBannerItems.isNotEmpty()) {
                     item {
-                        HeroBannerSection(
-                            items = state.heroBannerItems,
-                            onClick = onHeroClick,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        )
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            HeroBannerSection(
+                                items = state.heroBannerItems,
+                                onClick = onHeroClick,
+                                modifier = Modifier
+                                    .widthIn(max = KitsuXLayoutTokens.heroMaxWidth)
+                                    .padding(horizontal = KitsuXLayoutTokens.gutter, vertical = 8.dp),
+                            )
+                        }
                     }
                 }
 
@@ -288,139 +283,23 @@ fun ContinueWatchingSection(
         SectionTitle(title = title ?: stringResource(MR.strings.kitsux_home_continue_watching))
 
         LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            contentPadding = PaddingValues(horizontal = KitsuXLayoutTokens.gutter),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.fillMaxWidth(),
         ) {
             val distinctItems = items.distinctBy { "${it.id}_${it.isAnime}" }
             items(distinctItems, key = { "${it.id}_${it.isAnime}" }) { continueItem ->
-                Box(
-                    modifier = Modifier
-                        .width(180.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(Color(0xFF141414))
-                        .combinedClickable(
-                            onClick = { onContinueClick(continueItem) },
-                            onLongClick = { onContinueLongClick(continueItem) },
-                        ),
-                ) {
-                    Column {
-                        // Poster thumb aspect ratio (16:9)
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(1.77f),
-                        ) {
-                            ItemCover.Thumb(
-                                data = continueItem.thumbnailUrl,
-                                modifier = Modifier.fillMaxSize(),
-                            )
-
-                            // Play overlay icon in the middle
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(Color.Black.copy(alpha = 0.25f)),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(RoundedCornerShape(18.dp))
-                                        .background(Color.Black.copy(alpha = 0.6f)),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.PlayArrow,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(24.dp),
-                                    )
-                                }
-                            }
-
-                            // "NUEVO" update badge at top left of thumbnail
-                            if (continueItem.hasUpdates) {
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.TopStart)
-                                        .padding(6.dp)
-                                        .clip(RoundedCornerShape(3.dp))
-                                        .background(Color(0xFFE50914)) // Rojo KitsuX
-                                        .padding(horizontal = 6.dp, vertical = 2.dp),
-                                ) {
-                                    val text = if (continueItem.unseenCount > 0) {
-                                        stringResource(MR.strings.kitsux_home_new_count, continueItem.unseenCount)
-                                    } else {
-                                        stringResource(MR.strings.kitsux_home_new_badge)
-                                    }
-                                    Text(
-                                        text = text,
-                                        color = Color.White,
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.Bold,
-                                    )
-                                }
-                            }
-
-                            // Episode progress text at bottom right
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .padding(6.dp)
-                                    .clip(RoundedCornerShape(3.dp))
-                                    .background(Color.Black.copy(alpha = 0.7f))
-                                    .padding(horizontal = 6.dp, vertical = 2.dp),
-                            ) {
-                                Text(
-                                    text = continueItem.progressText,
-                                    color = Color.White,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                            }
-                        }
-
-                        // Progress indicator (Dynamic progress bar)
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(3.dp)
-                                .background(Color.Gray.copy(alpha = 0.4f)),
-                        ) {
-                            if (continueItem.episodeProgress > 0f) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxHeight()
-                                        .fillMaxWidth(continueItem.episodeProgress)
-                                        .background(Color(0xFFE50914)),
-                                )
-                            }
-                        }
-
-                        // Text Title (Crunchyroll-style bold)
-                        Text(
-                            text = continueItem.mediaItem.title,
-                            color = Color.White,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 2.dp),
-                        )
-                        // Subtitle with type and progress info
-                        val mediaType = if (continueItem.isAnime) "Anime" else "Manga"
-                        Text(
-                            text = "$mediaType • ${continueItem.progressText}",
-                            color = Color.Gray,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
-                        )
-                    }
-                }
+                MediaProgressCard(
+                    title = continueItem.mediaItem.title,
+                    artworkUrl = continueItem.thumbnailUrl,
+                    progressText = continueItem.progressText,
+                    progress = continueItem.episodeProgress,
+                    isAnime = continueItem.isAnime,
+                    hasUpdates = continueItem.hasUpdates,
+                    unseenCount = continueItem.unseenCount,
+                    onContinue = { onContinueClick(continueItem) },
+                    onRemove = { onContinueLongClick(continueItem) },
+                )
             }
         }
     }
@@ -441,7 +320,7 @@ fun MediaSection(
         SectionTitle(title = title)
 
         LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            contentPadding = PaddingValues(horizontal = KitsuXLayoutTokens.gutter),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.fillMaxWidth(),
         ) {
@@ -523,7 +402,12 @@ fun SectionTitle(
         fontSize = 20.sp,
         fontWeight = FontWeight.Bold,
         color = Color.White,
-        modifier = modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp),
+        modifier = modifier.padding(
+            start = KitsuXLayoutTokens.gutter,
+            end = KitsuXLayoutTokens.gutter,
+            top = 12.dp,
+            bottom = 8.dp,
+        ),
     )
 }
 

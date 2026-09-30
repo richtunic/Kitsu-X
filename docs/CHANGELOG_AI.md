@@ -343,3 +343,9 @@ Notas:
 - Navegación principal de hasta cinco destinos y rail desde `600dp` de ancho visible; Historial y Actualizaciones pasan a Más con indicador de novedades.
 - Se retiró de Ajustes el selector de navegación anterior, conservando el valor almacenado. La etiqueta inglesa de Explorar se actualizó.
 - Se trasladó el arreglo de FlexibleAdapter a esta rama para compilar el commit base. `:app:compileDebugKotlin` y `:app:assembleDebug` pasaron sin red; falta prueba en dispositivo.
+
+# 2026-09-29 — Foundations, componentes compartidos (avance)
+
+- Se centralizaron breakpoints y tamaños del layout, se limitó el ancho del hero y se añadió un skeleton accesible para la carga de Inicio.
+- La tarjeta de progreso de Continuar viendo/leyendo se extrajo como componente reutilizable con menú contextual; manga deja de mostrar el icono de reproducción.
+- Compilación Kotlin y APK debug pasaron sin red. No hay dispositivo ni AVD para validar la interacción.

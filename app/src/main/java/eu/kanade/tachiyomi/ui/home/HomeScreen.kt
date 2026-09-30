@@ -39,6 +39,8 @@ import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.ui.UiPreferences
+import eu.kanade.presentation.theme.KitsuXLayoutTokens
+import eu.kanade.presentation.theme.KitsuXWindowClass
 import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.ui.browse.BrowseTab
 import eu.kanade.tachiyomi.ui.download.DownloadsTab
@@ -82,7 +84,9 @@ object HomeScreen : Screen() {
     override fun Content() {
         val showAnime by uiPreferences.showAnime().collectAsState()
         val showManga by uiPreferences.showManga().collectAsState()
-        val useNavigationRail = LocalConfiguration.current.screenWidthDp >= 600
+        val useNavigationRail = KitsuXLayoutTokens.windowClass(
+            LocalConfiguration.current.screenWidthDp,
+        ) != KitsuXWindowClass.Compact
         val navigator = LocalNavigator.currentOrThrow
 
         val allTabs = remember(showAnime, showManga) {

@@ -1,5 +1,12 @@
 # HANDOFF
 
+## Gran actualización 2026-09-29: componentes de Foundations
+
+En el worktree `codex/gran-actualizacion`, Home usa `KitsuXLayoutTokens` para breakpoints y ancho del hero. `HomeLoadingSkeleton` reemplaza la carga con spinner; `MediaProgressCard` se usa en Continuar viendo y leyendo, con menú de continuar/quitar y sin icono de reproducción para manga. Las acciones existentes y los datos no cambiaron.
+
+`./gradlew :app:compileDebugKotlin --offline --quiet` y `:app:assembleDebug --offline --quiet` pasaron. `:app:spotlessKotlinCheck --offline` no corrió por faltar `ktlint-cli:1.5.0` en caché. `adb devices -l` no mostró equipos y no hay AVD. Antes de cerrar Foundations hay que revisar en móvil/tablet el menú, las barras de progreso, rotación, split-screen y Back; luego continuar con densidad de grid y componentes de biblioteca sin migración de datos. Ver `docs/GRAN_ACTUALIZACION.md`.
+
+
 ## Gran actualización 2026-09-29: Foundations en progreso
 
 En `codex/gran-actualizacion`, la navegación principal ahora presenta Inicio, Anime, Manga, Explorar y Más; Historial/Actualizaciones viven en Más, con contador en ese icono. Home usa rail desde `600dp` de ancho actual de ventana. La antigua preferencia de navegación queda oculta, no borrada. Se añadió la coordenada Maven Central de FlexibleAdapter en un commit separado para desbloquear el build del commit base.

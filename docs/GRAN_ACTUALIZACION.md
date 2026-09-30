@@ -45,3 +45,13 @@ Fuente de producto: `Kitsu_X_PRD_Gran_Actualizacion.md` (29 de septiembre de 202
 - Se copió a esta rama la corrección ya validada en el checkout principal de FlexibleAdapter desde Maven Central, porque el commit base apuntaba a un AAR de JitPack inexistente.
 - `:app:compileDebugKotlin --offline` y `:app:assembleDebug --offline` pasaron. `assembleDebug` emitió avisos D8 de reescritura de metadata Kotlin en clases heredadas; terminó con `BUILD SUCCESSFUL`.
 - `adb devices` no mostró equipos. Falta verificar Back, scroll, accesos y ancho de ventana en dispositivos; por eso Foundations sigue abierta. También faltan tokens visuales, cards y skeletons del PRD, que deben adaptar los componentes existentes.
+
+## Avance PR 1: componentes de Foundations
+
+- `KitsuXLayoutTokens` centraliza los breakpoints compact/medium/expanded, el gutter, el radio de tarjeta y el ancho máximo del hero. Home usa el breakpoint compartido y limita el hero sin tocar consultas.
+- `HomeLoadingSkeleton` sustituye el indicador aislado durante la carga de Inicio. Usa superficies del tema y deja un único texto de carga para accesibilidad.
+- `MediaProgressCard` se usa en Continuar viendo y leyendo. Mantiene artwork, progreso y novedades, limita el progreso a `0..1`, muestra reproducción solo en anime y abre un menú contextual con continuar/quitar. Quitar conserva la confirmación previa.
+- Se reutilizan `TachiyomiTheme`, `ItemCover`, los grids y estados compartidos ya presentes. No se añadieron dependencias ni cambios de DB.
+- `:app:compileDebugKotlin --offline --quiet` y `:app:assembleDebug --offline --quiet` pasaron; el APK arm64 debug se generó. `adb devices -l` no encontró equipo y `emulator -list-avds` no mostró AVD. Foundations aún requiere revisión visual/táctil en móvil y tablet.
+- `:app:spotlessKotlinCheck --offline` no pudo ejecutar ktlint porque `com.pinterest.ktlint:ktlint-cli:1.5.0` no está en la caché local; se revisaron manualmente imports, formato y `git diff --check`.
+- Pendiente en Foundations: evaluar la tarjeta y skeleton en dispositivo, Back y split-screen; adaptar densidad de grids y menús de biblioteca por etapas, sin cambiar aún lógica de negocio.

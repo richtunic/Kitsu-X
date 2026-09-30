@@ -1,6 +1,13 @@
 # DECISIONS
 
 Fecha: 2026-09-29
+Decisión: Centralizar solo los tamaños de layout usados y extraer la tarjeta de progreso existente de Home antes de crear un sistema visual paralelo.
+Motivo: El tema, las portadas y los grids ya tienen componentes compartidos. Reutilizarlos reduce el riesgo de duplicar estilos y conserva los temas elegidos por usuarios. Un skeleton estático evita movimiento innecesario durante la carga.
+Impacto: Home mantiene sus callbacks y datos; el menú contextual ofrece continuar o quitar, y quitar abre la misma confirmación. No cambia DB ni integraciones. Queda pendiente validación visual y táctil en móvil/tablet.
+
+---
+
+Fecha: 2026-09-29
 Decisión: Usar el ancho visible de la ventana (`600dp`) para elegir barra o rail en Home y conservar Voyager/Scaffold existentes.
 Motivo: `smallestScreenWidthDp` no responde adecuadamente a pantalla dividida y el PRD requiere cinco destinos estables. Historial y Actualizaciones se mantienen accesibles desde Más; la preferencia anterior se oculta sin borrar su valor.
 Impacto: La estructura principal cambia sin migración de DB. El contador de actualizaciones pasa al icono de Más. Falta validación táctil y responsive en dispositivo antes de cerrar Foundations.
