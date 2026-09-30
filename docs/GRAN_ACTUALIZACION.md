@@ -83,3 +83,9 @@ Fuente de producto: `Kitsu_X_PRD_Gran_Actualizacion.md` (29 de septiembre de 202
 - Tocar metadatos externos abre la búsqueda global en fuentes instaladas. No se ofrece «Añadir» directo hasta resolver una fuente real; la UI lo explica.
 - Las pestañas previas siguen accesibles y los accesos programáticos a Extensiones se calculan según tipos visibles. Se eliminó el supuesto de paridad entre índice de pestaña y Anime/Manga para la búsqueda.
 - Kotlin y APK debug compilaron offline. La API Jikan y la UI real no están verificadas en este entorno.
+
+## Avance PR 8: fichas de obra
+
+- Se conservan cabeceras, acciones, listas y dos paneles existentes; los CTA usan textos localizados y Manga usa icono de libro.
+- Los episodios parcialmente vistos muestran una barra pequeña basada en el progreso y duración reales.
+- Kotlin compiló offline. Las pestañas de Información/Relacionado y el ajuste táctil en tablet quedan pendientes.

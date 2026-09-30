@@ -1015,6 +1015,10 @@
     <string name="kitsux_home_recently_added">Recently added</string>
     <string name="kitsux_home_in_library">In your library</string>
     <string name="kitsux_home_view_details">View details</string>
+    <string name="kitsux_anime_resume_watching">Resume watching</string>
+    <string name="kitsux_anime_start_watching">Start watching</string>
+    <string name="kitsux_manga_resume_reading">Resume reading</string>
+    <string name="kitsux_manga_start_reading">Start reading</string>
     <string name="kitsux_home_continue_watching">Continue watching</string>
     <string name="kitsux_home_continue_reading">Continue reading</string>
     <string name="kitsux_home_remove_continue_watching_title">Remove from Continue Watching</string>

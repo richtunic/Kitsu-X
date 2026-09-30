@@ -374,3 +374,8 @@ Notas:
 - Descubrir muestra temporada actual, próximos estrenos, tendencias y filtros locales de género desde Jikan.
 - Búsqueda de Anime/Manga y tarjetas externas abren las búsquedas existentes en fuentes instaladas; se aclara que Jikan no verifica disponibilidad.
 - Fuentes y Extensiones conservan acceso y búsqueda correcta tras añadir la pestaña. Kotlin y APK debug compilaron offline; falta prueba de red y dispositivo.
+
+# 2026-09-29 — Fase 6, fichas (avance)
+
+- CTA de Anime/Manga localizados; Manga usa icono de lectura en lugar de reproducción.
+- Episodios con progreso parcial muestran barra pequeña además del texto existente. Kotlin compiló offline; falta inspección en dispositivo.

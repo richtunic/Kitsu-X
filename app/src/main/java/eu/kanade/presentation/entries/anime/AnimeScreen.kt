@@ -532,7 +532,10 @@ private fun AnimeScreenSmallImpl(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = if (isWatching) "Reanudar" else "Empezar a ver",
+                                        text = stringResource(
+                                            if (isWatching) MR.strings.kitsux_anime_resume_watching
+                                            else MR.strings.kitsux_anime_start_watching,
+                                        ),
                                         style = MaterialTheme.typography.titleMedium.copy(
                                             fontWeight = FontWeight.Bold,
                                             letterSpacing = 0.5.sp,
@@ -1127,6 +1130,9 @@ private fun LazyGridScope.sharedEpisodeItems(
                                 formatTime(episodeItem.episode.totalSeconds),
                             )
                         },
+                    watchProgressFraction = episodeItem.episode.takeIf {
+                        !it.seen && it.lastSecondSeen > 0L && it.totalSeconds > 0L
+                    }?.let { (it.lastSecondSeen.toFloat() / it.totalSeconds).coerceIn(0f, 1f) },
                     scanlator = episodeItem.episode.scanlator.takeIf { !it.isNullOrBlank() },
                     summary = episodeItem.episode.summary.takeIf { !it.isNullOrBlank() && showSummaries },
                     previewUrl = episodeItem.episode.previewUrl.takeIf { !it.isNullOrBlank() && showPreviews },

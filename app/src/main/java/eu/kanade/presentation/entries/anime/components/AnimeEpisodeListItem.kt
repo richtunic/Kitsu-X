@@ -25,6 +25,7 @@ import androidx.compose.material.icons.outlined.NewLabel
 import androidx.compose.material.icons.outlined.RemoveDone
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
@@ -67,6 +68,7 @@ fun AnimeEpisodeListItem(
     title: String,
     date: String?,
     watchProgress: String?,
+    watchProgressFraction: Float? = null,
     scanlator: String?,
     summary: String?,
     previewUrl: String?,
@@ -127,6 +129,7 @@ fun AnimeEpisodeListItem(
                     title = title,
                     date = date,
                     watchProgress = watchProgress,
+                    watchProgressFraction = watchProgressFraction,
                     fillermark = fillermark,
                     scanlator = scanlator,
                     seen = seen,
@@ -205,6 +208,12 @@ fun AnimeEpisodeListItem(
                         )
                     }
                 }
+                if (watchProgressFraction != null) {
+                    LinearProgressIndicator(
+                        progress = { watchProgressFraction.coerceIn(0f, 1f) },
+                        modifier = Modifier.fillMaxWidth().padding(top = 4.dp).height(2.dp),
+                    )
+                }
             }
         }
     }
@@ -215,6 +224,7 @@ private fun RowScope.SimpleEpisodeListItemImpl(
     title: String,
     date: String?,
     watchProgress: String?,
+    watchProgressFraction: Float?,
     fillermark: Boolean,
     scanlator: String?,
     seen: Boolean,
@@ -244,6 +254,12 @@ private fun RowScope.SimpleEpisodeListItemImpl(
             fillermark = fillermark,
             scanlator = scanlator,
         )
+        if (watchProgressFraction != null) {
+            LinearProgressIndicator(
+                progress = { watchProgressFraction.coerceIn(0f, 1f) },
+                modifier = Modifier.fillMaxWidth().height(2.dp),
+            )
+        }
     }
 
     BookmarkDownloadIcons(

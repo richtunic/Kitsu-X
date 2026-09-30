@@ -1,6 +1,13 @@
 # DECISIONS
 
 Fecha: 2026-09-29
+Decisión: Reutilizar las fichas existentes y sus paneles de tablet; corregir primero los CTA y el progreso visible sin reescribir episodios, capítulos ni motores.
+Motivo: Las fichas ya reúnen cabecera, acciones, descripción, listas y dos paneles. El cambio mínimo útil es que Manga use lenguaje de lectura y que un episodio parcialmente visto muestre su progreso.
+Impacto: No cambia reproducción, lectura, descargas ni esquema. Tabs de Información/Relacionado y otros cambios de jerarquía siguen pendientes de diseño y prueba táctil.
+
+---
+
+Fecha: 2026-09-29
 Decisión: Ubicar descubrimiento Jikan en una primera pestaña de Explorar y abrir los títulos externos mediante la búsqueda en fuentes instaladas.
 Motivo: Jikan aporta metadatos de temporada, próximos estrenos y tendencias, pero no confirma que un título esté disponible para reproducir. Mantener Fuentes y Extensiones como pestañas conserva las rutas actuales.
 Impacto: Explorar hace consultas Jikan al abrirse, separadas por una pausa para respetar límites. El buscador de cada pestaña de fuentes/extensiones se asocia explícitamente a Anime o Manga, sin depender de la posición de la pestaña. Falta prueba de red y UI en dispositivo.

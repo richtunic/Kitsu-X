@@ -879,6 +879,10 @@
     <string name="kitsux_home_recently_added">Añadidos recientemente</string>
     <string name="kitsux_home_in_library">En tu biblioteca</string>
     <string name="kitsux_home_view_details">Ver detalles</string>
+    <string name="kitsux_anime_resume_watching">Reanudar</string>
+    <string name="kitsux_anime_start_watching">Empezar a ver</string>
+    <string name="kitsux_manga_resume_reading">Reanudar lectura</string>
+    <string name="kitsux_manga_start_reading">Empezar a leer</string>
     <string name="kitsux_home_continue_watching">Continuar viendo</string>
     <string name="kitsux_home_continue_reading">Continuar leyendo</string>
     <string name="kitsux_home_remove_continue_watching_title">Eliminar de Continuar viendo</string>

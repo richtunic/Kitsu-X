@@ -30,7 +30,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -380,7 +380,7 @@ private fun MangaScreenSmallImpl(
                             text = stringResource(if (isReading) MR.strings.action_resume else MR.strings.action_start),
                         )
                     },
-                    icon = { Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = null) },
+                    icon = { Icon(imageVector = Icons.Outlined.MenuBook, contentDescription = null) },
                     onClick = onContinueReading,
                     expanded = chapterListState.shouldExpandFAB(),
                 )
@@ -450,13 +450,16 @@ private fun MangaScreenSmallImpl(
                                         .height(48.dp),
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Filled.PlayArrow,
+                                        imageVector = Icons.Outlined.MenuBook,
                                         contentDescription = null,
                                         modifier = Modifier.size(24.dp),
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = if (isReading) "Reanudar lectura" else "Empezar a leer",
+                                        text = stringResource(
+                                            if (isReading) MR.strings.kitsux_manga_resume_reading
+                                            else MR.strings.kitsux_manga_start_reading,
+                                        ),
                                         style = MaterialTheme.typography.titleMedium.copy(
                                             fontWeight = FontWeight.Bold,
                                             letterSpacing = 0.5.sp,
@@ -669,7 +672,7 @@ fun MangaScreenLargeImpl(
                             ),
                         )
                     },
-                    icon = { Icon(imageVector = Icons.Filled.PlayArrow, contentDescription = null) },
+                    icon = { Icon(imageVector = Icons.Outlined.MenuBook, contentDescription = null) },
                     onClick = onContinueReading,
                     expanded = chapterListState.shouldExpandFAB(),
                 )

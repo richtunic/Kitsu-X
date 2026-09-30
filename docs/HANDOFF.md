@@ -1,5 +1,10 @@
 # HANDOFF
 
+## Gran actualización 2026-09-29: Fase 6, ficha (avance)
+
+Las fichas de Anime y Manga reutilizan sus cabeceras, acciones, listas y `TwoPanelBox` existente. Los CTA principales se localizan en base/español; Manga usa icono de libro en móvil y tablet. La lista de episodios dibuja una barra pequeña cuando existe progreso positivo y duración conocida, manteniendo el texto de progreso. `:app:compileDebugKotlin --offline` pasó. Pendiente: diseño de tabs Información/Relacionado y validación visual/táctil de ficha, progreso y dos paneles en teléfono/tablet.
+
+
 ## Gran actualización 2026-09-29: Fase 5, Explorar (avance)
 
 Explorar tiene una pestaña inicial Descubrir que consulta `/v4/seasons/now`, `/v4/seasons/upcoming` y `/v4/top/anime` de Jikan al abrirse. Muestra filas de temporada, próximos estrenos y tendencias, además de géneros filtrables. El buscador distingue Anime y Manga; tocar una obra externa abre búsqueda global de anime en las fuentes instaladas. La UI aclara que los metadatos no garantizan disponibilidad. Hay error y reintento para secciones fallidas; las consultas se espacian 1.2 s.
