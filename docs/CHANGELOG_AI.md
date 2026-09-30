@@ -1,6 +1,16 @@
 # CHANGELOG_AI
 
 Fecha: 2026-09-29
+Tarea: Recuperar portadas grises en Inicio
+Cambios:
+- Continuar viendo/leyendo, Novedades y Añadidos recientemente usan `AnimeCover`/`MangaCover`, igual que las bibliotecas, para acceder a caché, portadas personalizadas y cabeceras de fuente.
+- El hero usa la portada de la obra cuando no hay banner o falla su carga.
+Validación:
+- `:app:compileDebugKotlin` y `:app:assembleDebug --offline --quiet` pasaron; APK debug `io.kitsux.app.dev` 1.0.7-41 generado. El teléfono no apareció en ADB y falta la prueba visual en dispositivo.
+
+---
+
+Fecha: 2026-09-29
 Tarea: Diagnosticar la carga de temporada de Jikan
 Cambios:
 - Explorar distingue errores HTTP 5xx de Jikan de otros fallos y muestra un mensaje de indisponibilidad temporal con Reintentar.

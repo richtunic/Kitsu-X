@@ -40,7 +40,7 @@ import tachiyomi.presentation.core.i18n.stringResource
 @Composable
 fun MediaProgressCard(
     title: String,
-    artworkUrl: Any?,
+    coverData: Any?,
     progressText: String,
     progress: Float,
     isAnime: Boolean,
@@ -66,7 +66,7 @@ fun MediaProgressCard(
     ) {
         Column {
             Box(modifier = Modifier.fillMaxWidth()) {
-                ItemCover.Book(data = artworkUrl, modifier = Modifier.fillMaxWidth())
+                ItemCover.Book(data = coverData, modifier = Modifier.fillMaxWidth())
 
                 if (isAnime) {
                     Box(

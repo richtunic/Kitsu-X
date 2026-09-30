@@ -23,12 +23,15 @@ import kotlinx.coroutines.withContext
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
+import tachiyomi.domain.entries.EntryCover
 import tachiyomi.domain.entries.anime.interactor.GetAnime
 import tachiyomi.domain.entries.anime.interactor.GetLibraryAnime
 import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.entries.anime.model.asAnimeCover
 import tachiyomi.domain.entries.manga.interactor.GetLibraryManga
 import tachiyomi.domain.entries.manga.interactor.GetManga
 import tachiyomi.domain.entries.manga.model.Manga
+import tachiyomi.domain.entries.manga.model.asMangaCover
 import tachiyomi.domain.history.anime.interactor.GetAnimeHistory
 import tachiyomi.domain.history.anime.interactor.GetNextEpisodes
 import tachiyomi.domain.history.manga.interactor.GetMangaHistory
@@ -659,7 +662,14 @@ data class KitsuXMediaItem(
     val unseenCount: Int = 0,
     val isRecommendation: Boolean = false,
     val isStarted: Boolean = false,
-)
+) {
+    val coverData: EntryCover?
+        get() = when (val entry = realModel) {
+            is Anime -> entry.asAnimeCover()
+            is Manga -> entry.asMangaCover()
+            else -> null
+        }
+}
 
 private data class HomePreferenceState(
     val showAnime: Boolean,

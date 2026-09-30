@@ -293,7 +293,7 @@ fun ContinueWatchingSection(
             items(distinctItems, key = { "${it.id}_${it.isAnime}" }) { continueItem ->
                 MediaProgressCard(
                     title = continueItem.mediaItem.title,
-                    artworkUrl = continueItem.thumbnailUrl,
+                    coverData = continueItem.mediaItem.coverData ?: continueItem.thumbnailUrl,
                     progressText = continueItem.progressText,
                     progress = continueItem.episodeProgress,
                     isAnime = continueItem.isAnime,
@@ -325,7 +325,10 @@ fun NewReleaseSection(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         Box(modifier = Modifier.fillMaxWidth().aspectRatio(0.67f).clip(RoundedCornerShape(6.dp))) {
-                            ItemCover.Book(data = item.thumbnailUrl, modifier = Modifier.fillMaxSize())
+                            ItemCover.Book(
+                                data = item.mediaItem.coverData ?: item.thumbnailUrl,
+                                modifier = Modifier.fillMaxSize(),
+                            )
                             Text(
                                 text = stringResource(MR.strings.kitsux_home_new_badge),
                                 modifier = Modifier.align(Alignment.TopStart)
@@ -380,7 +383,7 @@ fun MediaSection(
                             .clip(RoundedCornerShape(6.dp)),
                     ) {
                         ItemCover.Book(
-                            data = item.thumbnailUrl,
+                            data = item.coverData ?: item.thumbnailUrl,
                             modifier = Modifier.fillMaxSize(),
                         )
 
@@ -475,6 +478,9 @@ fun HeroBannerSection(
             modifier = Modifier.fillMaxSize(),
         ) { page ->
             val item = items[page]
+            var useCover by remember(item.id, item.heroArtworkUrl) {
+                mutableStateOf(item.heroArtworkUrl.isNullOrBlank())
+            }
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -482,10 +488,11 @@ fun HeroBannerSection(
             ) {
                 // Image
                 AsyncImage(
-                    model = item.heroArtworkUrl ?: item.thumbnailUrl,
+                    model = if (useCover) item.coverData ?: item.thumbnailUrl else item.heroArtworkUrl,
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
+                    onError = { if (!useCover) useCover = true },
                 )
 
                 // Gradient overlay (Netflix style)

@@ -1,6 +1,13 @@
 # DECISIONS
 
 Fecha: 2026-09-29
+Decisión: Cargar las portadas de Inicio con los modelos `EntryCover` existentes y mantener el banner del hero como imagen preferida con respaldo en la portada.
+Motivo: Las URLs directas de Inicio omiten la caché local, las portadas personalizadas y las cabeceras de fuentes que sí usa Biblioteca; por eso la misma obra podía verse gris solo en Inicio.
+Impacto: No cambian los datos ni las fuentes. Falta verificar con el teléfono las portadas específicas reportadas por el usuario.
+
+---
+
+Fecha: 2026-09-29
 Decisión: Mantener Jikan `/v4/seasons/now` para la temporada actual y distinguir fallos 5xx en la UI.
 Motivo: La petición directa en el teléfono devolvió HTTP 504 de Jikan por falta de conexión con MyAnimeList; cambiar el endpoint o mostrar títulos de otra clasificación como temporada actual sería engañoso.
 Impacto: Explorar informa la indisponibilidad y conserva Reintentar. La carga real de temporada depende de que Jikan vuelva a responder.

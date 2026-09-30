@@ -1,5 +1,10 @@
 # HANDOFF
 
+## Inicio: portadas grises, 2026-09-29
+
+El usuario reportó portadas grises en Continuar leyendo, Añadidos recientemente y hero mientras Biblioteca Anime/Manga sí las mostraba. Inicio entregaba `thumbnailUrl` directamente a Coil; Biblioteca entrega `AnimeCover`/`MangaCover` a sus fetchers, que resuelven caché, portada personalizada y cabeceras de la fuente. Las filas de Inicio ahora usan esos modelos mediante `KitsuXMediaItem.coverData`. El hero conserva `backgroundUrl` cuando carga y cambia a `coverData` si falta o falla. `:app:compileDebugKotlin` y `:app:assembleDebug --offline --quiet` pasaron; APK debug 1.0.7-41 generado. No hubo dispositivo ADB ni servicio mDNS disponible, así que no se instaló ni se comprobó visualmente esta corrección. Siguiente acción: conectar S23 Ultra, instalar APK sin borrar datos y revisar las obras reportadas en Inicio y Biblioteca.
+
+
 ## Diagnóstico Jikan, 2026-09-29
 
 Se verificó el contrato oficial de `jikan-me/jikan-rest`: `routes/web.v4.php` y `storage/api-docs/api-docs.json` todavía definen `/v4/seasons/now` y `/v4/seasons/upcoming`. La implementación de `ExploreScreenModel` usa estas rutas correctas. En la consulta directa, `/v4/anime/1` y `/v4/top/anime?limit=1` devolvieron HTTP 200; `/v4/seasons/now?limit=1`, `/v4/seasons/upcoming?limit=1` y `/v4/top/anime?filter=airing&limit=15` devolvieron HTTP 504 con `BadResponseException` indicando que Jikan no pudo conectar con MyAnimeList. El repositorio oficial mantiene abierto el issue #612 sobre errores 504. No hay evidencia de cambio de API ni de un defecto de serialización en KitsuX; la causa observable está en la instancia pública o su conexión ascendente. El S23 Ultra ya no figuró en ADB durante esta revisión, por lo que la comprobación actual fue desde el equipo. No sustituir «Temporada actual» por el ranking general: clasificaría obras incorrectamente. Siguiente verificación: repetir `/seasons/now` cuando Jikan se recupere y comprobar la lista en el teléfono.
