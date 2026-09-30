@@ -368,3 +368,9 @@ Notas:
 - Jikan dejó de crear una categoría por género al añadir anime/manga y dejó de modificar asociaciones al abrir detalles.
 - La elección manual de categorías se conserva y se escribe tras confirmar el alta. La preferencia de sugerir una categoría existente se expone en Ajustes de Biblioteca.
 - No se migraron asociaciones históricas ni se añadieron tablas; la conversión a etiquetas requiere backup y rollback validados.
+
+# 2026-09-29 — Fase 5, Explorar (avance)
+
+- Descubrir muestra temporada actual, próximos estrenos, tendencias y filtros locales de género desde Jikan.
+- Búsqueda de Anime/Manga y tarjetas externas abren las búsquedas existentes en fuentes instaladas; se aclara que Jikan no verifica disponibilidad.
+- Fuentes y Extensiones conservan acceso y búsqueda correcta tras añadir la pestaña. Kotlin y APK debug compilaron offline; falta prueba de red y dispositivo.

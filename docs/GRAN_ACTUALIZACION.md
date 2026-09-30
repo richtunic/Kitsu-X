@@ -76,3 +76,10 @@ Fuente de producto: `Kitsu_X_PRD_Gran_Actualizacion.md` (29 de septiembre de 202
 - Para nuevas altas, Jikan solo puede sugerir una categoría existente; no crea una por género. Se eliminó la recategorización al abrir detalles y al guardar una elección manual.
 - El switch de Ajustes > Biblioteca controla la sugerencia. Las categorías predeterminadas y el selector manual existentes siguen como fallback.
 - Migración pendiente: las asociaciones antiguas no indican si una categoría provino de Jikan o del usuario. La conversión a etiquetas deberá ser opcional, respaldar relaciones, preservar ambiguas y probar rollback antes de activarse.
+
+## Avance PR 7: Explorar
+
+- Descubrir es la primera pestaña de Explorar y consulta Jikan solo al entrar. Incluye temporada actual, próximos estrenos, tendencias, géneros y estado de error con reintento.
+- Tocar metadatos externos abre la búsqueda global en fuentes instaladas. No se ofrece «Añadir» directo hasta resolver una fuente real; la UI lo explica.
+- Las pestañas previas siguen accesibles y los accesos programáticos a Extensiones se calculan según tipos visibles. Se eliminó el supuesto de paridad entre índice de pestaña y Anime/Manga para la búsqueda.
+- Kotlin y APK debug compilaron offline. La API Jikan y la UI real no están verificadas en este entorno.

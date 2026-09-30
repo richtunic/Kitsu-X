@@ -906,6 +906,14 @@
     <string name="kitsux_category_completed">Terminados</string>
     <string name="kitsux_action_mark_completed">Terminado</string>
     <string name="kitsux_explore_search_anime">Buscar anime</string>
+    <string name="kitsux_explore_discover">Descubrir</string>
+    <string name="kitsux_explore_search_hint">Buscar anime o manga</string>
+    <string name="kitsux_explore_current_season">Temporada actual</string>
+    <string name="kitsux_explore_upcoming">Próximos estrenos</string>
+    <string name="kitsux_explore_trending">Anime en tendencia</string>
+    <string name="kitsux_explore_genres">Géneros</string>
+    <string name="kitsux_explore_metadata_notice">Estos títulos vienen de Jikan. Busca en tus fuentes instaladas para comprobar disponibilidad.</string>
+    <string name="kitsux_explore_load_failed">No se pudieron cargar algunas secciones de descubrimiento.</string>
     <string name="kitsux_explore_search_manga">Buscar manga</string>
     <string name="kitsux_explore_search_all_sources">Busca en todas tus fuentes instaladas</string>
     <string name="kitsux_pref_show_hero_banner">Mostrar banner hero</string>

@@ -1,6 +1,13 @@
 # DECISIONS
 
 Fecha: 2026-09-29
+Decisión: Ubicar descubrimiento Jikan en una primera pestaña de Explorar y abrir los títulos externos mediante la búsqueda en fuentes instaladas.
+Motivo: Jikan aporta metadatos de temporada, próximos estrenos y tendencias, pero no confirma que un título esté disponible para reproducir. Mantener Fuentes y Extensiones como pestañas conserva las rutas actuales.
+Impacto: Explorar hace consultas Jikan al abrirse, separadas por una pausa para respetar límites. El buscador de cada pestaña de fuentes/extensiones se asocia explícitamente a Anime o Manga, sin depender de la posición de la pestaña. Falta prueba de red y UI en dispositivo.
+
+---
+
+Fecha: 2026-09-29
 Decisión: Limitar la sugerencia Jikan al alta de una obra y a una sola categoría ya existente; no reescribir asociaciones al abrir detalles ni después de una elección manual.
 Motivo: La creación de una categoría por género duplicaba la organización y podía sustituir una selección explícita. Mantener las asociaciones históricas evita pérdidas hasta contar con migración y rollback probados.
 Impacto: La preferencia de Jikan se expone en Ajustes de Biblioteca. Las categorías existentes y la base de datos no se alteran automáticamente; etiquetas y migración siguen pendientes.

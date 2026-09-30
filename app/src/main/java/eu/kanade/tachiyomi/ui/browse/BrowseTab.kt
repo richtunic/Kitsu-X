@@ -12,10 +12,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.components.TabbedScreen
+import eu.kanade.presentation.components.TabContent
+import eu.kanade.presentation.browse.ExploreDiscover
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.browse.anime.extension.AnimeExtensionsScreenModel
@@ -23,6 +27,7 @@ import eu.kanade.tachiyomi.ui.browse.anime.extension.animeExtensionsTab
 import eu.kanade.tachiyomi.ui.browse.anime.migration.sources.migrateAnimeSourceTab
 import eu.kanade.tachiyomi.ui.browse.anime.source.animeSourcesTab
 import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
+import eu.kanade.tachiyomi.ui.browse.manga.source.globalsearch.GlobalMangaSearchScreen
 import eu.kanade.tachiyomi.ui.browse.manga.extension.MangaExtensionsScreenModel
 import eu.kanade.tachiyomi.ui.browse.manga.extension.mangaExtensionsTab
 import eu.kanade.tachiyomi.ui.browse.manga.migration.sources.migrateMangaSourceTab
@@ -58,19 +63,23 @@ data object BrowseTab : Tab {
         navigator.push(GlobalAnimeSearchScreen())
     }
 
-    private val switchToTabNumberChannel = Channel<Int>(1, BufferOverflow.DROP_OLDEST)
+    private enum class ExtensionDestination { Anime, Manga }
+    private val switchToExtensionChannel = Channel<ExtensionDestination>(1, BufferOverflow.DROP_OLDEST)
 
     fun showExtension() {
-        switchToTabNumberChannel.trySend(3) // Manga extensions: tab no. 3
+        switchToExtensionChannel.trySend(ExtensionDestination.Manga)
     }
 
     fun showAnimeExtension() {
-        switchToTabNumberChannel.trySend(2) // Anime extensions: tab no. 2
+        switchToExtensionChannel.trySend(ExtensionDestination.Anime)
     }
 
     @Composable
     override fun Content() {
         val context = LocalContext.current
+        val navigator = LocalNavigator.currentOrThrow
+        val exploreScreenModel = rememberScreenModel { ExploreScreenModel() }
+        val exploreState by exploreScreenModel.state.collectAsState()
 
         // Hoisted for extensions tab's search bar
         val mangaExtensionsScreenModel = rememberScreenModel { MangaExtensionsScreenModel() }
@@ -83,24 +92,41 @@ data object BrowseTab : Tab {
         val showAnime by uiPreferences.showAnime().collectPreferencesAsState()
         val showManga by uiPreferences.showManga().collectPreferencesAsState()
 
+        var animeExtensionIndex = -1
+        var mangaExtensionIndex = -1
         val tabs = buildList {
+            add(
+                TabContent(
+                    titleRes = MR.strings.kitsux_explore_discover,
+                    content = { _, _ ->
+                        ExploreDiscover(
+                            state = exploreState,
+                            onRetry = exploreScreenModel::refresh,
+                            onSearchAnime = { navigator.push(GlobalAnimeSearchScreen(it)) },
+                            onSearchManga = { navigator.push(GlobalMangaSearchScreen(it)) },
+                        )
+                    },
+                ),
+            )
             if (showAnime) {
-                add(animeSourcesTab())
+                add(animeSourcesTab().copy(searchManga = false))
             }
             if (showManga) {
-                add(mangaSourcesTab())
+                add(mangaSourcesTab().copy(searchManga = true))
             }
             if (showAnime) {
-                add(animeExtensionsTab(animeExtensionsScreenModel))
+                animeExtensionIndex = size
+                add(animeExtensionsTab(animeExtensionsScreenModel).copy(searchManga = false))
             }
             if (showManga) {
-                add(mangaExtensionsTab(mangaExtensionsScreenModel))
+                mangaExtensionIndex = size
+                add(mangaExtensionsTab(mangaExtensionsScreenModel).copy(searchManga = true))
             }
             if (showAnime) {
-                add(migrateAnimeSourceTab())
+                add(migrateAnimeSourceTab().copy(searchManga = false))
             }
             if (showManga) {
-                add(migrateMangaSourceTab())
+                add(migrateMangaSourceTab().copy(searchManga = true))
             }
         }.toPersistentList()
 
@@ -116,9 +142,15 @@ data object BrowseTab : Tab {
             onChangeAnimeSearchQuery = animeExtensionsScreenModel::search,
             scrollable = true,
         )
-        LaunchedEffect(Unit) {
-            switchToTabNumberChannel.receiveAsFlow()
-                .collectLatest { state.scrollToPage(it) }
+        LaunchedEffect(animeExtensionIndex, mangaExtensionIndex) {
+            switchToExtensionChannel.receiveAsFlow()
+                .collectLatest { destination ->
+                    val index = when (destination) {
+                        ExtensionDestination.Anime -> animeExtensionIndex
+                        ExtensionDestination.Manga -> mangaExtensionIndex
+                    }
+                    if (index >= 0) state.scrollToPage(index)
+                }
         }
 
         LaunchedEffect(Unit) {

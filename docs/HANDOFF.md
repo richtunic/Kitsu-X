@@ -1,5 +1,12 @@
 # HANDOFF
 
+## Gran actualización 2026-09-29: Fase 5, Explorar (avance)
+
+Explorar tiene una pestaña inicial Descubrir que consulta `/v4/seasons/now`, `/v4/seasons/upcoming` y `/v4/top/anime` de Jikan al abrirse. Muestra filas de temporada, próximos estrenos y tendencias, además de géneros filtrables. El buscador distingue Anime y Manga; tocar una obra externa abre búsqueda global de anime en las fuentes instaladas. La UI aclara que los metadatos no garantizan disponibilidad. Hay error y reintento para secciones fallidas; las consultas se espacian 1.2 s.
+
+Se mantienen las pestañas de Fuentes, Extensiones y migración. El destino de Extensiones se calcula según pestañas visibles y el buscador de cada pestaña usa su tipo explícito. Kotlin y APK debug compilaron offline. Falta prueba de Jikan real, disponibilidad de fuentes, tablet y teléfono. No se añadió acción «Añadir» directa porque una obra de Jikan todavía no tiene fuente local resuelta.
+
+
 ## Gran actualización 2026-09-29: Organización 2.0, avance seguro
 
 El alta de anime/manga ya no crea categorías por cada género de Jikan. Si la preferencia está activa, el modelo busca como máximo una categoría existente con nombre coincidente; en otro caso conserva el flujo de categoría predeterminada o selección manual. Abrir detalles de una obra favorita ya no modifica sus categorías. Guardar una selección manual espera primero al alta de la obra y luego escribe la asociación, sin aplicar Jikan encima. La preferencia se muestra en Ajustes > Biblioteca; onboarding y textos describen la conducta actual.
