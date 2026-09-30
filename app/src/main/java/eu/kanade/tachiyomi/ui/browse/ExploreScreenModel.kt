@@ -46,7 +46,6 @@ class ExploreScreenModel(
             mutableState.value = mutableState.value.copy(isLoading = true, hasError = false)
             var failed = false
             var serviceUnavailable = false
-            var usedAniListFallback = false
             var requestedNetwork = false
             suspend fun section(
                 path: String,
@@ -76,7 +75,6 @@ class ExploreScreenModel(
                         try {
                             val backup = withContext(Dispatchers.IO) { loadAniListSection(aniListSection, force) }
                             if (backup.isNotEmpty()) {
-                                usedAniListFallback = true
                                 return backup
                             }
                         } catch (cancelled: CancellationException) {
@@ -101,7 +99,6 @@ class ExploreScreenModel(
                 isLoading = false,
                 hasError = failed,
                 isServiceUnavailable = serviceUnavailable,
-                usedAniListFallback = usedAniListFallback,
             )
         }
     }
@@ -170,7 +167,6 @@ data class ExploreState(
     val isLoading: Boolean = false,
     val hasError: Boolean = false,
     val isServiceUnavailable: Boolean = false,
-    val usedAniListFallback: Boolean = false,
 )
 
 @Serializable

@@ -1,9 +1,16 @@
 # DECISIONS
 
 Fecha: 2026-09-29
+Decisión: Retirar la leyenda persistente de procedencia de datos en Descubrir.
+Motivo: El usuario prefiere que la interfaz muestre directamente las obras; la leyenda ocupa espacio y no cambia la acción disponible al tocar una tarjeta.
+Impacto: Jikan y AniList mantienen sus roles de proveedor inicial y respaldo. Si ambas fuentes fallan, el error y Reintentar siguen visibles.
+
+---
+
+Fecha: 2026-09-29
 Decisión: Mantener Jikan como proveedor inicial de Explorar y usar AniList como respaldo para temporada, próximos estrenos y tendencias ante fallos de red, 429 o 5xx.
 Motivo: La conexión Jikan-MyAnimeList no puede repararse desde KitsuX. AniList ya se utiliza en el proyecto y sus consultas GraphQL públicas devolvieron datos reales para las tres secciones.
-Impacto: No se agregan claves ni dependencias. La UI identifica el respaldo y sigue exigiendo búsqueda en fuentes instaladas para disponibilidad. La equivalencia editorial entre catálogos no es exacta; falta comprobar el flujo en Android.
+Impacto: No se agregan claves ni dependencias. Tocar una obra sigue abriendo la búsqueda en fuentes instaladas para comprobar disponibilidad. La equivalencia editorial entre catálogos no es exacta.
 
 ---
 

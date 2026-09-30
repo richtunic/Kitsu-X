@@ -1,8 +1,13 @@
 # HANDOFF
 
+## Explorar: leyenda retirada, 2026-09-29
+
+Por petición del usuario, Descubrir ya no muestra la leyenda de procedencia Jikan/AniList encima de las filas. Se eliminó el estado `usedAniListFallback` que solo alimentaba ese texto. Permanecen las consultas, el respaldo AniList, la búsqueda en fuentes instaladas y el error con Reintentar cuando una sección realmente falla. Kotlin y APK debug compilaron offline; se instaló `io.kitsux.app.dev` 1.0.7-43 sin borrar datos. Una captura del S23 Ultra confirmó las filas de temporada y próximos estrenos con portadas y sin leyenda.
+
+
 ## Explorar: respaldo AniList para Jikan, 2026-09-29
 
-`ExploreScreenModel` mantiene las tres consultas Jikan y, ante errores de conexión, HTTP 429 o 5xx, consulta AniList GraphQL para temporada actual (`RELEASING`), próximo trimestre (`NOT_YET_RELEASED`) y tendencias (`TRENDING_DESC`). El trimestre se calcula en la zona del dispositivo y el caché se separa por proveedor, sección y temporada; se guarda solo tras decodificar la respuesta. Las tarjetas indican cuando algunos títulos vienen de AniList y siguen abriendo búsqueda en fuentes locales. Se verificaron respuestas HTTP 200 directas para las tres consultas AniList, con títulos e imágenes; `:app:compileDebugKotlin` y `:app:assembleDebug --offline --quiet` pasaron. Se instaló `io.kitsux.app.dev` 1.0.7-42 en S23 Ultra sin borrar datos y una captura de Explorar confirmó temporada actual y próximos estrenos con imágenes y aviso AniList; otra captura de Inicio confirmó imagen en hero y Continuar viendo/leyendo. La integración no usa tokens nuevos. Pendiente: recorrido táctil de Tendencias, Añadidos recientemente, reintento y cambio de temporada.
+`ExploreScreenModel` mantiene las tres consultas Jikan y, ante errores de conexión, HTTP 429 o 5xx, consulta AniList GraphQL para temporada actual (`RELEASING`), próximo trimestre (`NOT_YET_RELEASED`) y tendencias (`TRENDING_DESC`). El trimestre se calcula en la zona del dispositivo y el caché se separa por proveedor, sección y temporada; se guarda solo tras decodificar la respuesta. Las tarjetas siguen abriendo búsqueda en fuentes locales. Se verificaron respuestas HTTP 200 directas para las tres consultas AniList, con títulos e imágenes; `:app:compileDebugKotlin` y `:app:assembleDebug --offline --quiet` pasaron. Se instaló `io.kitsux.app.dev` 1.0.7-42 en S23 Ultra sin borrar datos y una captura de Explorar confirmó temporada actual y próximos estrenos con imágenes; otra captura de Inicio confirmó imagen en hero y Continuar viendo/leyendo. La integración no usa tokens nuevos. Pendiente: recorrido táctil de Tendencias, Añadidos recientemente, reintento y cambio de temporada.
 
 
 ## Inicio: portadas grises, 2026-09-29

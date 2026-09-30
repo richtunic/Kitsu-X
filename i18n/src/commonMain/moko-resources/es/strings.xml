@@ -922,8 +922,6 @@
     <string name="kitsux_explore_upcoming">Próximos estrenos</string>
     <string name="kitsux_explore_trending">Anime en tendencia</string>
     <string name="kitsux_explore_genres">Géneros</string>
-    <string name="kitsux_explore_metadata_notice">Estos títulos vienen de Jikan. Busca en tus fuentes instaladas para comprobar disponibilidad.</string>
-    <string name="kitsux_explore_anilist_fallback_notice">Jikan no está disponible; algunos títulos vienen de AniList. Busca en tus fuentes instaladas para comprobar disponibilidad.</string>
     <string name="kitsux_explore_load_failed">No se pudieron cargar algunas secciones de descubrimiento.</string>
     <string name="kitsux_explore_service_unavailable">Jikan no está disponible temporalmente. Inténtalo más tarde.</string>
     <string name="kitsux_explore_search_manga">Buscar manga</string>

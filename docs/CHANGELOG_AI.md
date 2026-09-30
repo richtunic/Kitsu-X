@@ -1,10 +1,19 @@
 # CHANGELOG_AI
 
 Fecha: 2026-09-29
+Tarea: Retirar la leyenda de proveedores en Explorar
+Cambios:
+- Descubrir deja de mostrar la leyenda de Jikan/AniList sobre las filas de temporada, próximos estrenos y tendencias. El respaldo AniList y los mensajes de error reales siguen funcionando.
+Validación:
+- Kotlin y APK debug compilaron offline. `io.kitsux.app.dev` 1.0.7-43 se instaló en S23 Ultra y una captura de Descubrir confirmó las filas de temporada y próximos estrenos sin la leyenda.
+
+---
+
+Fecha: 2026-09-29
 Tarea: Respaldo de Explorar durante fallos de Jikan
 Cambios:
 - Temporada actual, próximos estrenos y tendencias usan AniList como respaldo cuando Jikan responde 429/5xx o falla la conexión.
-- Explorar identifica los resultados de AniList, conserva la búsqueda en fuentes instaladas y cachea respuestas válidas durante seis horas.
+- Explorar conserva la búsqueda en fuentes instaladas y cachea respuestas válidas durante seis horas.
 Validación:
 - Consultas GraphQL directas de las tres secciones devolvieron HTTP 200 con títulos e imágenes. Kotlin y APK debug compilaron offline. Se instaló `io.kitsux.app.dev` 1.0.7-42 en S23 Ultra; Explorar mostró temporada actual y próximos estrenos con portadas de AniList. Inicio mostró hero y Continuar con imágenes. Falta recorrido de Tendencias y Añadidos recientemente.
 

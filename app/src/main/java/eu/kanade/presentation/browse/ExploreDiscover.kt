@@ -73,14 +73,6 @@ fun ExploreDiscover(
                         Text(stringResource(MR.strings.kitsux_explore_search_manga))
                     }
                 }
-                Text(
-                    text = stringResource(
-                        if (state.usedAniListFallback) MR.strings.kitsux_explore_anilist_fallback_notice
-                        else MR.strings.kitsux_explore_metadata_notice,
-                    ),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
             }
         }
 
