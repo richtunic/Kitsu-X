@@ -1,5 +1,11 @@
 # HANDOFF
 
+## Gran actualización 2026-09-29: fase técnica 0
+
+El PRD `Kitsu_X_PRD_Gran_Actualizacion.md` se inició en el worktree aislado `codex/gran-actualizacion` desde `b829a5838`. Se completó el inventario y el plan en `docs/GRAN_ACTUALIZACION.md`. El checkout principal tiene modificaciones locales previas y no se tocó. No hay cambios de app ni DB en esta fase.
+
+Siguiente acción: implementar PR 1 / Foundations en esta rama, empezando por acceso seguro a Historial y Actualizaciones desde Más, luego cinco destinos y adaptación de barra/rail al ancho actual de ventana. Compilar y probar móvil/tablet antes de avanzar a PR 2. La validación en dispositivo sigue pendiente.
+
 ## Nota técnica: bandeja de novedades y actualización de extensiones en lote
 Home deriva `newReleaseGroups` del estado local de anime y manga. Los límites se calculan con el inicio del día en la zona horaria del dispositivo: `Hoy`, `Ayer` y los seis días recientes restantes como `Esta semana`. Los grupos vacíos no se dibujan y la bandeja completa se oculta cuando no hay elementos válidos. Cada tarjeta conserva `onContinueClick`, que abre directamente el siguiente episodio o capítulo pendiente.
 

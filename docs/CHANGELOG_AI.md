@@ -331,3 +331,9 @@ Validación:
 - Comprobación exitosa de las firmas y enlazados de dependencias.
 Notas:
 - La arquitectura híbrida elegida mantiene la compatibilidad de Voyager internamente para evitar reescribir todos los screen models y preservar las integraciones existentes.
+
+# 2026-09-29 — Gran actualización, fase técnica 0
+
+- Inventariados navegación, responsive, tema, Inicio, biblioteca, Jikan y esquemas de categorías para el nuevo PRD.
+- Creada la rama aislada `codex/gran-actualizacion` desde `b829a5838`; el checkout principal y sus cambios locales quedaron intactos.
+- Registrado el plan por fases y los riesgos de compatibilidad en `docs/GRAN_ACTUALIZACION.md`. No se cambió código ni base de datos.

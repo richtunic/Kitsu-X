@@ -1,5 +1,12 @@
 # DECISIONS
 
+Fecha: 2026-09-29
+Decisión: Comenzar la gran actualización con inventario y rama aislada; reutilizar Voyager, Scaffold y el tema existentes durante Foundations.
+Motivo: La navegación y las categorías actuales tienen consumidores y preferencias heredadas. Un cambio visual masivo o una migración de datos temprana pondría en riesgo accesos, biblioteca y backups.
+Impacto: `docs/GRAN_ACTUALIZACION.md` documenta el mapa técnico y el orden de cambios. No se cambian todavía rutas, preferencias ni esquemas. Antes de fijar cinco destinos, Historial y Actualizaciones deben quedar accesibles desde Más; el rail debe basarse en el ancho actual de la ventana.
+
+---
+
 Fecha: 2026-08-01
 Decision: Construir la bandeja de novedades desde el estado local de la biblioteca y ejecutar las actualizaciones de extensiones de forma secuencial sobre los instaladores existentes.
 Motivo: La biblioteca ya conserva las fechas necesarias y el toque de las tarjetas ya resuelve el siguiente episodio o capítulo, por lo que no hace falta otra tabla ni sincronización. En extensiones, reutilizar el flujo individual mantiene la confirmación y la validación de firmas sin crear un instalador paralelo menos seguro.
