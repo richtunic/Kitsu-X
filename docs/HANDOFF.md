@@ -1,5 +1,12 @@
 # HANDOFF
 
+## Gran actualización 2026-09-29: Organización 2.0, avance seguro
+
+El alta de anime/manga ya no crea categorías por cada género de Jikan. Si la preferencia está activa, el modelo busca como máximo una categoría existente con nombre coincidente; en otro caso conserva el flujo de categoría predeterminada o selección manual. Abrir detalles de una obra favorita ya no modifica sus categorías. Guardar una selección manual espera primero al alta de la obra y luego escribe la asociación, sin aplicar Jikan encima. La preferencia se muestra en Ajustes > Biblioteca; onboarding y textos describen la conducta actual.
+
+Pendiente para completar Fase 4: selector de los cuatro modos al añadir, categoría principal y etiquetas persistentes, y migración de asociaciones antiguas con backup/rollback probado sobre datos de ejemplo. No ejecutar una conversión automática de las categorías actuales: no hay procedencia fiable para distinguir las creadas por Jikan de las personales. Kotlin compiló offline; falta dispositivo.
+
+
 ## Gran actualización 2026-09-29: Fase 3, Biblioteca
 
 Anime y Manga tienen una pestaña virtual «Todo» que toma las asociaciones existentes y deduplica por ID. No se modifican tablas ni categorías. Una bandera de preferencia desplaza una vez los índices guardados mayores que cero para conservar la pestaña previa. «Todo» refresca la biblioteca completa y usa el orden global. Ambas pantallas muestran chips rápidos Todo/Viendo o Leyendo/Pendientes/Completados basados en recuentos reales; los filtros avanzados y la elección persistida de cuadrícula/lista se conservan. La cuadrícula automática calcula 2–8 columnas según el ancho visible, y la preferencia explícita de columnas sigue mandando.

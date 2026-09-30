@@ -278,15 +278,6 @@ class AnimeScreenModel(
             // Initial loading finished
             updateSuccessState { it.copy(isRefreshingData = false) }
 
-            if (anime.favorite) {
-                try {
-                    if (getCategories.await(anime.id).isEmpty()) {
-                        applyJikanCategoriesToAnime(anime)
-                    }
-                } catch (e: Exception) {
-                    logcat(LogPriority.ERROR, e) { "Failed to auto-categorize existing anime '${anime.title}'" }
-                }
-            }
         }
     }
 
@@ -379,58 +370,29 @@ class AnimeScreenModel(
                     }
                 }
 
-                val genres = fetchJikanGenresForAnime(anime.title)
-
-                if (!genres.isNullOrEmpty()) {
-                    val result = updateAnime.awaitUpdateFavorite(anime.id, true)
-                    if (result) {
-                        val assignedCategories = mutableListOf<Category>()
-                        for (genreName in genres) {
-                            val categories = getCategories()
-                            var genreCategory = categories.find { it.name.equals(genreName, ignoreCase = true) }
-                            if (genreCategory == null) {
-                                val createResult = createAnimeCategoryWithName.await(genreName)
-                                if (createResult is CreateAnimeCategoryWithName.Result.Success) {
-                                    val updatedCategories = getCategories()
-                                    genreCategory =
-                                        updatedCategories.find { it.name.equals(genreName, ignoreCase = true) }
-                                }
-                            }
-                            if (genreCategory != null) {
-                                assignedCategories.add(genreCategory)
-                            }
+                val categories = getCategories()
+                val suggestedCategory = if (uiPreferences.autoCategorizeLibrary().get()) {
+                    fetchJikanGenresForAnime(anime.title)
+                        ?.firstNotNullOfOrNull { genre ->
+                            categories.find { it.name.equals(genre, ignoreCase = true) }
                         }
-                        if (assignedCategories.isNotEmpty()) {
-                            moveAnimeToCategories(assignedCategories)
-                        } else {
-                            moveAnimeToCategory(null)
-                        }
-                    }
                 } else {
-                    // Now check if user previously set categories, when available
-                    val categories = getCategories()
-                    val defaultCategoryId = libraryPreferences.defaultAnimeCategory().get().toLong()
-                    val defaultCategory = categories.find { it.id == defaultCategoryId }
-                    when {
-                        // Default category set
-                        defaultCategory != null -> {
-                            val result = updateAnime.awaitUpdateFavorite(anime.id, true)
-                            if (!result) return@launchIO
-                            moveAnimeToCategory(defaultCategory)
-                        }
-
-                        // Automatic 'Default' or no categories
-                        defaultCategoryId == 0L || categories.isEmpty() -> {
-                            val result = updateAnime.awaitUpdateFavorite(anime.id, true)
-                            if (!result) return@launchIO
-                            moveAnimeToCategory(null)
-                        }
-
-                        // Choose a category
-                        else -> {
-                            isFromChangeCategory = true
-                            showChangeCategoryDialog()
-                        }
+                    null
+                }
+                val defaultCategoryId = libraryPreferences.defaultAnimeCategory().get().toLong()
+                val targetCategory = suggestedCategory ?: categories.find { it.id == defaultCategoryId }
+                when {
+                    targetCategory != null -> {
+                        if (!updateAnime.awaitUpdateFavorite(anime.id, true)) return@launchIO
+                        moveAnimeToCategory(targetCategory)
+                    }
+                    defaultCategoryId == 0L || categories.isEmpty() -> {
+                        if (!updateAnime.awaitUpdateFavorite(anime.id, true)) return@launchIO
+                        moveAnimeToCategory(null)
+                    }
+                    else -> {
+                        isFromChangeCategory = true
+                        showChangeCategoryDialog()
                     }
                 }
 
@@ -517,13 +479,11 @@ class AnimeScreenModel(
     }
 
     fun moveAnimeToCategoriesAndAddToLibrary(anime: Anime, categories: List<Long>) {
-        moveAnimeToCategory(categories)
-
         screenModelScope.launchIO {
-            if (!anime.favorite) {
-                updateAnime.awaitUpdateFavorite(anime.id, true)
+            if (!anime.favorite && !updateAnime.awaitUpdateFavorite(anime.id, true)) {
+                return@launchIO
             }
-            applyJikanCategoriesToAnime(anime)
+            setAnimeCategories.await(anime.id, categories)
         }
     }
 
@@ -1644,24 +1604,6 @@ class AnimeScreenModel(
 
     private fun showQualitiesDialog(episode: Episode) {
         updateSuccessState { it.copy(dialog = Dialog.ShowQualities(episode, it.anime, it.source)) }
-    }
-
-    private suspend fun applyJikanCategoriesToAnime(anime: Anime): Boolean {
-        if (!uiPreferences.autoCategorizeLibrary().get()) return false
-        val genres = fetchJikanGenresForAnime(anime.title) ?: return false
-        val assignedCategories = genres.mapNotNull { genreName ->
-            getOrCreateJikanAnimeCategory(genreName)
-        }
-        if (assignedCategories.isEmpty()) return false
-
-        setAnimeCategories.await(anime.id, assignedCategories.map { it.id })
-        return true
-    }
-
-    private suspend fun getOrCreateJikanAnimeCategory(genreName: String): Category? {
-        getCategories().find { it.name.equals(genreName, ignoreCase = true) }?.let { return it }
-        createAnimeCategoryWithName.await(genreName)
-        return getCategories().find { it.name.equals(genreName, ignoreCase = true) }
     }
 
     private suspend fun fetchJikanGenresForAnime(title: String): List<String>? {

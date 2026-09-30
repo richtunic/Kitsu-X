@@ -70,3 +70,9 @@ Fuente de producto: `Kitsu_X_PRD_Gran_Actualizacion.md` (29 de septiembre de 202
 - Se desplazan una sola vez los índices guardados mayores que cero para mantener la categoría seleccionada. La opción de grid/lista y las columnas explícitas permanecen; el grid automático responde al ancho visible.
 - Chips rápidos de estado filtran la vista por progreso real de episodios/capítulos. El filtro avanzado, selección múltiple y acciones existentes siguen operativos.
 - Kotlin y APK debug compilaron offline. La verificación en teléfono/tablet y de backups queda pendiente.
+
+## Avance PR 6: Organización 2.0
+
+- Para nuevas altas, Jikan solo puede sugerir una categoría existente; no crea una por género. Se eliminó la recategorización al abrir detalles y al guardar una elección manual.
+- El switch de Ajustes > Biblioteca controla la sugerencia. Las categorías predeterminadas y el selector manual existentes siguen como fallback.
+- Migración pendiente: las asociaciones antiguas no indican si una categoría provino de Jikan o del usuario. La conversión a etiquetas deberá ser opcional, respaldar relaciones, preservar ambiguas y probar rollback antes de activarse.

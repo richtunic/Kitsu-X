@@ -1,6 +1,13 @@
 # DECISIONS
 
 Fecha: 2026-09-29
+Decisión: Limitar la sugerencia Jikan al alta de una obra y a una sola categoría ya existente; no reescribir asociaciones al abrir detalles ni después de una elección manual.
+Motivo: La creación de una categoría por género duplicaba la organización y podía sustituir una selección explícita. Mantener las asociaciones históricas evita pérdidas hasta contar con migración y rollback probados.
+Impacto: La preferencia de Jikan se expone en Ajustes de Biblioteca. Las categorías existentes y la base de datos no se alteran automáticamente; etiquetas y migración siguen pendientes.
+
+---
+
+Fecha: 2026-09-29
 Decisión: Añadir una vista virtual «Todo» a Anime y Manga y deduplicar sus obras por ID, sin escribir nuevas relaciones de categoría.
 Motivo: La relación obra-categoría existente admite varias categorías y debe conservarse. Un agregado de lectura resuelve la duplicación visual sin migrar datos.
 Impacto: Los índices guardados de pestañas posteriores a la primera se desplazan una sola vez. La cuadrícula automática usa el ancho visible; los filtros rápidos actúan solo sobre la vista y los filtros avanzados siguen disponibles.

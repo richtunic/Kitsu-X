@@ -1046,7 +1046,8 @@
     <string name="kitsux_explore_search_all_sources">Search all your installed sources</string>
     <string name="kitsux_pref_show_hero_banner">Show hero banner</string>
     <string name="kitsux_pref_show_hero_banner_summary">Show or hide the main Home banner.</string>
-    <string name="kitsux_pref_auto_category">Create categories automatically</string>
+    <string name="kitsux_pref_auto_category">Suggest an existing category with Jikan</string>
+    <string name="kitsux_pref_auto_category_summary">A matching category is chosen when you add a work. Other categories stay unchanged.</string>
     <string name="kitsux_onboarding_content_type_title">What do you want to see in KitsuX?</string>
     <string name="kitsux_onboarding_content_type_description">Personalize your experience.</string>
     <string name="kitsux_onboarding_recommendations_title">Do you want recommendations?</string>
@@ -1054,7 +1055,7 @@
     <string name="kitsux_onboarding_hero_banner_title">Show the main banner?</string>
     <string name="kitsux_onboarding_hero_banner_description">The hero banner highlights recommendations and library entries at the top of Home.</string>
     <string name="kitsux_onboarding_auto_category_title">Enable auto-categorization?</string>
-    <string name="kitsux_onboarding_auto_category_description">KitsuX can automatically create categories with Jikan when you add anime or manga to your library.</string>
+    <string name="kitsux_onboarding_auto_category_description">KitsuX can use Jikan to choose one of your existing categories when you add anime or manga.</string>
     <string name="kitsux_onboarding_extension_repo_title">Do you already have an extension repository?</string>
     <string name="kitsux_onboarding_extension_repo_description">You can add it now or do it later from Settings.</string>
     <string name="kitsux_onboarding_final_title">KitsuX is ready.</string>

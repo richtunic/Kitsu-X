@@ -362,3 +362,9 @@ Notas:
 - Anime y Manga agregan «Todo» virtual sin duplicados ni cambios de DB; se conserva la selección previa de categoría al desplazar índices guardados.
 - Chips rápidos filtran por progreso y pendientes reales; la cuadrícula automática se adapta al ancho actual de ventana con límite de ocho columnas.
 - Kotlin y APK debug compilaron offline. Pruebas táctiles y responsive en dispositivo pendientes.
+
+# 2026-09-29 — Organización 2.0, avance seguro
+
+- Jikan dejó de crear una categoría por género al añadir anime/manga y dejó de modificar asociaciones al abrir detalles.
+- La elección manual de categorías se conserva y se escribe tras confirmar el alta. La preferencia de sugerir una categoría existente se expone en Ajustes de Biblioteca.
+- No se migraron asociaciones históricas ni se añadieron tablas; la conversión a etiquetas requiere backup y rollback validados.
