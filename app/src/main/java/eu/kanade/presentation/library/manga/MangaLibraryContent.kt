@@ -108,7 +108,7 @@ fun MangaLibraryContent(
             MangaLibraryPager(
                 state = pagerState,
                 contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
-                hasActiveFilters = hasActiveFilters,
+                hasActiveFilters = hasActiveFilters || quickFilter != LibraryQuickFilter.All,
                 selectedManga = selection,
                 searchQuery = searchQuery,
                 onGlobalSearchClicked = onGlobalSearchClicked,

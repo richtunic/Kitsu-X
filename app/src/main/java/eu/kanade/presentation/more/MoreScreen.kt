@@ -6,11 +6,14 @@ import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.outlined.CloudOff
 import androidx.compose.material.icons.outlined.GetApp
+import androidx.compose.material.icons.outlined.Extension
+import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.VideoSettings
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
@@ -42,6 +45,9 @@ fun MoreScreen(
     onClickUpdates: () -> Unit,
     onClickDownloadQueue: () -> Unit,
     onClickCategories: () -> Unit,
+    onClickSources: () -> Unit,
+    onClickExtensions: () -> Unit,
+    onClickTracking: () -> Unit,
     onClickStats: () -> Unit,
     onClickStorage: () -> Unit,
     onClickDataAndStorage: () -> Unit,
@@ -133,6 +139,27 @@ fun MoreScreen(
                     title = stringResource(AYMR.strings.general_categories),
                     icon = Icons.AutoMirrored.Outlined.Label,
                     onPreferenceClick = onClickCategories,
+                )
+            }
+            item {
+                TextPreferenceWidget(
+                    title = stringResource(MR.strings.label_sources),
+                    icon = Icons.Outlined.Explore,
+                    onPreferenceClick = onClickSources,
+                )
+            }
+            item {
+                TextPreferenceWidget(
+                    title = stringResource(MR.strings.label_extensions),
+                    icon = Icons.Outlined.Extension,
+                    onPreferenceClick = onClickExtensions,
+                )
+            }
+            item {
+                TextPreferenceWidget(
+                    title = stringResource(MR.strings.kitsux_more_tracking),
+                    icon = Icons.Outlined.Sync,
+                    onPreferenceClick = onClickTracking,
                 )
             }
             item {

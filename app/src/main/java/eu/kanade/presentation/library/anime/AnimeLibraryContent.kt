@@ -108,7 +108,7 @@ fun AnimeLibraryContent(
             AnimeLibraryPager(
                 state = pagerState,
                 contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
-                hasActiveFilters = hasActiveFilters,
+                hasActiveFilters = hasActiveFilters || quickFilter != LibraryQuickFilter.All,
                 selectedAnime = selection,
                 searchQuery = searchQuery,
                 onGlobalSearchClicked = onGlobalSearchClicked,

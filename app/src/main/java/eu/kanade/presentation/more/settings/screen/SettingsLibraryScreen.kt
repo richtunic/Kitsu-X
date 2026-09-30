@@ -107,6 +107,16 @@ object SettingsLibraryScreen : SearchableSettings {
         return Preference.PreferenceGroup(
             title = stringResource(AYMR.strings.general_categories),
             preferenceItems = persistentListOf(
+                Preference.PreferenceItem.ListPreference(
+                    preference = libraryPreferences.organizationOnAdd(),
+                    entries = persistentMapOf(
+                        LibraryPreferences.OrganizationOnAdd.Automatic to stringResource(MR.strings.kitsux_organization_automatic),
+                        LibraryPreferences.OrganizationOnAdd.Ask to stringResource(MR.strings.kitsux_organization_ask),
+                        LibraryPreferences.OrganizationOnAdd.DefaultCategory to stringResource(MR.strings.kitsux_organization_default),
+                        LibraryPreferences.OrganizationOnAdd.Uncategorized to stringResource(MR.strings.kitsux_organization_none),
+                    ),
+                    title = stringResource(MR.strings.kitsux_organization_on_add),
+                ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = uiPreferences.autoCategorizeLibrary(),
                     title = stringResource(MR.strings.kitsux_pref_auto_category),

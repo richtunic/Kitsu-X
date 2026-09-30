@@ -868,10 +868,16 @@
     <string name="pref_mark_duplicate_read_chapter_read_existing">Al terminar de leer un capítulo</string>
     <!-- KitsuX -->
     <string name="kitsux_home_tab">Inicio</string>
+    <string name="kitsux_more_tracking">Seguimiento</string>
     <string name="kitsux_library_all">Todo</string>
     <string name="kitsux_library_watching">Viendo</string>
     <string name="kitsux_library_reading">Leyendo</string>
     <string name="kitsux_library_pending">Pendientes</string>
+    <string name="kitsux_organization_on_add">Organización al añadir</string>
+    <string name="kitsux_organization_automatic">Automática</string>
+    <string name="kitsux_organization_ask">Preguntar siempre</string>
+    <string name="kitsux_organization_default">Categoría predeterminada</string>
+    <string name="kitsux_organization_none">Sin categoría</string>
     <string name="kitsux_home_empty_library_title">Tu biblioteca está vacía</string>
     <string name="kitsux_home_empty_library_description">Agrega anime o manga desde Explorar para verlo aquí.</string>
     <string name="kitsux_home_nothing_to_show_title">Nada que mostrar por ahora</string>
@@ -923,7 +929,7 @@
     <string name="kitsux_pref_show_hero_banner">Mostrar banner hero</string>
     <string name="kitsux_pref_show_hero_banner_summary">Muestra u oculta el banner principal del Home.</string>
     <string name="kitsux_pref_auto_category">Sugerir una categoría existente con Jikan</string>
-    <string name="kitsux_pref_auto_category_summary">Al añadir una obra se elige una categoría coincidente. Las demás categorías no cambian.</string>
+    <string name="kitsux_pref_auto_category_summary">En modo Automática, Jikan puede elegir una categoría existente coincidente. Las demás no cambian.</string>
     <string name="kitsux_onboarding_content_type_title">¿Qué deseas visualizar en KitsuX?</string>
     <string name="kitsux_onboarding_content_type_description">Personaliza tu experiencia.</string>
     <string name="kitsux_onboarding_recommendations_title">¿Deseas recibir recomendaciones?</string>

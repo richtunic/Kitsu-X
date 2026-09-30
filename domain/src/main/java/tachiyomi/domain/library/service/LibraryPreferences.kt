@@ -15,6 +15,13 @@ class LibraryPreferences(
     private val preferenceStore: PreferenceStore,
 ) {
 
+    enum class OrganizationOnAdd { Automatic, Ask, DefaultCategory, Uncategorized }
+
+    fun organizationOnAdd() = preferenceStore.getEnum(
+        "library_organization_on_add",
+        OrganizationOnAdd.Automatic,
+    )
+
     fun displayMode() = preferenceStore.getObject(
         "pref_display_mode_library",
         LibraryDisplayMode.default,

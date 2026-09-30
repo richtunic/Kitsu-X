@@ -63,22 +63,26 @@ data object BrowseTab : Tab {
         navigator.push(GlobalAnimeSearchScreen())
     }
 
-    private enum class ExtensionDestination { Anime, Manga }
-    private val switchToExtensionChannel = Channel<ExtensionDestination>(1, BufferOverflow.DROP_OLDEST)
+    private enum class BrowseDestination { AnimeSources, MangaSources, AnimeExtensions, MangaExtensions }
+    private val switchToDestinationChannel = Channel<BrowseDestination>(1, BufferOverflow.DROP_OLDEST)
 
     fun showExtension() {
-        switchToExtensionChannel.trySend(ExtensionDestination.Manga)
+        switchToDestinationChannel.trySend(BrowseDestination.MangaExtensions)
     }
 
     fun showAnimeExtension() {
-        switchToExtensionChannel.trySend(ExtensionDestination.Anime)
+        switchToDestinationChannel.trySend(BrowseDestination.AnimeExtensions)
+    }
+
+    fun showSources(anime: Boolean) {
+        switchToDestinationChannel.trySend(if (anime) BrowseDestination.AnimeSources else BrowseDestination.MangaSources)
     }
 
     @Composable
     override fun Content() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
-        val exploreScreenModel = rememberScreenModel { ExploreScreenModel() }
+        val exploreScreenModel = rememberScreenModel { ExploreScreenModel(context) }
         val exploreState by exploreScreenModel.state.collectAsState()
 
         // Hoisted for extensions tab's search bar
@@ -94,6 +98,8 @@ data object BrowseTab : Tab {
 
         var animeExtensionIndex = -1
         var mangaExtensionIndex = -1
+        var animeSourceIndex = -1
+        var mangaSourceIndex = -1
         val tabs = buildList {
             add(
                 TabContent(
@@ -101,7 +107,7 @@ data object BrowseTab : Tab {
                     content = { _, _ ->
                         ExploreDiscover(
                             state = exploreState,
-                            onRetry = exploreScreenModel::refresh,
+                            onRetry = { exploreScreenModel.refresh(force = true) },
                             onSearchAnime = { navigator.push(GlobalAnimeSearchScreen(it)) },
                             onSearchManga = { navigator.push(GlobalMangaSearchScreen(it)) },
                         )
@@ -109,9 +115,11 @@ data object BrowseTab : Tab {
                 ),
             )
             if (showAnime) {
+                animeSourceIndex = size
                 add(animeSourcesTab().copy(searchManga = false))
             }
             if (showManga) {
+                mangaSourceIndex = size
                 add(mangaSourcesTab().copy(searchManga = true))
             }
             if (showAnime) {
@@ -142,12 +150,14 @@ data object BrowseTab : Tab {
             onChangeAnimeSearchQuery = animeExtensionsScreenModel::search,
             scrollable = true,
         )
-        LaunchedEffect(animeExtensionIndex, mangaExtensionIndex) {
-            switchToExtensionChannel.receiveAsFlow()
+        LaunchedEffect(animeSourceIndex, mangaSourceIndex, animeExtensionIndex, mangaExtensionIndex) {
+            switchToDestinationChannel.receiveAsFlow()
                 .collectLatest { destination ->
                     val index = when (destination) {
-                        ExtensionDestination.Anime -> animeExtensionIndex
-                        ExtensionDestination.Manga -> mangaExtensionIndex
+                        BrowseDestination.AnimeSources -> animeSourceIndex
+                        BrowseDestination.MangaSources -> mangaSourceIndex
+                        BrowseDestination.AnimeExtensions -> animeExtensionIndex
+                        BrowseDestination.MangaExtensions -> mangaExtensionIndex
                     }
                     if (index >= 0) state.scrollToPage(index)
                 }

@@ -185,7 +185,6 @@ class AnimeScreenModel(
     private val selectedPositions: Array<Int> = arrayOf(-1, -1) // first and last selected index in list
     private val selectedEpisodeIds: HashSet<Long> = HashSet()
 
-    internal var isFromChangeCategory: Boolean = false
 
     internal val autoOpenTrack: Boolean
         get() = successState?.hasLoggedInTrackers == true && trackPreferences.trackOnAddingToLibrary().get()
@@ -371,7 +370,11 @@ class AnimeScreenModel(
                 }
 
                 val categories = getCategories()
-                val suggestedCategory = if (uiPreferences.autoCategorizeLibrary().get()) {
+                val organizationMode = libraryPreferences.organizationOnAdd().get()
+                val suggestedCategory = if (
+                    organizationMode == LibraryPreferences.OrganizationOnAdd.Automatic &&
+                    uiPreferences.autoCategorizeLibrary().get()
+                ) {
                     fetchJikanGenresForAnime(anime.title)
                         ?.firstNotNullOfOrNull { genre ->
                             categories.find { it.name.equals(genre, ignoreCase = true) }
@@ -382,16 +385,23 @@ class AnimeScreenModel(
                 val defaultCategoryId = libraryPreferences.defaultAnimeCategory().get().toLong()
                 val targetCategory = suggestedCategory ?: categories.find { it.id == defaultCategoryId }
                 when {
+                    organizationMode == LibraryPreferences.OrganizationOnAdd.Ask -> {
+                        showChangeCategoryDialog()
+                    }
+                    organizationMode == LibraryPreferences.OrganizationOnAdd.Uncategorized -> {
+                        if (!updateAnime.awaitUpdateFavorite(anime.id, true)) return@launchIO
+                        moveAnimeToCategory(null)
+                    }
                     targetCategory != null -> {
                         if (!updateAnime.awaitUpdateFavorite(anime.id, true)) return@launchIO
                         moveAnimeToCategory(targetCategory)
                     }
-                    defaultCategoryId == 0L || categories.isEmpty() -> {
+                    defaultCategoryId == 0L ||
+                        (organizationMode == LibraryPreferences.OrganizationOnAdd.Automatic && categories.isEmpty()) -> {
                         if (!updateAnime.awaitUpdateFavorite(anime.id, true)) return@launchIO
                         moveAnimeToCategory(null)
                     }
                     else -> {
-                        isFromChangeCategory = true
                         showChangeCategoryDialog()
                     }
                 }
@@ -484,6 +494,10 @@ class AnimeScreenModel(
                 return@launchIO
             }
             setAnimeCategories.await(anime.id, categories)
+            if (!anime.favorite) {
+                successState?.source?.let { addTracks.bindEnhancedTrackers(anime, it) }
+                if (autoOpenTrack) showTrackDialog()
+            }
         }
     }
 

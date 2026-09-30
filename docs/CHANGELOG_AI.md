@@ -379,3 +379,14 @@ Notas:
 
 - CTA de Anime/Manga localizados; Manga usa icono de lectura en lugar de reproducción.
 - Episodios con progreso parcial muestran barra pequeña además del texto existente. Kotlin compiló offline; falta inspección en dispositivo.
+
+# 2026-09-29 — Fase 7, herramientas
+
+- Más enlaza directamente a Fuentes, Extensiones y Tracking usando las pantallas actuales. El destino en Explorar se calcula con las pestañas disponibles.
+- Kotlin compiló offline. Los recorridos táctiles y estados reales de instalación quedan pendientes.
+
+# 2026-09-29 — Ajustes de QA del rediseño
+
+- «Todo» usa el orden global guardado y el estado vacío de filtros rápidos explica que no hay coincidencias.
+- Descubrir reutiliza la caché Jikan existente durante seis horas y conserva resultados visibles si un reintento falla.
+- Ajustes de Biblioteca ofrece cuatro modos de organización al añadir; el diálogo manual guarda la obra antes de vincular tracking, y cancelarlo no abre tracking.

@@ -167,7 +167,6 @@ class MangaScreenModel(
     private val selectedPositions: Array<Int> = arrayOf(-1, -1) // first and last selected index in list
     private val selectedChapterIds: HashSet<Long> = HashSet()
 
-    internal var isFromChangeCategory: Boolean = false
 
     internal val autoOpenTrack: Boolean
         get() = successState?.trackingAvailable == true && trackPreferences.trackOnAddingToLibrary().get()
@@ -360,7 +359,11 @@ class MangaScreenModel(
                 }
 
                 val categories = getCategories()
-                val suggestedCategory = if (uiPreferences.autoCategorizeLibrary().get()) {
+                val organizationMode = libraryPreferences.organizationOnAdd().get()
+                val suggestedCategory = if (
+                    organizationMode == LibraryPreferences.OrganizationOnAdd.Automatic &&
+                    uiPreferences.autoCategorizeLibrary().get()
+                ) {
                     fetchJikanGenresForManga(manga.title)
                         ?.firstNotNullOfOrNull { genre ->
                             categories.find { it.name.equals(genre, ignoreCase = true) }
@@ -371,16 +374,23 @@ class MangaScreenModel(
                 val defaultCategoryId = libraryPreferences.defaultMangaCategory().get().toLong()
                 val targetCategory = suggestedCategory ?: categories.find { it.id == defaultCategoryId }
                 when {
+                    organizationMode == LibraryPreferences.OrganizationOnAdd.Ask -> {
+                        showChangeCategoryDialog()
+                    }
+                    organizationMode == LibraryPreferences.OrganizationOnAdd.Uncategorized -> {
+                        if (!updateManga.awaitUpdateFavorite(manga.id, true)) return@launchIO
+                        moveMangaToCategory(null)
+                    }
                     targetCategory != null -> {
                         if (!updateManga.awaitUpdateFavorite(manga.id, true)) return@launchIO
                         moveMangaToCategory(targetCategory)
                     }
-                    defaultCategoryId == 0L || categories.isEmpty() -> {
+                    defaultCategoryId == 0L ||
+                        (organizationMode == LibraryPreferences.OrganizationOnAdd.Automatic && categories.isEmpty()) -> {
                         if (!updateManga.awaitUpdateFavorite(manga.id, true)) return@launchIO
                         moveMangaToCategory(null)
                     }
                     else -> {
-                        isFromChangeCategory = true
                         showChangeCategoryDialog()
                     }
                 }
@@ -473,6 +483,10 @@ class MangaScreenModel(
                 return@launchIO
             }
             setMangaCategories.await(manga.id, categories)
+            if (!manga.favorite) {
+                successState?.source?.let { addTracks.bindEnhancedTrackers(manga, it) }
+                if (autoOpenTrack) showTrackDialog()
+            }
         }
     }
 

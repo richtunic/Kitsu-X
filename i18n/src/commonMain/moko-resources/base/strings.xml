@@ -1004,10 +1004,16 @@
     <string name="exception_unknown_host">Couldn\'t reach %s</string>
     <!-- KitsuX -->
     <string name="kitsux_home_tab">Home</string>
+    <string name="kitsux_more_tracking">Tracking</string>
     <string name="kitsux_library_all">All</string>
     <string name="kitsux_library_watching">Watching</string>
     <string name="kitsux_library_reading">Reading</string>
     <string name="kitsux_library_pending">Pending</string>
+    <string name="kitsux_organization_on_add">Organization when adding</string>
+    <string name="kitsux_organization_automatic">Automatic</string>
+    <string name="kitsux_organization_ask">Ask every time</string>
+    <string name="kitsux_organization_default">Default category</string>
+    <string name="kitsux_organization_none">No category</string>
     <string name="kitsux_home_empty_library_title">Your library is empty</string>
     <string name="kitsux_home_empty_library_description">Add anime or manga from Explore to see it here.</string>
     <string name="kitsux_home_nothing_to_show_title">Nothing to show yet</string>
@@ -1059,7 +1065,7 @@
     <string name="kitsux_pref_show_hero_banner">Show hero banner</string>
     <string name="kitsux_pref_show_hero_banner_summary">Show or hide the main Home banner.</string>
     <string name="kitsux_pref_auto_category">Suggest an existing category with Jikan</string>
-    <string name="kitsux_pref_auto_category_summary">A matching category is chosen when you add a work. Other categories stay unchanged.</string>
+    <string name="kitsux_pref_auto_category_summary">In Automatic mode, Jikan may choose one matching existing category. Other categories stay unchanged.</string>
     <string name="kitsux_onboarding_content_type_title">What do you want to see in KitsuX?</string>
     <string name="kitsux_onboarding_content_type_description">Personalize your experience.</string>
     <string name="kitsux_onboarding_recommendations_title">Do you want recommendations?</string>

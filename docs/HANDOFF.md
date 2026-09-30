@@ -1,5 +1,10 @@
 # HANDOFF
 
+## Gran actualización 2026-09-29: Fase 7, herramientas
+
+Más ofrece accesos a Fuentes, Extensiones y Tracking además de Descargas, Historial, Actualizaciones, Categorías, almacenamiento y Ajustes. Fuentes/Extensiones cambian a la pestaña visible correspondiente de Explorar; el índice se calcula con los tipos Anime/Manga habilitados. Se conservan los gestores, instaladores, estados y búsquedas existentes. Kotlin compiló offline. Pendiente: recorrido táctil de cada acceso, Back, filtros y estados de instalación en teléfono.
+
+
 ## Gran actualización 2026-09-29: Fase 6, ficha (avance)
 
 Las fichas de Anime y Manga reutilizan sus cabeceras, acciones, listas y `TwoPanelBox` existente. Los CTA principales se localizan en base/español; Manga usa icono de libro en móvil y tablet. La lista de episodios dibuja una barra pequeña cuando existe progreso positivo y duración conocida, manteniendo el texto de progreso. `:app:compileDebugKotlin --offline` pasó. Pendiente: diseño de tabs Información/Relacionado y validación visual/táctil de ficha, progreso y dos paneles en teléfono/tablet.
@@ -16,7 +21,11 @@ Se mantienen las pestañas de Fuentes, Extensiones y migración. El destino de E
 
 El alta de anime/manga ya no crea categorías por cada género de Jikan. Si la preferencia está activa, el modelo busca como máximo una categoría existente con nombre coincidente; en otro caso conserva el flujo de categoría predeterminada o selección manual. Abrir detalles de una obra favorita ya no modifica sus categorías. Guardar una selección manual espera primero al alta de la obra y luego escribe la asociación, sin aplicar Jikan encima. La preferencia se muestra en Ajustes > Biblioteca; onboarding y textos describen la conducta actual.
 
-Pendiente para completar Fase 4: selector de los cuatro modos al añadir, categoría principal y etiquetas persistentes, y migración de asociaciones antiguas con backup/rollback probado sobre datos de ejemplo. No ejecutar una conversión automática de las categorías actuales: no hay procedencia fiable para distinguir las creadas por Jikan de las personales. Kotlin compiló offline; falta dispositivo.
+El selector de Ajustes > Biblioteca ofrece Automática, Preguntar siempre, Categoría predeterminada y Sin categoría. La selección manual usa el diálogo actual; al confirmar, el tracking se vincula después de guardar la obra y sus categorías, y cancelar no abre tracking. En modo Automática, el switch Jikan controla si se busca coincidencia externa; se conserva el fallback de categoría predeterminada. Kotlin compiló offline.
+Si todavía no hay categorías, el diálogo ofrece añadir la obra sin categoría o abrir el editor de categorías.
+
+Pendiente para completar Fase 4: categoría principal y etiquetas persistentes, una hoja de alta renovada, y migración de asociaciones antiguas con backup/rollback probado sobre datos de ejemplo. No ejecutar una conversión automática de las categorías actuales: no hay procedencia fiable para distinguir las creadas por Jikan de las personales. Falta dispositivo.
+El contrato y los casos de rollback están en `docs/ORGANIZACION_2_MIGRACION.md`.
 
 
 ## Gran actualización 2026-09-29: Fase 3, Biblioteca

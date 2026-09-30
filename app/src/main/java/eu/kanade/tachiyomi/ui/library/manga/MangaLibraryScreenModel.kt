@@ -318,12 +318,13 @@ class MangaLibraryScreenModel(
         }
 
         return mapValues { (key, value) ->
-            if (key.sort.type == MangaLibrarySort.Type.Random) {
+            val sort = if (key.id == Category.ALL_ID) libraryPreferences.mangaSortingMode().get() else key.sort
+            if (sort.type == MangaLibrarySort.Type.Random) {
                 return@mapValues value.shuffled(Random(libraryPreferences.randomMangaSortSeed().get()))
             }
 
-            val comparator = key.sort.comparator()
-                .let { if (key.sort.isAscending) it else it.reversed() }
+            val comparator = sort.comparator()
+                .let { if (sort.isAscending) it else it.reversed() }
                 .thenComparator(sortAlphabetically)
 
             value.sortedWith(comparator)

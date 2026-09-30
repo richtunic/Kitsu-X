@@ -1,6 +1,13 @@
 # DECISIONS
 
 Fecha: 2026-09-29
+Decisión: Dar a Fuentes, Extensiones y Tracking accesos directos desde Más que reutilizan sus pantallas actuales.
+Motivo: El PRD sitúa herramientas en Más y conservar las rutas existentes evita duplicar instalación, búsqueda y ajustes. El destino de Fuentes/Extensiones se calcula según los tipos visibles.
+Impacto: No cambia contratos de extensiones, descargas ni tracking. Falta revisar táctilmente cada acceso y Back en teléfono.
+
+---
+
+Fecha: 2026-09-29
 Decisión: Reutilizar las fichas existentes y sus paneles de tablet; corregir primero los CTA y el progreso visible sin reescribir episodios, capítulos ni motores.
 Motivo: Las fichas ya reúnen cabecera, acciones, descripción, listas y dos paneles. El cambio mínimo útil es que Manga use lenguaje de lectura y que un episodio parcialmente visto muestre su progreso.
 Impacto: No cambia reproducción, lectura, descargas ni esquema. Tabs de Información/Relacionado y otros cambios de jerarquía siguen pendientes de diseño y prueba táctil.

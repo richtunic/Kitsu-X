@@ -75,7 +75,9 @@ Fuente de producto: `Kitsu_X_PRD_Gran_Actualizacion.md` (29 de septiembre de 202
 
 - Para nuevas altas, Jikan solo puede sugerir una categoría existente; no crea una por género. Se eliminó la recategorización al abrir detalles y al guardar una elección manual.
 - El switch de Ajustes > Biblioteca controla la sugerencia. Las categorías predeterminadas y el selector manual existentes siguen como fallback.
+- Ajustes también ofrece Automática, Preguntar siempre, Categoría predeterminada y Sin categoría. La confirmación manual vincula tracking después del alta; cancelar no lo abre.
 - Migración pendiente: las asociaciones antiguas no indican si una categoría provino de Jikan o del usuario. La conversión a etiquetas deberá ser opcional, respaldar relaciones, preservar ambiguas y probar rollback antes de activarse.
+- El contrato aditivo y el plan de rollback están en `docs/ORGANIZACION_2_MIGRACION.md`.
 
 ## Avance PR 7: Explorar
 
@@ -89,3 +91,8 @@ Fuente de producto: `Kitsu_X_PRD_Gran_Actualizacion.md` (29 de septiembre de 202
 - Se conservan cabeceras, acciones, listas y dos paneles existentes; los CTA usan textos localizados y Manga usa icono de libro.
 - Los episodios parcialmente vistos muestran una barra pequeña basada en el progreso y duración reales.
 - Kotlin compiló offline. Las pestañas de Información/Relacionado y el ajuste táctil en tablet quedan pendientes.
+
+## Avance PR 9: herramientas
+
+- Más enlaza a Fuentes, Extensiones y Tracking, además de las herramientas ya presentes. Las rutas de Fuentes y Extensiones cambian a las pestañas existentes de Explorar según los tipos visibles.
+- Se mantienen instaladores, descarga, historial, actualizaciones, tracking y ajustes existentes sin cambios de contrato. Kotlin compiló offline; falta recorrido táctil de los destinos.
