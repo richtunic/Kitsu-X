@@ -95,7 +95,10 @@ fun ExploreDiscover(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
-                            stringResource(MR.strings.kitsux_explore_load_failed),
+                            stringResource(
+                                if (state.isServiceUnavailable) MR.strings.kitsux_explore_service_unavailable
+                                else MR.strings.kitsux_explore_load_failed,
+                            ),
                             modifier = Modifier.weight(1f),
                             style = MaterialTheme.typography.bodyMedium,
                         )

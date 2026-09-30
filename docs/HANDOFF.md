@@ -1,5 +1,10 @@
 # HANDOFF
 
+## Gran actualización 2026-09-29: Jikan temporada actual
+
+La app sí consulta `https://api.jikan.moe/v4/seasons/now?limit=15`. El 2026-09-29, `curl` local y en S23 Ultra recibieron HTTP 504 con el mensaje de Jikan de que no pudo conectar con MyAnimeList. Explorar ahora muestra «Jikan no está disponible temporalmente» ante respuestas 5xx y conserva Reintentar. Kotlin y APK debug pasaron offline; `io.kitsux.app.dev` 1.0.7-39 se instaló y el mensaje se comprobó visualmente. Pendiente: comprobar que los títulos de temporada aparecen cuando Jikan vuelva a responder; no confundir esta indisponibilidad con falta de obras en las fuentes instaladas.
+
+
 ## Gran actualización 2026-09-29: navegación flotante
 
 La barra inferior de Home ahora es una píldora con margen de 12 dp, separación inferior de 10 dp y esquinas de 24 dp. Conserva los cinco destinos y sus badges; el rail no cambia. Kotlin y APK debug compilaron offline. Se instaló `io.kitsux.app.dev` 1.0.7-38 en S23 Ultra y una captura confirmó forma, margen y etiquetas. Falta tocar cada destino, probar Back y rotación; la captura mostró un error de carga de Jikan en Explorar, ajeno a la barra.

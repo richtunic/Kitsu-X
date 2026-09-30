@@ -4,6 +4,7 @@ import android.content.Context
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.tachiyomi.network.GET
+import eu.kanade.tachiyomi.network.HttpException
 import eu.kanade.tachiyomi.network.NetworkHelper
 import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.ui.home.intelligence.KitsuXIntelDatabase
@@ -37,6 +38,7 @@ class ExploreScreenModel(
             val previous = mutableState.value
             mutableState.value = mutableState.value.copy(isLoading = true, hasError = false)
             var failed = false
+            var serviceUnavailable = false
             var requestedNetwork = false
             suspend fun section(path: String, fallback: List<ExploreAnime>): List<ExploreAnime> {
                 return try {
@@ -55,8 +57,9 @@ class ExploreScreenModel(
                     }
                 } catch (e: CancellationException) {
                     throw e
-                } catch (_: Exception) {
+                } catch (e: Exception) {
                     failed = true
+                    serviceUnavailable = serviceUnavailable || (e is HttpException && e.code in 500..599)
                     fallback
                 }
             }
@@ -70,6 +73,7 @@ class ExploreScreenModel(
                 trending = trending,
                 isLoading = false,
                 hasError = failed,
+                isServiceUnavailable = serviceUnavailable,
             )
         }
     }
@@ -85,6 +89,7 @@ data class ExploreState(
     val trending: List<ExploreAnime> = emptyList(),
     val isLoading: Boolean = false,
     val hasError: Boolean = false,
+    val isServiceUnavailable: Boolean = false,
 )
 
 @Serializable

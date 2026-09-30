@@ -1,6 +1,16 @@
 # CHANGELOG_AI
 
 Fecha: 2026-09-29
+Tarea: Diagnosticar la carga de temporada de Jikan
+Cambios:
+- Explorar distingue errores HTTP 5xx de Jikan de otros fallos y muestra un mensaje de indisponibilidad temporal con Reintentar.
+Validación:
+- `/v4/seasons/now?limit=15` devolvió HTTP 504 tanto desde el equipo como desde el S23 Ultra, con un mensaje de Jikan sobre su conexión a MyAnimeList.
+- Kotlin y APK debug compilaron offline. Se instaló `io.kitsux.app.dev` 1.0.7-39 y se comprobó el mensaje en pantalla.
+
+---
+
+Fecha: 2026-09-29
 Tarea: Barra de navegación inferior flotante
 Cambios:
 - En teléfonos, la barra de cinco destinos tiene esquinas redondeadas, sombra y márgenes laterales e inferior, respetando el área de gestos del sistema.

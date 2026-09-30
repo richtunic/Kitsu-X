@@ -1,6 +1,13 @@
 # DECISIONS
 
 Fecha: 2026-09-29
+Decisión: Mantener Jikan `/v4/seasons/now` para la temporada actual y distinguir fallos 5xx en la UI.
+Motivo: La petición directa en el teléfono devolvió HTTP 504 de Jikan por falta de conexión con MyAnimeList; cambiar el endpoint o mostrar títulos de otra clasificación como temporada actual sería engañoso.
+Impacto: Explorar informa la indisponibilidad y conserva Reintentar. La carga real de temporada depende de que Jikan vuelva a responder.
+
+---
+
+Fecha: 2026-09-29
 Decisión: Dar apariencia flotante a la barra inferior dentro del slot de Scaffold en ancho compacto.
 Motivo: El usuario busca una navegación más ligera; mantener el slot conserva los insets y evita cubrir listas y controles inferiores.
 Impacto: No cambian rutas ni estado de pestañas; el rail permanece para ventanas medianas y grandes. Falta recorrido táctil y rotación.
