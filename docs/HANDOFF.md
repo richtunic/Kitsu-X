@@ -1,5 +1,10 @@
 # HANDOFF
 
+## Explorar: respaldo AniList para Jikan, 2026-09-29
+
+`ExploreScreenModel` mantiene las tres consultas Jikan y, ante errores de conexión, HTTP 429 o 5xx, consulta AniList GraphQL para temporada actual (`RELEASING`), próximo trimestre (`NOT_YET_RELEASED`) y tendencias (`TRENDING_DESC`). El trimestre se calcula en la zona del dispositivo y el caché se separa por proveedor, sección y temporada; se guarda solo tras decodificar la respuesta. Las tarjetas indican cuando algunos títulos vienen de AniList y siguen abriendo búsqueda en fuentes locales. Se verificaron respuestas HTTP 200 directas para las tres consultas AniList, con títulos e imágenes; `:app:compileDebugKotlin` y `:app:assembleDebug --offline --quiet` pasaron. Se instaló `io.kitsux.app.dev` 1.0.7-42 en S23 Ultra sin borrar datos y una captura de Explorar confirmó temporada actual y próximos estrenos con imágenes y aviso AniList; otra captura de Inicio confirmó imagen en hero y Continuar viendo/leyendo. La integración no usa tokens nuevos. Pendiente: recorrido táctil de Tendencias, Añadidos recientemente, reintento y cambio de temporada.
+
+
 ## Inicio: portadas grises, 2026-09-29
 
 El usuario reportó portadas grises en Continuar leyendo, Añadidos recientemente y hero mientras Biblioteca Anime/Manga sí las mostraba. Inicio entregaba `thumbnailUrl` directamente a Coil; Biblioteca entrega `AnimeCover`/`MangaCover` a sus fetchers, que resuelven caché, portada personalizada y cabeceras de la fuente. Las filas de Inicio ahora usan esos modelos mediante `KitsuXMediaItem.coverData`. El hero conserva `backgroundUrl` cuando carga y cambia a `coverData` si falta o falla. `:app:compileDebugKotlin` y `:app:assembleDebug --offline --quiet` pasaron; APK debug 1.0.7-41 generado. No hubo dispositivo ADB ni servicio mDNS disponible, así que no se instaló ni se comprobó visualmente esta corrección. Siguiente acción: conectar S23 Ultra, instalar APK sin borrar datos y revisar las obras reportadas en Inicio y Biblioteca.

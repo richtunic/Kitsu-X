@@ -1,6 +1,16 @@
 # CHANGELOG_AI
 
 Fecha: 2026-09-29
+Tarea: Respaldo de Explorar durante fallos de Jikan
+Cambios:
+- Temporada actual, próximos estrenos y tendencias usan AniList como respaldo cuando Jikan responde 429/5xx o falla la conexión.
+- Explorar identifica los resultados de AniList, conserva la búsqueda en fuentes instaladas y cachea respuestas válidas durante seis horas.
+Validación:
+- Consultas GraphQL directas de las tres secciones devolvieron HTTP 200 con títulos e imágenes. Kotlin y APK debug compilaron offline. Se instaló `io.kitsux.app.dev` 1.0.7-42 en S23 Ultra; Explorar mostró temporada actual y próximos estrenos con portadas de AniList. Inicio mostró hero y Continuar con imágenes. Falta recorrido de Tendencias y Añadidos recientemente.
+
+---
+
+Fecha: 2026-09-29
 Tarea: Recuperar portadas grises en Inicio
 Cambios:
 - Continuar viendo/leyendo, Novedades y Añadidos recientemente usan `AnimeCover`/`MangaCover`, igual que las bibliotecas, para acceder a caché, portadas personalizadas y cabeceras de fuente.

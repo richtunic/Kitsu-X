@@ -1,6 +1,13 @@
 # DECISIONS
 
 Fecha: 2026-09-29
+Decisión: Mantener Jikan como proveedor inicial de Explorar y usar AniList como respaldo para temporada, próximos estrenos y tendencias ante fallos de red, 429 o 5xx.
+Motivo: La conexión Jikan-MyAnimeList no puede repararse desde KitsuX. AniList ya se utiliza en el proyecto y sus consultas GraphQL públicas devolvieron datos reales para las tres secciones.
+Impacto: No se agregan claves ni dependencias. La UI identifica el respaldo y sigue exigiendo búsqueda en fuentes instaladas para disponibilidad. La equivalencia editorial entre catálogos no es exacta; falta comprobar el flujo en Android.
+
+---
+
+Fecha: 2026-09-29
 Decisión: Cargar las portadas de Inicio con los modelos `EntryCover` existentes y mantener el banner del hero como imagen preferida con respaldo en la portada.
 Motivo: Las URLs directas de Inicio omiten la caché local, las portadas personalizadas y las cabeceras de fuentes que sí usa Biblioteca; por eso la misma obra podía verse gris solo en Inicio.
 Impacto: No cambian los datos ni las fuentes. Falta verificar con el teléfono las portadas específicas reportadas por el usuario.
