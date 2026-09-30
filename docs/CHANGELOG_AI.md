@@ -1,6 +1,16 @@
 # CHANGELOG_AI
 
 Fecha: 2026-09-29
+Tarea: Barra de navegación inferior flotante
+Cambios:
+- En teléfonos, la barra de cinco destinos tiene esquinas redondeadas, sombra y márgenes laterales e inferior, respetando el área de gestos del sistema.
+- Se conserva el espacio reservado por Scaffold para que el contenido no quede bajo la barra y el rail para ventanas amplias.
+Validación:
+- `:app:compileDebugKotlin` y `:app:assembleDebug --offline --quiet` pasaron. APK `io.kitsux.app.dev` 1.0.7-38 instalado y revisado visualmente en S23 Ultra.
+
+---
+
+Fecha: 2026-09-29
 Tarea: Compactar portadas de Anime y Manga según la referencia visual
 Cambios:
 - Inicio muestra portadas verticales de 108 dp en Continuar, Novedades y Añadidos recientemente; Continuar conserva el avance sobre la portada y su barra de progreso.

@@ -1,6 +1,13 @@
 # DECISIONS
 
 Fecha: 2026-09-29
+Decisión: Dar apariencia flotante a la barra inferior dentro del slot de Scaffold en ancho compacto.
+Motivo: El usuario busca una navegación más ligera; mantener el slot conserva los insets y evita cubrir listas y controles inferiores.
+Impacto: No cambian rutas ni estado de pestañas; el rail permanece para ventanas medianas y grandes. Falta recorrido táctil y rotación.
+
+---
+
+Fecha: 2026-09-29
 Decisión: Usar portadas verticales compactas para las filas de Inicio y reducir el ancho automático de la cuadrícula de Anime y Manga.
 Motivo: La referencia visual busca mostrar más obras por pantalla y las tarjetas horizontales de 180 dp ocupaban demasiado espacio para imágenes de portada.
 Impacto: Se mantienen el avance, los accesos y la elección manual de columnas. La densidad y legibilidad requieren revisión en dispositivo.

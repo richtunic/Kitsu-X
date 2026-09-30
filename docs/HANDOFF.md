@@ -1,5 +1,10 @@
 # HANDOFF
 
+## Gran actualización 2026-09-29: navegación flotante
+
+La barra inferior de Home ahora es una píldora con margen de 12 dp, separación inferior de 10 dp y esquinas de 24 dp. Conserva los cinco destinos y sus badges; el rail no cambia. Kotlin y APK debug compilaron offline. Se instaló `io.kitsux.app.dev` 1.0.7-38 en S23 Ultra y una captura confirmó forma, margen y etiquetas. Falta tocar cada destino, probar Back y rotación; la captura mostró un error de carga de Jikan en Explorar, ajeno a la barra.
+
+
 ## Gran actualización 2026-09-29: densidad visual de portadas
 
 La referencia del usuario pide portadas verticales tipo Netflix y más obras visibles. Inicio usa 108 dp en Continuar, Novedades y Añadidos; la biblioteca calcula columnas automáticas con ancho mínimo de 100 dp en móvil y 132 dp en ventanas amplias. Los valores manuales de columnas no cambian. Kotlin compiló offline. Pendiente: revisar visualmente y tocar Inicio, Anime y Manga en el S23 Ultra; verificar títulos largos, badges, barras, menús y accesibilidad antes de dar por cerrado el ajuste.
