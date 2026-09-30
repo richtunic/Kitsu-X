@@ -1,5 +1,10 @@
 # HANDOFF
 
+## Diagnóstico Jikan, 2026-09-29
+
+Se verificó el contrato oficial de `jikan-me/jikan-rest`: `routes/web.v4.php` y `storage/api-docs/api-docs.json` todavía definen `/v4/seasons/now` y `/v4/seasons/upcoming`. La implementación de `ExploreScreenModel` usa estas rutas correctas. En la consulta directa, `/v4/anime/1` y `/v4/top/anime?limit=1` devolvieron HTTP 200; `/v4/seasons/now?limit=1`, `/v4/seasons/upcoming?limit=1` y `/v4/top/anime?filter=airing&limit=15` devolvieron HTTP 504 con `BadResponseException` indicando que Jikan no pudo conectar con MyAnimeList. El repositorio oficial mantiene abierto el issue #612 sobre errores 504. No hay evidencia de cambio de API ni de un defecto de serialización en KitsuX; la causa observable está en la instancia pública o su conexión ascendente. El S23 Ultra ya no figuró en ADB durante esta revisión, por lo que la comprobación actual fue desde el equipo. No sustituir «Temporada actual» por el ranking general: clasificaría obras incorrectamente. Siguiente verificación: repetir `/seasons/now` cuando Jikan se recupere y comprobar la lista en el teléfono.
+
+
 ## Gran actualización 2026-09-29: Jikan temporada actual
 
 La app sí consulta `https://api.jikan.moe/v4/seasons/now?limit=15`. El 2026-09-29, `curl` local y en S23 Ultra recibieron HTTP 504 con el mensaje de Jikan de que no pudo conectar con MyAnimeList. Explorar ahora muestra «Jikan no está disponible temporalmente» ante respuestas 5xx y conserva Reintentar. Kotlin y APK debug pasaron offline; `io.kitsux.app.dev` 1.0.7-39 se instaló y el mensaje se comprobó visualmente. Pendiente: comprobar que los títulos de temporada aparecen cuando Jikan vuelva a responder; no confundir esta indisponibilidad con falta de obras en las fuentes instaladas.
