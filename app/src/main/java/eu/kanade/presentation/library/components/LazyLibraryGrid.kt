@@ -20,7 +20,7 @@ internal fun LazyLibraryGrid(
     content: LazyGridScope.() -> Unit,
 ) {
     BoxWithConstraints(modifier = modifier) {
-        val minCardWidth = if (maxWidth < 600.dp) 112.dp else 148.dp
+        val minCardWidth = if (maxWidth < 600.dp) 100.dp else 132.dp
         val adaptiveColumns = ((maxWidth - 16.dp).value / minCardWidth.value).toInt().coerceIn(2, 8)
         FastScrollLazyVerticalGrid(
             columns = GridCells.Fixed(if (columns == 0) adaptiveColumns else columns),

@@ -55,7 +55,7 @@ fun MediaProgressCard(
 
     Box(
         modifier = modifier
-            .width(180.dp)
+            .width(108.dp)
             .clip(RoundedCornerShape(KitsuXLayoutTokens.cardRadius))
             .background(scheme.surfaceContainerLow)
             .combinedClickable(
@@ -66,14 +66,14 @@ fun MediaProgressCard(
     ) {
         Column {
             Box(modifier = Modifier.fillMaxWidth()) {
-                ItemCover.Thumb(data = artworkUrl, modifier = Modifier.fillMaxWidth())
+                ItemCover.Book(data = artworkUrl, modifier = Modifier.fillMaxWidth())
 
                 if (isAnime) {
                     Box(
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .size(36.dp)
-                            .clip(RoundedCornerShape(18.dp))
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(16.dp))
                             .background(Color.Black.copy(alpha = 0.6f)),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -136,15 +136,7 @@ fun MediaProgressCard(
                 fontWeight = FontWeight.Bold,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp),
-            )
-            Text(
-                text = progressText,
-                color = scheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                modifier = Modifier.padding(horizontal = 4.dp, vertical = 5.dp),
             )
         }
 

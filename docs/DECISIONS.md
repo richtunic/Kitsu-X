@@ -1,6 +1,13 @@
 # DECISIONS
 
 Fecha: 2026-09-29
+Decisión: Usar portadas verticales compactas para las filas de Inicio y reducir el ancho automático de la cuadrícula de Anime y Manga.
+Motivo: La referencia visual busca mostrar más obras por pantalla y las tarjetas horizontales de 180 dp ocupaban demasiado espacio para imágenes de portada.
+Impacto: Se mantienen el avance, los accesos y la elección manual de columnas. La densidad y legibilidad requieren revisión en dispositivo.
+
+---
+
+Fecha: 2026-09-29
 Decisión: Dar a Fuentes, Extensiones y Tracking accesos directos desde Más que reutilizan sus pantallas actuales.
 Motivo: El PRD sitúa herramientas en Más y conservar las rutas existentes evita duplicar instalación, búsqueda y ajustes. El destino de Fuentes/Extensiones se calcula según los tipos visibles.
 Impacto: No cambia contratos de extensiones, descargas ni tracking. Falta revisar táctilmente cada acceso y Back en teléfono.

@@ -321,7 +321,7 @@ fun NewReleaseSection(
             groups.forEach { group ->
                 items(group.items, key = { "${it.isAnime}_${it.id}" }) { item ->
                     Column(
-                        modifier = Modifier.width(125.dp).clickable { onItemClick(item.mediaItem) },
+                        modifier = Modifier.width(108.dp).clickable { onItemClick(item.mediaItem) },
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         Box(modifier = Modifier.fillMaxWidth().aspectRatio(0.67f).clip(RoundedCornerShape(6.dp))) {
@@ -370,7 +370,7 @@ fun MediaSection(
             items(distinctItems, key = { "${it.id}_${it.isAnime}" }) { item ->
                 Column(
                     modifier = Modifier
-                        .width(125.dp)
+                        .width(108.dp)
                         .clickable { onItemClick(item) },
                 ) {
                     Box(

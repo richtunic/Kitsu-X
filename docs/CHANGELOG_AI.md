@@ -1,5 +1,15 @@
 # CHANGELOG_AI
 
+Fecha: 2026-09-29
+Tarea: Compactar portadas de Anime y Manga según la referencia visual
+Cambios:
+- Inicio muestra portadas verticales de 108 dp en Continuar, Novedades y Añadidos recientemente; Continuar conserva el avance sobre la portada y su barra de progreso.
+- La cuadrícula automática de las bibliotecas usa portadas de ancho mínimo 100 dp en móvil y 132 dp en ventanas amplias; los ajustes manuales de columnas se respetan.
+Validación:
+- `:app:compileDebugKotlin --offline --quiet` pasó; falta revisar en teléfono la legibilidad y el tacto de las tarjetas.
+
+---
+
 Fecha: 2026-08-01
 Tarea: Preparar release KitsuX 1.0.7
 Cambios:

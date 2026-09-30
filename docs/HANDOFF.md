@@ -1,5 +1,10 @@
 # HANDOFF
 
+## Gran actualización 2026-09-29: densidad visual de portadas
+
+La referencia del usuario pide portadas verticales tipo Netflix y más obras visibles. Inicio usa 108 dp en Continuar, Novedades y Añadidos; la biblioteca calcula columnas automáticas con ancho mínimo de 100 dp en móvil y 132 dp en ventanas amplias. Los valores manuales de columnas no cambian. Kotlin compiló offline. Pendiente: revisar visualmente y tocar Inicio, Anime y Manga en el S23 Ultra; verificar títulos largos, badges, barras, menús y accesibilidad antes de dar por cerrado el ajuste.
+
+
 ## Gran actualización 2026-09-29: Fase 7, herramientas
 
 Más ofrece accesos a Fuentes, Extensiones y Tracking además de Descargas, Historial, Actualizaciones, Categorías, almacenamiento y Ajustes. Fuentes/Extensiones cambian a la pestaña visible correspondiente de Explorar; el índice se calcula con los tipos Anime/Manga habilitados. Se conservan los gestores, instaladores, estados y búsquedas existentes. Kotlin compiló offline. Pendiente: recorrido táctil de cada acceso, Back, filtros y estados de instalación en teléfono.
