@@ -185,7 +185,7 @@ data object MangaLibraryTab : Tab {
                     onClickFilter = screenModel::showSettingsDialog,
                     onClickRefresh = {
                         onClickRefresh(
-                            state.categories[screenModel.activeCategoryIndex],
+                            state.categories[screenModel.activeCategoryIndex].takeUnless { it.id == Category.ALL_ID },
                         )
                     },
                     onClickGlobalUpdate = { onClickRefresh(null) },
@@ -245,6 +245,7 @@ data object MangaLibraryTab : Tab {
                         contentPadding = contentPadding,
                         currentPage = { screenModel.activeCategoryIndex },
                         hasActiveFilters = state.hasActiveFilters,
+                        onClearFilters = screenModel::clearFilters,
                         showPageTabs = state.showCategoryTabs || !state.searchQuery.isNullOrEmpty(),
                         onChangeCurrentPage = { screenModel.activeCategoryIndex = it },
                         onMangaClicked = { navigator.push(MangaScreen(it)) },
@@ -272,7 +273,9 @@ data object MangaLibraryTab : Tab {
                             screenModel.toggleRangeSelection(it)
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         },
-                        onRefresh = onClickRefresh,
+                        onRefresh = { category ->
+                            onClickRefresh(category?.takeUnless { it.id == Category.ALL_ID })
+                        },
                         onGlobalSearchClicked = {
                             navigator.push(
                                 GlobalMangaSearchScreen(screenModel.state.value.searchQuery ?: ""),
@@ -294,6 +297,7 @@ data object MangaLibraryTab : Tab {
         when (val dialog = state.dialog) {
             is MangaLibraryScreenModel.Dialog.SettingsSheet -> run {
                 val category = state.categories.getOrNull(screenModel.activeCategoryIndex)
+                    ?.takeUnless { it.id == Category.ALL_ID }
                 if (category == null) {
                     onDismissRequest()
                     return@run

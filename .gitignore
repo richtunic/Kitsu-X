@@ -16,5 +16,5 @@ local.properties
 .DS_Store
 
 # Local release builds and keys
-releases/
+/releases/
 *.keystore

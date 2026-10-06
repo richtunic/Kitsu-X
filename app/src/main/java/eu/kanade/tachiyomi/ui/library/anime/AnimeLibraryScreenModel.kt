@@ -105,6 +105,11 @@ class AnimeLibraryScreenModel(
     )
 
     init {
+        if (!libraryPreferences.animeAllTabIndexMigrated().get()) {
+            val previousIndex = libraryPreferences.lastUsedAnimeCategory()
+            if (previousIndex.get() > 0) previousIndex.set(previousIndex.get() + 1)
+            libraryPreferences.animeAllTabIndexMigrated().set(true)
+        }
         screenModelScope.launchIO {
             combine(
                 state.map { it.searchQuery }.debounce(SEARCH_DEBOUNCE_MILLIS),
@@ -326,12 +331,13 @@ class AnimeLibraryScreenModel(
         }
 
         return mapValues { (key, value) ->
-            if (key.sort.type == AnimeLibrarySort.Type.Random) {
+            val sort = if (key.id == Category.ALL_ID) libraryPreferences.animeSortingMode().get() else key.sort
+            if (sort.type == AnimeLibrarySort.Type.Random) {
                 return@mapValues value.shuffled(Random(libraryPreferences.randomAnimeSortSeed().get()))
             }
 
-            val comparator = key.sort.comparator()
-                .let { if (key.sort.isAscending) it else it.reversed() }
+            val comparator = sort.comparator()
+                .let { if (sort.isAscending) it else it.reversed() }
                 .thenComparator(sortAlphabetically)
 
             value.sortedWith(comparator)
@@ -381,7 +387,7 @@ class AnimeLibraryScreenModel(
             getAnimelibItemPreferencesFlow(),
             downloadCache.changes,
         ) { animelibAnimeList, prefs, _ ->
-            animelibAnimeList
+            val items = animelibAnimeList
                 .map { animelibAnime ->
                     // Display mode based on user preference: take it from global library setting or category
                     AnimeLibraryItem(
@@ -400,17 +406,25 @@ class AnimeLibraryScreenModel(
                         },
                     )
                 }
-                .groupBy { it.libraryAnime.category }
+            items to items.groupBy { it.libraryAnime.category }
         }
 
-        return combine(getCategories.subscribe(), animelibAnimesFlow) { categories, animelibAnime ->
+        return combine(getCategories.subscribe(), animelibAnimesFlow) { categories, (allItems, animelibAnime) ->
             val displayCategories = if (animelibAnime.isNotEmpty() && !animelibAnime.containsKey(0)) {
                 categories.fastFilterNot { it.isSystemCategory }
             } else {
                 categories
             }
 
-            displayCategories.associateWith { animelibAnime[it.id].orEmpty() }
+            buildMap {
+                if (allItems.isNotEmpty()) {
+                    put(
+                        Category(Category.ALL_ID, "", -1L, 0L, false),
+                        allItems.distinctBy { it.libraryAnime.anime.id },
+                    )
+                }
+                displayCategories.forEach { put(it, animelibAnime[it.id].orEmpty()) }
+            }
         }
     }
 
@@ -602,6 +616,18 @@ class AnimeLibraryScreenModel(
         }
     }
 
+    fun clearFilters() {
+        libraryPreferences.filterDownloadedAnime().set(TriState.DISABLED)
+        libraryPreferences.filterUnseen().set(TriState.DISABLED)
+        libraryPreferences.filterStartedAnime().set(TriState.DISABLED)
+        libraryPreferences.filterBookmarkedAnime().set(TriState.DISABLED)
+        libraryPreferences.filterCompletedAnime().set(TriState.DISABLED)
+        libraryPreferences.filterIntervalCustom().set(TriState.DISABLED)
+        trackerManager.trackers.forEach {
+            libraryPreferences.filterTrackedAnime(it.id.toInt()).set(TriState.DISABLED)
+        }
+    }
+
     fun showSettingsDialog() {
         mutableState.update { it.copy(dialog = Dialog.SettingsSheet) }
     }
@@ -697,7 +723,7 @@ class AnimeLibraryScreenModel(
             val animeList = state.value.selection.map { it.anime }
 
             // Hide the default category because it has a different behavior than the ones from db.
-            val categories = state.value.categories.filter { it.id != 0L }
+            val categories = state.value.categories.filter { it.id > 0L }
 
             // Get indexes of the common categories to preselect.
             val common = getCommonCategories(animeList)
@@ -795,7 +821,11 @@ class AnimeLibraryScreenModel(
         ): LibraryToolbarTitle {
             val category = categories.getOrNull(page) ?: return LibraryToolbarTitle(defaultTitle)
             val categoryName = category.let {
-                if (it.isSystemCategory) defaultCategoryTitle else it.name
+                when {
+                    it.id == Category.ALL_ID -> defaultTitle
+                    it.isSystemCategory -> defaultCategoryTitle
+                    else -> it.name
+                }
             }
             val title = if (showCategoryTabs) defaultTitle else categoryName
             val count = when {

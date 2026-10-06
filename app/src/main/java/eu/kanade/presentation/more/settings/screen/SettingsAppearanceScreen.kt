@@ -1,7 +1,6 @@
 package eu.kanade.presentation.more.settings.screen
 
 import android.app.Activity
-import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
@@ -11,7 +10,6 @@ import androidx.core.app.ActivityCompat
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.ui.UiPreferences
-import eu.kanade.domain.ui.model.NavStyle
 import eu.kanade.domain.ui.model.StartScreen
 import eu.kanade.domain.ui.model.TabletUiMode
 import eu.kanade.domain.ui.model.ThemeMode
@@ -19,7 +17,6 @@ import eu.kanade.domain.ui.model.setAppCompatDelegateThemeMode
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.screen.appearance.AppLanguageScreen
 import eu.kanade.presentation.more.settings.widget.AppThemeModePreferenceWidget
-import eu.kanade.presentation.more.settings.widget.AppThemePreferenceWidget
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableMap
@@ -57,33 +54,21 @@ object SettingsAppearanceScreen : SearchableSettings {
         val themeModePref = uiPreferences.themeMode()
         val themeMode by themeModePref.collectAsState()
 
-        val appThemePref = uiPreferences.appTheme()
-        val appTheme by appThemePref.collectAsState()
-
         val amoledPref = uiPreferences.themeDarkAmoled()
-        val amoled by amoledPref.collectAsState()
 
         return Preference.PreferenceGroup(
-            title = stringResource(MR.strings.pref_category_theme),
+            title = stringResource(MR.strings.pref_app_theme),
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.CustomPreference(
                     title = stringResource(MR.strings.pref_app_theme),
                 ) {
-                    Column {
-                        AppThemeModePreferenceWidget(
-                            value = themeMode,
-                            onItemClick = {
-                                themeModePref.set(it)
-                                setAppCompatDelegateThemeMode(it)
-                            },
-                        )
-
-                        AppThemePreferenceWidget(
-                            value = appTheme,
-                            amoled = amoled,
-                            onItemClick = { appThemePref.set(it) },
-                        )
-                    }
+                    AppThemeModePreferenceWidget(
+                        value = themeMode,
+                        onItemClick = {
+                            themeModePref.set(it)
+                            setAppCompatDelegateThemeMode(it)
+                        },
+                    )
                 },
                 Preference.PreferenceItem.SwitchPreference(
                     preference = amoledPref,
@@ -140,14 +125,6 @@ object SettingsAppearanceScreen : SearchableSettings {
                         context.toast(MR.strings.requires_app_restart)
                         true
                     },
-                ),
-                Preference.PreferenceItem.ListPreference(
-                    preference = uiPreferences.navStyle(),
-                    entries = NavStyle.entries
-                        .associateWith { stringResource(it.titleRes) }
-                        .toImmutableMap(),
-                    title = "Navigation Style",
-                    onValueChanged = { true },
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = uiPreferences.dateFormat(),

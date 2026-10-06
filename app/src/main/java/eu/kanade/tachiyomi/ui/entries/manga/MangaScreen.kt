@@ -179,10 +179,6 @@ class MangaScreen(
 
         val onDismissRequest = {
             screenModel.dismissDialog()
-            if (screenModel.autoOpenTrack && screenModel.isFromChangeCategory) {
-                screenModel.isFromChangeCategory = false
-                screenModel.showTrackDialog()
-            }
         }
         when (val dialog = successState.dialog) {
             null -> {}

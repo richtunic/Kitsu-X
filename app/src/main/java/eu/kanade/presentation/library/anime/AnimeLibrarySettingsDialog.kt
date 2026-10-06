@@ -165,8 +165,10 @@ private fun ColumnScope.SortPage(
     screenModel: AnimeLibrarySettingsScreenModel,
 ) {
     val trackers by screenModel.trackersFlow.collectAsState()
-    val sortingMode = category.sort.type
-    val sortDescending = !category.sort.isAscending
+    val globalSort by screenModel.libraryPreferences.animeSortingMode().collectAsState()
+    val sort = category?.sort ?: globalSort
+    val sortingMode = sort.type
+    val sortDescending = !sort.isAscending
 
     val options = remember(trackers.isEmpty()) {
         val trackerMeanPair = if (trackers.isNotEmpty()) {

@@ -5,7 +5,6 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.Scaffold
@@ -16,7 +15,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.PermissionChecker
@@ -26,13 +24,12 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import eu.kanade.presentation.home.HomeScreenContent
 import eu.kanade.presentation.util.Tab
-import eu.kanade.tachiyomi.ui.browse.anime.source.globalsearch.GlobalAnimeSearchScreen
-import eu.kanade.tachiyomi.ui.browse.manga.source.globalsearch.GlobalMangaSearchScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
 import eu.kanade.tachiyomi.ui.entries.manga.MangaScreen
 import kotlinx.coroutines.launch
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.material.LocalFloatingNavigationPadding
 
 data object KitsuXHomeTab : Tab {
 
@@ -40,7 +37,7 @@ data object KitsuXHomeTab : Tab {
         @Composable
         get() = TabOptions(
             index = 0u,
-            title = "Home",
+            title = tachiyomi.presentation.core.i18n.stringResource(MR.strings.kitsux_home_tab),
             icon = rememberVectorPainter(Icons.Outlined.Home),
         )
 
@@ -68,34 +65,20 @@ data object KitsuXHomeTab : Tab {
 
         Scaffold(
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-            contentWindowInsets = WindowInsets(0),
+            contentWindowInsets = WindowInsets(bottom = LocalFloatingNavigationPadding.current),
         ) { contentPadding ->
             HomeScreenContent(
                 state = state,
-                modifier = Modifier.padding(contentPadding),
+                bottomPadding = contentPadding.calculateBottomPadding(),
                 onItemClick = { item ->
-                    if (item.isRecommendation) {
-                        if (item.isAnime) {
-                            navigator.push(GlobalAnimeSearchScreen(item.title))
-                        } else {
-                            navigator.push(GlobalMangaSearchScreen(item.title))
-                        }
+                    if (item.isAnime) {
+                        navigator.push(AnimeScreen(item.id))
                     } else {
-                        if (item.isAnime) {
-                            navigator.push(AnimeScreen(item.id))
-                        } else {
-                            navigator.push(MangaScreen(item.id))
-                        }
+                        navigator.push(MangaScreen(item.id))
                     }
                 },
                 onHeroClick = { item ->
-                    if (item.isRecommendation) {
-                        if (item.isAnime) {
-                            navigator.push(GlobalAnimeSearchScreen(item.title))
-                        } else {
-                            navigator.push(GlobalMangaSearchScreen(item.title))
-                        }
-                    } else if (item.isStarted) {
+                    if (item.isStarted) {
                         screenModel.continueWatchingOrReading(
                             context = context,
                             continueItem = ContinueWatchingItem(
@@ -120,6 +103,9 @@ data object KitsuXHomeTab : Tab {
                 },
                 onRemoveContinueItem = { continueItem ->
                     screenModel.hideContinueItem(continueItem)
+                },
+                onExploreClick = {
+                    scope.launch { HomeScreen.openTab(HomeScreen.Tab.Browse()) }
                 },
                 onRefresh = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&

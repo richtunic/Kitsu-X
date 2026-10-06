@@ -104,9 +104,6 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
         Injekt.importModule(SYDomainModule())
         // SY <--
 
-        // Initialize KitsuX Intelligence System
-        eu.kanade.tachiyomi.ui.home.intelligence.KitsuXIntelSystem.initialize(this)
-
         setupNotificationChannels()
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)

@@ -204,13 +204,23 @@ fun ChangeCategoryDialog(
         AlertDialog(
             onDismissRequest = onDismissRequest,
             confirmButton = {
-                tachiyomi.presentation.core.components.material.TextButton(
-                    onClick = {
-                        onDismissRequest()
-                        onEditCategories()
-                    },
-                ) {
-                    Text(text = stringResource(MR.strings.action_edit_categories))
+                Row {
+                    tachiyomi.presentation.core.components.material.TextButton(
+                        onClick = {
+                            onDismissRequest()
+                            onConfirm(emptyList(), emptyList())
+                        },
+                    ) {
+                        Text(text = stringResource(MR.strings.kitsux_organization_none))
+                    }
+                    tachiyomi.presentation.core.components.material.TextButton(
+                        onClick = {
+                            onDismissRequest()
+                            onEditCategories()
+                        },
+                    ) {
+                        Text(text = stringResource(MR.strings.action_edit_categories))
+                    }
                 }
             },
             title = {

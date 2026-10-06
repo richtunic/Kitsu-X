@@ -43,7 +43,7 @@ fun TachiyomiTheme(
 ) {
     val uiPreferences = Injekt.get<UiPreferences>()
     BaseTachiyomiTheme(
-        appTheme = appTheme ?: uiPreferences.appTheme().get(),
+        appTheme = appTheme ?: AppTheme.DEFAULT,
         isAmoled = amoled ?: uiPreferences.themeDarkAmoled().get(),
         content = content,
     )

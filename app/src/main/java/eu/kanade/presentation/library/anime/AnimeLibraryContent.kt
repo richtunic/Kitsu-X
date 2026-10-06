@@ -12,10 +12,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import eu.kanade.core.preference.PreferenceMutableState
+import eu.kanade.presentation.library.components.ActiveLibraryFilters
+import eu.kanade.presentation.library.components.LibraryQuickFilter
+import eu.kanade.presentation.library.components.LibraryQuickFilters
 import eu.kanade.presentation.library.components.LibraryTabs
 import eu.kanade.tachiyomi.ui.library.anime.AnimeLibraryItem
 import kotlinx.coroutines.delay
@@ -34,6 +38,7 @@ fun AnimeLibraryContent(
     contentPadding: PaddingValues,
     currentPage: () -> Int,
     hasActiveFilters: Boolean,
+    onClearFilters: () -> Unit,
     showPageTabs: Boolean,
     onChangeCurrentPage: (Int) -> Unit,
     onAnimeClicked: (Long) -> Unit,
@@ -59,6 +64,7 @@ fun AnimeLibraryContent(
 
         val scope = rememberCoroutineScope()
         var isRefreshing by remember(pagerState.currentPage) { mutableStateOf(false) }
+        var quickFilter by rememberSaveable { mutableStateOf(LibraryQuickFilter.All) }
 
         if (showPageTabs && categories.size > 1) {
             LaunchedEffect(categories) {
@@ -71,6 +77,19 @@ fun AnimeLibraryContent(
                 pagerState = pagerState,
                 getNumberOfItemsForCategory = getNumberOfAnimeForCategory,
             ) { scope.launch { pagerState.animateScrollToPage(it) } }
+        }
+
+        LibraryQuickFilters(
+            selected = quickFilter,
+            isAnime = true,
+            onSelect = { quickFilter = it },
+        )
+
+        if (hasActiveFilters || quickFilter != LibraryQuickFilter.All) {
+            ActiveLibraryFilters {
+                quickFilter = LibraryQuickFilter.All
+                onClearFilters()
+            }
         }
 
         val notSelectionMode = selection.isEmpty()
@@ -99,13 +118,26 @@ fun AnimeLibraryContent(
             AnimeLibraryPager(
                 state = pagerState,
                 contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding()),
-                hasActiveFilters = hasActiveFilters,
+                hasActiveFilters = hasActiveFilters || quickFilter != LibraryQuickFilter.All,
                 selectedAnime = selection,
                 searchQuery = searchQuery,
                 onGlobalSearchClicked = onGlobalSearchClicked,
                 getDisplayMode = getDisplayMode,
                 getColumnsForOrientation = getColumnsForOrientation,
-                getLibraryForPage = getAnimeLibraryForPage,
+                getLibraryForPage = { page ->
+                    getAnimeLibraryForPage(page).filter { item ->
+                        when (quickFilter) {
+                            LibraryQuickFilter.All -> true
+                            LibraryQuickFilter.Started ->
+                                item.libraryAnime.hasStarted &&
+                                    item.libraryAnime.unseenCount > 0
+                            LibraryQuickFilter.Pending -> item.libraryAnime.unseenCount > 0
+                            LibraryQuickFilter.Completed ->
+                                item.libraryAnime.totalCount > 0 &&
+                                    item.libraryAnime.unseenCount == 0L
+                        }
+                    }
+                },
                 onClickAnime = onClickAnime,
                 onLongClickAnime = onToggleRangeSelection,
                 onClickContinueWatching = onContinueWatchingClicked,

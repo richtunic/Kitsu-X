@@ -102,6 +102,11 @@ class MangaLibraryScreenModel(
     )
 
     init {
+        if (!libraryPreferences.mangaAllTabIndexMigrated().get()) {
+            val previousIndex = libraryPreferences.lastUsedMangaCategory()
+            if (previousIndex.get() > 0) previousIndex.set(previousIndex.get() + 1)
+            libraryPreferences.mangaAllTabIndexMigrated().set(true)
+        }
         screenModelScope.launchIO {
             combine(
                 state.map { it.searchQuery }.debounce(SEARCH_DEBOUNCE_MILLIS),
@@ -313,12 +318,13 @@ class MangaLibraryScreenModel(
         }
 
         return mapValues { (key, value) ->
-            if (key.sort.type == MangaLibrarySort.Type.Random) {
+            val sort = if (key.id == Category.ALL_ID) libraryPreferences.mangaSortingMode().get() else key.sort
+            if (sort.type == MangaLibrarySort.Type.Random) {
                 return@mapValues value.shuffled(Random(libraryPreferences.randomMangaSortSeed().get()))
             }
 
-            val comparator = key.sort.comparator()
-                .let { if (key.sort.isAscending) it else it.reversed() }
+            val comparator = sort.comparator()
+                .let { if (sort.isAscending) it else it.reversed() }
                 .thenComparator(sortAlphabetically)
 
             value.sortedWith(comparator)
@@ -367,7 +373,7 @@ class MangaLibraryScreenModel(
             getLibraryItemPreferencesFlow(),
             downloadCache.changes,
         ) { libraryMangaList, prefs, _ ->
-            libraryMangaList
+            val items = libraryMangaList
                 .map { libraryManga ->
                     // Display mode based on user preference: take it from global library setting or category
                     MangaLibraryItem(
@@ -386,17 +392,25 @@ class MangaLibraryScreenModel(
                         },
                     )
                 }
-                .groupBy { it.libraryManga.category }
+            items to items.groupBy { it.libraryManga.category }
         }
 
-        return combine(getCategories.subscribe(), libraryMangasFlow) { categories, libraryManga ->
+        return combine(getCategories.subscribe(), libraryMangasFlow) { categories, (allItems, libraryManga) ->
             val displayCategories = if (libraryManga.isNotEmpty() && !libraryManga.containsKey(0)) {
                 categories.fastFilterNot { it.isSystemCategory }
             } else {
                 categories
             }
 
-            displayCategories.associateWith { libraryManga[it.id].orEmpty() }
+            buildMap {
+                if (allItems.isNotEmpty()) {
+                    put(
+                        Category(Category.ALL_ID, "", -1L, 0L, false),
+                        allItems.distinctBy { it.libraryManga.manga.id },
+                    )
+                }
+                displayCategories.forEach { put(it, libraryManga[it.id].orEmpty()) }
+            }
         }
     }
 
@@ -587,6 +601,18 @@ class MangaLibraryScreenModel(
         }
     }
 
+    fun clearFilters() {
+        libraryPreferences.filterDownloadedManga().set(TriState.DISABLED)
+        libraryPreferences.filterUnread().set(TriState.DISABLED)
+        libraryPreferences.filterStartedManga().set(TriState.DISABLED)
+        libraryPreferences.filterBookmarkedManga().set(TriState.DISABLED)
+        libraryPreferences.filterCompletedManga().set(TriState.DISABLED)
+        libraryPreferences.filterIntervalCustom().set(TriState.DISABLED)
+        trackerManager.trackers.forEach {
+            libraryPreferences.filterTrackedManga(it.id.toInt()).set(TriState.DISABLED)
+        }
+    }
+
     fun showSettingsDialog() {
         mutableState.update { it.copy(dialog = Dialog.SettingsSheet) }
     }
@@ -682,7 +708,7 @@ class MangaLibraryScreenModel(
             val mangaList = state.value.selection.map { it.manga }
 
             // Hide the default category because it has a different behavior than the ones from db.
-            val categories = state.value.categories.filter { it.id != 0L }
+            val categories = state.value.categories.filter { it.id > 0L }
 
             // Get indexes of the common categories to preselect.
             val common = getCommonCategories(mangaList)
@@ -780,7 +806,11 @@ class MangaLibraryScreenModel(
         ): LibraryToolbarTitle {
             val category = categories.getOrNull(page) ?: return LibraryToolbarTitle(defaultTitle)
             val categoryName = category.let {
-                if (it.isSystemCategory) defaultCategoryTitle else it.name
+                when {
+                    it.id == Category.ALL_ID -> defaultTitle
+                    it.isSystemCategory -> defaultCategoryTitle
+                    else -> it.name
+                }
             }
             val title = if (showCategoryTabs) defaultTitle else categoryName
             val count = when {

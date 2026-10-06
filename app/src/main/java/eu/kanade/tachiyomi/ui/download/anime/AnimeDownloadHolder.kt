@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.ui.download.anime
 import android.view.View
 import androidx.recyclerview.widget.ItemTouchHelper
 import eu.davidea.viewholders.FlexibleViewHolder
+import eu.kanade.presentation.download.safeDownloadError
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 import eu.kanade.tachiyomi.databinding.DownloadItemBinding
@@ -24,6 +25,9 @@ class AnimeDownloadHolder(private val view: View, val adapter: AnimeDownloadAdap
     private val binding = DownloadItemBinding.bind(view)
 
     init {
+        binding.container.setOnClickListener {
+            if (download.status == AnimeDownload.State.ERROR) adapter.onErrorClick(download)
+        }
         setDragHandleView(binding.reorder)
         binding.menu.setOnClickListener { it.post { showPopupMenu(it) } }
     }
@@ -37,6 +41,7 @@ class AnimeDownloadHolder(private val view: View, val adapter: AnimeDownloadAdap
      */
     fun bind(download: AnimeDownload) {
         this.download = download
+        notifyStatus()
         // Update the chapter name.
         binding.chapterTitle.text = download.episode.name
 
@@ -63,8 +68,8 @@ class AnimeDownloadHolder(private val view: View, val adapter: AnimeDownloadAdap
         if (binding.downloadProgress.max == 1) {
             binding.downloadProgress.max = 100
         }
-        if (download.progress == 0) {
-            binding.downloadProgress.isIndeterminate = true
+        if (download.progress <= 0) {
+            binding.downloadProgress.isIndeterminate = download.status == AnimeDownload.State.DOWNLOADING
         } else {
             binding.downloadProgress.isIndeterminate = false
             binding.downloadProgress.setProgressCompat(download.progress, true)
@@ -75,11 +80,29 @@ class AnimeDownloadHolder(private val view: View, val adapter: AnimeDownloadAdap
      * Updates the text field of the number of downloaded pages.
      */
     fun notifyDownloadedPages() {
-        binding.downloadProgressText.text = if (download.progress == 0) {
-            view.context.stringResource(MR.strings.update_check_notification_download_in_progress)
+        binding.downloadProgressText.text = if (download.progress <= 0) {
+            ""
         } else {
             view.context.stringResource(AYMR.strings.episode_download_progress, download.progress)
         }
+    }
+
+    fun notifyStatus() {
+        binding.container.isClickable = download.status == AnimeDownload.State.ERROR
+        binding.downloadStatus.text = view.context.stringResource(
+            when (download.status) {
+                AnimeDownload.State.DOWNLOADING -> MR.strings.update_check_notification_download_in_progress
+                AnimeDownload.State.ERROR -> MR.strings.update_check_notification_download_error
+                AnimeDownload.State.DOWNLOADED -> MR.strings.completed
+                else -> MR.strings.kitsux_download_waiting
+            },
+        )
+        if (download.status == AnimeDownload.State.ERROR && !download.errorMessage.isNullOrBlank()) {
+            binding.downloadStatus.text = safeDownloadError(download.errorMessage!!).lineSequence().first().take(200)
+        }
+        binding.downloadProgress.isIndeterminate =
+            download.status == AnimeDownload.State.DOWNLOADING &&
+            download.progress <= 0
     }
 
     override fun onItemReleased(position: Int) {

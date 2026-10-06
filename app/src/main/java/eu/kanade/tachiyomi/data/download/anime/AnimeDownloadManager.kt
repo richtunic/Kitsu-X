@@ -63,7 +63,7 @@ class AnimeDownloadManager(
         get() = downloader.queueState
 
     // For use by DownloadService only
-    fun downloaderStart() = downloader.start()
+    fun downloaderStart(retryId: Long? = null) = downloader.start(retryId)
     fun downloaderStop(reason: String? = null) = downloader.stop(reason)
 
     val isDownloaderRunning
@@ -85,6 +85,15 @@ class AnimeDownloadManager(
     /**
      * Tells the downloader to pause downloads.
      */
+    fun retryDownload(episodeId: Long) {
+        if (getQueuedDownloadOrNull(episodeId)?.status != AnimeDownload.State.ERROR) return
+        if (downloader.isRunning || AnimeDownloadJob.isRunning(context)) {
+            downloader.start(episodeId)
+        } else {
+            AnimeDownloadJob.start(context, episodeId)
+        }
+    }
+
     fun pauseDownloads() {
         downloader.stop()
     }

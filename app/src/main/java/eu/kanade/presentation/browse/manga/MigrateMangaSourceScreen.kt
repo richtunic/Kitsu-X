@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowDownward
@@ -32,7 +33,6 @@ import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.Badge
 import tachiyomi.presentation.core.components.BadgeGroup
 import tachiyomi.presentation.core.components.ScrollbarLazyColumn
-import tachiyomi.presentation.core.components.Scroller.STICKY_HEADER_KEY_PREFIX
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.components.material.topSmallPaddingValues
 import tachiyomi.presentation.core.i18n.stringResource
@@ -49,6 +49,7 @@ fun MigrateMangaSourceScreen(
     onClickItem: (Source) -> Unit,
     onToggleSortingDirection: () -> Unit,
     onToggleSortingMode: () -> Unit,
+    listContent: (@Composable (LazyListScope.() -> Unit) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     when {
@@ -60,6 +61,7 @@ fun MigrateMangaSourceScreen(
         else ->
             MigrateSourceList(
                 list = state.items,
+                listContent = listContent,
                 contentPadding = contentPadding,
                 onClickItem = onClickItem,
                 onLongClickItem = { source ->
@@ -84,11 +86,13 @@ private fun MigrateSourceList(
     onToggleSortingMode: () -> Unit,
     sortingDirection: SetMigrateSorting.Direction,
     onToggleSortingDirection: () -> Unit,
+    listContent: (@Composable (LazyListScope.() -> Unit) -> Unit)? = null,
 ) {
-    ScrollbarLazyColumn(
-        contentPadding = contentPadding + topSmallPaddingValues,
-    ) {
-        stickyHeader(key = STICKY_HEADER_KEY_PREFIX) {
+    val renderList: @Composable (LazyListScope.() -> Unit) -> Unit = listContent ?: { items ->
+        ScrollbarLazyColumn(contentPadding = contentPadding + topSmallPaddingValues, content = items)
+    }
+    renderList {
+        item(key = "manga-migration-sort") {
             Row(
                 modifier = Modifier
                     .background(MaterialTheme.colorScheme.background)
@@ -130,7 +134,7 @@ private fun MigrateSourceList(
 
         items(
             items = list,
-            key = { (source, _) -> "migrate-${source.id}" },
+            key = { (source, _) -> "manga-migrate-${source.id}" },
         ) { (source, count) ->
             MigrateSourceItem(
                 modifier = Modifier.animateItem(),

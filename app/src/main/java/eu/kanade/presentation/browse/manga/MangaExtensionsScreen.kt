@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -87,8 +88,29 @@ fun MangaExtensionScreen(
     onOpenExtension: (MangaExtension.Installed) -> Unit,
     onClickUpdateAll: () -> Unit,
     onRefresh: () -> Unit,
+    listContent: (@Composable (LazyListScope.() -> Unit) -> Unit)? = null,
 ) {
     val navigator = LocalNavigator.currentOrThrow
+
+    if (listContent != null) {
+        ExtensionContent(
+            state = state,
+            listContent = listContent,
+            contentPadding = contentPadding,
+            onLongClickItem = onLongClickItem,
+            onClickItemCancel = onClickItemCancel,
+            onOpenWebView = onOpenWebView,
+            onInstallExtension = onInstallExtension,
+            onUninstallExtension = onUninstallExtension,
+            onUpdateExtension = onUpdateExtension,
+            onTrustExtension = onTrustExtension,
+            onOpenExtension = onOpenExtension,
+            onClickUpdateAll = onClickUpdateAll,
+            onAddRepo = { navigator.push(UnifiedExtensionReposScreen()) },
+            showAddRepoButton = !hasExtensionRepos,
+        )
+        return
+    }
 
     PullRefresh(
         refreshing = state.isRefreshing,
@@ -155,16 +177,38 @@ private fun ExtensionContent(
     onClickUpdateAll: () -> Unit,
     onAddRepo: () -> Unit,
     showAddRepoButton: Boolean,
+    listContent: (@Composable (LazyListScope.() -> Unit) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     var trustState by remember { mutableStateOf<MangaExtension.Untrusted?>(null) }
     val installGranted = rememberRequestPackageInstallsPermissionState(initialValue = true)
 
-    FastScrollLazyColumn(
-        contentPadding = contentPadding + topSmallPaddingValues,
-    ) {
+    val renderList: @Composable (LazyListScope.() -> Unit) -> Unit = listContent ?: { items ->
+        FastScrollLazyColumn(contentPadding = contentPadding + topSmallPaddingValues, content = items)
+    }
+    renderList {
+        if (state.isLoading || state.isEmpty) {
+            item(key = "manga-status") {
+                Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                    if (state.isLoading) {
+                        CircularProgressIndicator()
+                    } else {
+                        Text(
+                            stringResource(
+                                if (state.searchQuery.isNullOrBlank()) {
+                                    MR.strings.empty_screen
+                                } else {
+                                    MR.strings.no_results_found
+                                },
+                            ),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        }
         if (!installGranted && state.installer?.requiresSystemPermission == true) {
-            item(key = "extension-permissions-warning") {
+            item(key = "manga-extension-permissions-warning") {
                 WarningBanner(
                     textRes = MR.strings.ext_permission_install_apps_warning,
                     modifier = Modifier.clickable {
@@ -177,7 +221,7 @@ private fun ExtensionContent(
         state.items.forEach { (header, items) ->
             item(
                 contentType = "header",
-                key = "extensionHeader-${header.hashCode()}",
+                key = "manga-extensionHeader-${header.hashCode()}",
             ) {
                 when (header) {
                     is MangaExtensionUiModel.Header.Resource -> {
@@ -219,9 +263,9 @@ private fun ExtensionContent(
                 contentType = { "item" },
                 key = { item ->
                     when (item.extension) {
-                        is MangaExtension.Untrusted -> "extension-untrusted-${item.hashCode()}"
-                        is MangaExtension.Installed -> "extension-installed-${item.hashCode()}"
-                        is MangaExtension.Available -> "extension-available-${item.hashCode()}"
+                        is MangaExtension.Untrusted -> "manga-extension-untrusted-${item.hashCode()}"
+                        is MangaExtension.Installed -> "manga-extension-installed-${item.hashCode()}"
+                        is MangaExtension.Available -> "manga-extension-available-${item.hashCode()}"
                     }
                 },
             ) { item ->
@@ -267,7 +311,7 @@ private fun ExtensionContent(
         }
 
         if (showAddRepoButton) {
-            item(key = "add-extension-repo") {
+            item(key = "manga-add-extension-repo") {
                 Button(
                     onClick = onAddRepo,
                     modifier = Modifier

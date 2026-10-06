@@ -157,6 +157,7 @@ fun AppBar(
                 containerColor = backgroundColor ?: MaterialTheme.colorScheme.surfaceColorAtElevation(
                     elevation = if (isActionMode) 3.dp else 0.dp,
                 ),
+                scrolledContainerColor = backgroundColor ?: MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
             ),
             scrollBehavior = scrollBehavior,
         )
@@ -289,6 +290,7 @@ fun SearchToolbar(
     searchQuery: String?,
     onChangeSearchQuery: (String?) -> Unit,
     modifier: Modifier = Modifier,
+    backgroundColor: Color? = null,
     titleContent: @Composable () -> Unit = {},
     navigateUp: (() -> Unit)? = null,
     searchEnabled: Boolean = true,
@@ -304,6 +306,7 @@ fun SearchToolbar(
 
     AppBar(
         modifier = modifier,
+        backgroundColor = backgroundColor,
         titleContent = {
             if (searchQuery == null) return@AppBar titleContent()
 

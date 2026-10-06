@@ -26,6 +26,9 @@ data class MangaDownload(
 
     var pages: List<Page>? = null
 
+    @Transient
+    var errorMessage: String? = null
+
     val totalProgress: Int
         get() = pages?.sumOf(Page::progress) ?: 0
 

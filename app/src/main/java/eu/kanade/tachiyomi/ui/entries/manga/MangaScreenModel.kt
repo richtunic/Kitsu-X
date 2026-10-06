@@ -167,8 +167,6 @@ class MangaScreenModel(
     private val selectedPositions: Array<Int> = arrayOf(-1, -1) // first and last selected index in list
     private val selectedChapterIds: HashSet<Long> = HashSet()
 
-    internal var isFromChangeCategory: Boolean = false
-
     internal val autoOpenTrack: Boolean
         get() = successState?.trackingAvailable == true && trackPreferences.trackOnAddingToLibrary().get()
 
@@ -266,16 +264,6 @@ class MangaScreenModel(
 
             // Initial loading finished
             updateSuccessState { it.copy(isRefreshingData = false) }
-
-            if (manga.favorite) {
-                try {
-                    if (getCategories.await(manga.id).isEmpty()) {
-                        applyJikanCategoriesToManga(manga)
-                    }
-                } catch (e: Exception) {
-                    logcat(LogPriority.ERROR, e) { "Failed to auto-categorize existing manga '${manga.title}'" }
-                }
-            }
         }
     }
 
@@ -368,57 +356,43 @@ class MangaScreenModel(
                     }
                 }
 
-                val genres = fetchJikanGenresForManga(manga.title)
-
-                if (!genres.isNullOrEmpty()) {
-                    val result = updateManga.awaitUpdateFavorite(manga.id, true)
-                    if (result) {
-                        val assignedCategories = mutableListOf<Category>()
-                        for (genreName in genres) {
-                            val categories = getCategories()
-                            var genreCategory = categories.find { it.name.equals(genreName, ignoreCase = true) }
-                            if (genreCategory == null) {
-                                val createResult = createMangaCategoryWithName.await(genreName)
-                                if (createResult is CreateMangaCategoryWithName.Result.Success) {
-                                    val updatedCategories = getCategories()
-                                    genreCategory =
-                                        updatedCategories.find { it.name.equals(genreName, ignoreCase = true) }
-                                }
-                            }
-                            if (genreCategory != null) {
-                                assignedCategories.add(genreCategory)
-                            }
+                val categories = getCategories()
+                val organizationMode = libraryPreferences.organizationOnAdd().get()
+                val suggestedCategory = if (
+                    organizationMode == LibraryPreferences.OrganizationOnAdd.Automatic &&
+                    uiPreferences.autoCategorizeLibrary().get()
+                ) {
+                    fetchJikanGenresForManga(manga.title)
+                        ?.firstNotNullOfOrNull { genre ->
+                            categories.find { it.name.equals(genre, ignoreCase = true) }
                         }
-                        if (assignedCategories.isNotEmpty()) {
-                            moveMangaToCategories(assignedCategories)
-                        } else {
-                            moveMangaToCategory(null)
-                        }
-                    }
                 } else {
-                    val categories = getCategories()
-                    val defaultCategoryId = libraryPreferences.defaultMangaCategory().get().toLong()
-                    val defaultCategory = categories.find { it.id == defaultCategoryId }
-                    when {
-                        // Default category set
-                        defaultCategory != null -> {
-                            val result = updateManga.awaitUpdateFavorite(manga.id, true)
-                            if (!result) return@launchIO
-                            moveMangaToCategory(defaultCategory)
-                        }
-
-                        // Automatic 'Default' or no categories
-                        defaultCategoryId == 0L || categories.isEmpty() -> {
-                            val result = updateManga.awaitUpdateFavorite(manga.id, true)
-                            if (!result) return@launchIO
-                            moveMangaToCategory(null)
-                        }
-
-                        // Choose a category
-                        else -> {
-                            isFromChangeCategory = true
-                            showChangeCategoryDialog()
-                        }
+                    null
+                }
+                val defaultCategoryId = libraryPreferences.defaultMangaCategory().get().toLong()
+                val targetCategory = suggestedCategory ?: categories.find { it.id == defaultCategoryId }
+                when {
+                    organizationMode == LibraryPreferences.OrganizationOnAdd.Ask -> {
+                        showChangeCategoryDialog()
+                    }
+                    organizationMode == LibraryPreferences.OrganizationOnAdd.Uncategorized -> {
+                        if (!updateManga.awaitUpdateFavorite(manga.id, true)) return@launchIO
+                        moveMangaToCategory(null)
+                    }
+                    targetCategory != null -> {
+                        if (!updateManga.awaitUpdateFavorite(manga.id, true)) return@launchIO
+                        moveMangaToCategory(targetCategory)
+                    }
+                    defaultCategoryId == 0L ||
+                        (
+                            organizationMode == LibraryPreferences.OrganizationOnAdd.Automatic &&
+                                categories.isEmpty()
+                            ) -> {
+                        if (!updateManga.awaitUpdateFavorite(manga.id, true)) return@launchIO
+                        moveMangaToCategory(null)
+                    }
+                    else -> {
+                        showChangeCategoryDialog()
                     }
                 }
 
@@ -505,13 +479,15 @@ class MangaScreenModel(
     }
 
     fun moveMangaToCategoriesAndAddToLibrary(manga: Manga, categories: List<Long>) {
-        moveMangaToCategory(categories)
-
         screenModelScope.launchIO {
-            if (!manga.favorite) {
-                updateManga.awaitUpdateFavorite(manga.id, true)
+            if (!manga.favorite && !updateManga.awaitUpdateFavorite(manga.id, true)) {
+                return@launchIO
             }
-            applyJikanCategoriesToManga(manga)
+            setMangaCategories.await(manga.id, categories)
+            if (!manga.favorite) {
+                successState?.source?.let { addTracks.bindEnhancedTrackers(manga, it) }
+                if (autoOpenTrack) showTrackDialog()
+            }
         }
     }
 
@@ -1202,24 +1178,6 @@ class MangaScreenModel(
     fun showMigrateDialog(duplicate: Manga) {
         val manga = successState?.manga ?: return
         updateSuccessState { it.copy(dialog = Dialog.Migrate(newManga = manga, oldManga = duplicate)) }
-    }
-
-    private suspend fun applyJikanCategoriesToManga(manga: Manga): Boolean {
-        if (!uiPreferences.autoCategorizeLibrary().get()) return false
-        val genres = fetchJikanGenresForManga(manga.title) ?: return false
-        val assignedCategories = genres.mapNotNull { genreName ->
-            getOrCreateJikanMangaCategory(genreName)
-        }
-        if (assignedCategories.isEmpty()) return false
-
-        setMangaCategories.await(manga.id, assignedCategories.map { it.id })
-        return true
-    }
-
-    private suspend fun getOrCreateJikanMangaCategory(genreName: String): Category? {
-        getCategories().find { it.name.equals(genreName, ignoreCase = true) }?.let { return it }
-        createMangaCategoryWithName.await(genreName)
-        return getCategories().find { it.name.equals(genreName, ignoreCase = true) }
     }
 
     fun setExcludedScanlators(excludedScanlators: Set<String>) {

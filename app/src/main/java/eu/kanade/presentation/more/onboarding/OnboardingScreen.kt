@@ -35,7 +35,7 @@ fun OnboardingScreen(
     val steps = remember {
         listOf(
             ContentTypeStep(),
-            RecommendationsStep(),
+            DiscoveryStep(),
             HeroBannerStep(),
             AutoCategorizationStep(),
             ExtensionsRepoStep(onSuccess = { currentStep++ }),
@@ -50,8 +50,8 @@ fun OnboardingScreen(
     BackHandler(enabled = currentStep != 0, onBack = { currentStep-- })
 
     val acceptText = when (steps[currentStep]) {
-        is ExtensionsRepoStep -> "Omitir"
-        is FinalStep -> "Comenzar"
+        is ExtensionsRepoStep -> stringResource(MR.strings.onboarding_action_skip)
+        is FinalStep -> stringResource(MR.strings.onboarding_action_finish)
         else -> stringResource(MR.strings.onboarding_action_next)
     }
 

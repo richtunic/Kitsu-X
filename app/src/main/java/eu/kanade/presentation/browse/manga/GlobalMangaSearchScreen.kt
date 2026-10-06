@@ -30,6 +30,7 @@ fun GlobalMangaSearchScreen(
     onClickSource: (CatalogueSource) -> Unit,
     onClickItem: (Manga) -> Unit,
     onLongClickItem: (Manga) -> Unit,
+    onRetrySource: (CatalogueSource) -> Unit,
 ) {
     Scaffold(
         topBar = { scrollBehavior ->
@@ -55,6 +56,7 @@ fun GlobalMangaSearchScreen(
             onClickSource = onClickSource,
             onClickItem = onClickItem,
             onLongClickItem = onLongClickItem,
+            onRetrySource = onRetrySource,
         )
     }
 }
@@ -68,6 +70,7 @@ internal fun GlobalSearchContent(
     onClickItem: (Manga) -> Unit,
     onLongClickItem: (Manga) -> Unit,
     fromSourceId: Long? = null,
+    onRetrySource: ((CatalogueSource) -> Unit)? = null,
 ) {
     LazyColumn(
         contentPadding = contentPadding,
@@ -95,7 +98,10 @@ internal fun GlobalSearchContent(
                             )
                         }
                         is MangaSearchItemResult.Error -> {
-                            GlobalSearchErrorResultItem(message = result.throwable.message)
+                            GlobalSearchErrorResultItem(
+                                error = result.throwable,
+                                onRetry = onRetrySource?.let { retry -> { retry(source) } },
+                            )
                         }
                     }
                 }

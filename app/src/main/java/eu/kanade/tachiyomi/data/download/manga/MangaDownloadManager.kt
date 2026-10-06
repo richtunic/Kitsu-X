@@ -65,7 +65,7 @@ class MangaDownloadManager(
         get() = downloader.queueState
 
     // For use by DownloadService only
-    fun downloaderStart() = downloader.start()
+    fun downloaderStart(retryId: Long? = null) = downloader.start(retryId)
     fun downloaderStop(reason: String? = null) = downloader.stop(reason)
 
     val isDownloaderRunning
@@ -87,6 +87,15 @@ class MangaDownloadManager(
     /**
      * Tells the downloader to pause downloads.
      */
+    fun retryDownload(chapterId: Long) {
+        if (getQueuedDownloadOrNull(chapterId)?.status != MangaDownload.State.ERROR) return
+        if (downloader.isRunning || MangaDownloadJob.isRunning(context)) {
+            downloader.start(chapterId)
+        } else {
+            MangaDownloadJob.start(context, chapterId)
+        }
+    }
+
     fun pauseDownloads() {
         downloader.pause()
         downloader.stop()

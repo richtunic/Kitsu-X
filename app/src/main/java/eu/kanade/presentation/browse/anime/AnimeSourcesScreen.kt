@@ -157,7 +157,7 @@ private fun AnimeSourceHeader(
 }
 
 @Composable
-private fun AnimeSourceItem(
+internal fun AnimeSourceItem(
     source: AnimeSource,
     onClickItem: (AnimeSource, Listing) -> Unit,
     onLongClickItem: (AnimeSource) -> Unit,

@@ -1,23 +1,24 @@
 package eu.kanade.presentation.more
 
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material.icons.outlined.Explore
+import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.GetApp
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.QueryStats
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
+import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material.icons.outlined.VideoSettings
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.vectorResource
-import eu.kanade.domain.ui.model.NavStyle
 import eu.kanade.presentation.more.settings.widget.SwitchPreferenceWidget
 import eu.kanade.presentation.more.settings.widget.TextPreferenceWidget
 import eu.kanade.tachiyomi.R
@@ -37,11 +38,14 @@ fun MoreScreen(
     onDownloadedOnlyChange: (Boolean) -> Unit,
     incognitoMode: Boolean,
     onIncognitoModeChange: (Boolean) -> Unit,
-    navStyle: NavStyle,
     showAnime: Boolean,
-    onClickAlt: () -> Unit,
+    onClickHistory: () -> Unit,
+    onClickUpdates: () -> Unit,
     onClickDownloadQueue: () -> Unit,
     onClickCategories: () -> Unit,
+    onClickSources: () -> Unit,
+    onClickExtensions: () -> Unit,
+    onClickTracking: () -> Unit,
     onClickStats: () -> Unit,
     onClickStorage: () -> Unit,
     onClickDataAndStorage: () -> Unit,
@@ -53,7 +57,7 @@ fun MoreScreen(
 
     Scaffold { contentPadding ->
         ScrollbarLazyColumn(
-            modifier = Modifier.padding(contentPadding),
+            contentPadding = contentPadding,
         ) {
             item {
                 LogoHeader()
@@ -81,9 +85,16 @@ fun MoreScreen(
 
             item {
                 TextPreferenceWidget(
-                    title = navStyle.moreTab.options.title,
-                    icon = navStyle.moreIcon,
-                    onPreferenceClick = onClickAlt,
+                    title = stringResource(MR.strings.history),
+                    icon = Icons.Outlined.History,
+                    onPreferenceClick = onClickHistory,
+                )
+            }
+            item {
+                TextPreferenceWidget(
+                    title = stringResource(MR.strings.label_recent_updates),
+                    icon = ImageVector.vectorResource(R.drawable.ic_updates_outline_24dp),
+                    onPreferenceClick = onClickUpdates,
                 )
             }
 
@@ -126,6 +137,27 @@ fun MoreScreen(
                     title = stringResource(AYMR.strings.general_categories),
                     icon = Icons.AutoMirrored.Outlined.Label,
                     onPreferenceClick = onClickCategories,
+                )
+            }
+            item {
+                TextPreferenceWidget(
+                    title = stringResource(MR.strings.label_sources),
+                    icon = Icons.Outlined.Explore,
+                    onPreferenceClick = onClickSources,
+                )
+            }
+            item {
+                TextPreferenceWidget(
+                    title = stringResource(MR.strings.label_extensions),
+                    icon = Icons.Outlined.Extension,
+                    onPreferenceClick = onClickExtensions,
+                )
+            }
+            item {
+                TextPreferenceWidget(
+                    title = stringResource(MR.strings.kitsux_more_tracking),
+                    icon = Icons.Outlined.Sync,
+                    onPreferenceClick = onClickTracking,
                 )
             }
             item {

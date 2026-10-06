@@ -3,13 +3,17 @@ package eu.kanade.tachiyomi.ui.download.anime
 import android.view.MenuItem
 import eu.davidea.flexibleadapter.FlexibleAdapter
 import eu.davidea.flexibleadapter.items.AbstractFlexibleItem
+import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
 
 /**
  * Adapter storing a list of downloads.
  *
  * @param downloadItemListener Listener called when an item of the list is released.
  */
-class AnimeDownloadAdapter(val downloadItemListener: DownloadItemListener) : FlexibleAdapter<AbstractFlexibleItem<*>>(
+class AnimeDownloadAdapter(
+    val downloadItemListener: DownloadItemListener,
+    val onErrorClick: (AnimeDownload) -> Unit,
+) : FlexibleAdapter<AbstractFlexibleItem<*>>(
     null,
     downloadItemListener,
     true,

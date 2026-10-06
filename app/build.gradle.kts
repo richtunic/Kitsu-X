@@ -15,13 +15,13 @@ shortcutHelper.setFilePath("./shortcuts.xml")
 
 android {
     namespace = "eu.kanade.tachiyomi"
-    val releaseKeystoreFile = rootProject.file("kitsux.keystore")
+    val releaseKeystoreFile = rootProject.file(System.getenv("KITSUX_KEYSTORE_PATH") ?: "kitsux.keystore")
 
     defaultConfig {
         applicationId = "io.kitsux.app"
 
-        versionCode = 8
-        versionName = "1.0.7"
+        versionCode = 9
+        versionName = "1.1.0"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getGitSha()}\"")
@@ -46,9 +46,9 @@ android {
     signingConfigs {
         create("release") {
             storeFile = releaseKeystoreFile
-            storePassword = "kitsux123"
-            keyAlias = "kitsux"
-            keyPassword = "kitsux123"
+            storePassword = System.getenv("KITSUX_STORE_PASSWORD")
+            keyAlias = System.getenv("KITSUX_KEY_ALIAS")
+            keyPassword = System.getenv("KITSUX_KEY_PASSWORD")
         }
     }
 
@@ -104,9 +104,9 @@ android {
     splits {
         abi {
             isEnable = true
-            isUniversalApk = true
+            isUniversalApk = false
             reset()
-            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+            include("arm64-v8a")
         }
     }
 

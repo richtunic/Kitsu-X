@@ -4,11 +4,11 @@ import android.content.Context
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.ui.UiPreferences
+import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.manga.MangaDownloadManager
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
 import eu.kanade.tachiyomi.data.library.manga.MangaLibraryUpdateJob
-import eu.kanade.tachiyomi.ui.home.intelligence.KitsuXIntelSystem
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.player.settings.PlayerPreferences
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
@@ -18,23 +18,24 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import logcat.LogPriority
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.Preference
 import tachiyomi.core.common.preference.PreferenceStore
-import tachiyomi.core.common.util.system.logcat
-import tachiyomi.domain.category.anime.interactor.GetAnimeCategories
-import tachiyomi.domain.category.manga.interactor.GetMangaCategories
+import tachiyomi.domain.entries.EntryCover
 import tachiyomi.domain.entries.anime.interactor.GetAnime
 import tachiyomi.domain.entries.anime.interactor.GetLibraryAnime
 import tachiyomi.domain.entries.anime.model.Anime
+import tachiyomi.domain.entries.anime.model.asAnimeCover
 import tachiyomi.domain.entries.manga.interactor.GetLibraryManga
 import tachiyomi.domain.entries.manga.interactor.GetManga
 import tachiyomi.domain.entries.manga.model.Manga
+import tachiyomi.domain.entries.manga.model.asMangaCover
 import tachiyomi.domain.history.anime.interactor.GetAnimeHistory
+import tachiyomi.domain.history.anime.interactor.GetNextEpisodes
 import tachiyomi.domain.history.manga.interactor.GetMangaHistory
 import tachiyomi.domain.items.chapter.interactor.GetChapter
 import tachiyomi.domain.items.chapter.interactor.GetChaptersByMangaId
@@ -43,6 +44,8 @@ import tachiyomi.domain.items.episode.interactor.GetEpisodesByAnimeId
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.library.anime.LibraryAnime
 import tachiyomi.domain.library.manga.LibraryManga
+import tachiyomi.domain.source.anime.service.AnimeSourceManager
+import tachiyomi.domain.source.manga.service.MangaSourceManager
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -54,9 +57,8 @@ class KitsuXHomeScreenModel(
     private val getLibraryAnime: GetLibraryAnime = Injekt.get(),
     private val getLibraryManga: GetLibraryManga = Injekt.get(),
     private val getAnimeHistory: GetAnimeHistory = Injekt.get(),
+    private val getNextEpisodes: GetNextEpisodes = Injekt.get(),
     private val getMangaHistory: GetMangaHistory = Injekt.get(),
-    private val getAnimeCategories: GetAnimeCategories = Injekt.get(),
-    private val getMangaCategories: GetMangaCategories = Injekt.get(),
     private val getEpisode: GetEpisode = Injekt.get(),
     private val getChapter: GetChapter = Injekt.get(),
     private val getEpisodesByAnimeId: GetEpisodesByAnimeId = Injekt.get(),
@@ -67,9 +69,8 @@ class KitsuXHomeScreenModel(
     private val preferenceStore: PreferenceStore = Injekt.get(),
 ) : ScreenModel {
 
-    private val animeCategoriesFlow = getAnimeCategories.subscribe()
-    private val mangaCategoriesFlow = getMangaCategories.subscribe()
-
+    private val animeSourceManager by lazy { Injekt.get<AnimeSourceManager>() }
+    private val mangaSourceManager by lazy { Injekt.get<MangaSourceManager>() }
     private val getAnime: GetAnime = Injekt.get()
     private val getManga: GetManga = Injekt.get()
     private val hiddenContinueItemsPreference = preferenceStore.getStringSet(
@@ -78,39 +79,16 @@ class KitsuXHomeScreenModel(
     )
     private val activeContinueActions = ConcurrentHashMap.newKeySet<String>()
 
-    private val jikanFlow = combine(
-        KitsuXIntelSystem.heroBannerAnimeList,
-        KitsuXIntelSystem.recommendedAnime,
-        KitsuXIntelSystem.recommendedManga,
-        KitsuXIntelSystem.genreRecommendations,
-        KitsuXIntelSystem.similarToLastWatched,
-    ) { heroList, recAnime, recManga, genreRecs, similar ->
-        JikanData(heroList, recAnime, recManga, genreRecs, similar)
-    }
-
-    private val categoriesAndJikanFlow = combine(
-        combine(animeCategoriesFlow, mangaCategoriesFlow, ::Pair),
-        jikanFlow,
-        ::Pair,
-    )
-
     private val preferencesFlow = combine(
         uiPreferences.showAnime().changes(),
         uiPreferences.showManga().changes(),
-        uiPreferences.showRecommendations().changes(),
         uiPreferences.showHeroBanner().changes(),
-    ) { showAnime, showManga, showRecommendations, showHeroBanner ->
-        HomePreferenceState(showAnime, showManga, showRecommendations, showHeroBanner)
+    ) { showAnime, showManga, showHeroBanner ->
+        HomePreferenceState(showAnime, showManga, showHeroBanner)
     }
 
-    private val categoriesAndJikanAndPrefsFlow = combine(
-        categoriesAndJikanFlow,
-        preferencesFlow,
-        ::Pair,
-    )
-
     private val homeAuxiliaryFlow = combine(
-        categoriesAndJikanAndPrefsFlow,
+        preferencesFlow,
         hiddenContinueItemsPreference.changes(),
         ::Pair,
     )
@@ -122,11 +100,10 @@ class KitsuXHomeScreenModel(
         getMangaHistory.subscribe(""),
         homeAuxiliaryFlow,
     ) { libraryAnime, libraryManga, animeHistory, mangaHistory, auxiliaryData ->
-        val (combinedData, hiddenContinueItems) = auxiliaryData
-        val (categoriesAndJikan, prefsTriple) = combinedData
-        val (categoriesPair, jikanData) = categoriesAndJikan
-        val (animeCategories, mangaCategories) = categoriesPair
-        val (showAnime, showManga, showRecommendations, showHeroBanner) = prefsTriple
+        val (preferences, hiddenContinueItems) = auxiliaryData
+        val (showAnime, showManga, showHeroBanner) = preferences
+        val animeById = libraryAnime.associateBy { it.id }
+        val mangaById = libraryManga.associateBy { it.id }
 
         // 1. Process continue watching items (mix anime and manga history + library items with unseen count)
         val continueWatching = mutableListOf<ContinueWatchingItem>()
@@ -134,12 +111,12 @@ class KitsuXHomeScreenModel(
         val addedMediaIds = mutableSetOf<Pair<Long, Boolean>>() // Pair(mediaId, isAnime)
 
         if (showAnime) {
-            val animeHistoryLatest = animeHistory.groupBy { it.animeId }
-                .map { (_, list) -> list.first() }
-                .take(15)
+            val animeHistoryLatest = selectContinueAnimeHistory(animeHistory) { episodeId ->
+                getEpisode.await(episodeId)?.lastSecondSeen?.let { it > 0L } == true
+            }
 
             animeHistoryLatest.forEach { hist ->
-                val libAnime = libraryAnime.find { it.id == hist.animeId }
+                val libAnime = animeById[hist.animeId]
                 val anime = libAnime?.anime ?: getAnime.await(hist.animeId)
                 if (anime == null) return@forEach
 
@@ -157,7 +134,8 @@ class KitsuXHomeScreenModel(
 
                 val currentEpisode = getEpisode.await(hist.episodeId)
                 val targetEpisode = currentEpisode?.takeUnless { it.seen }
-                    ?: getEpisodesByAnimeId.await(anime.id).getNextUnseen(anime, animeDownloadManager)
+                    ?: getNextEpisodes.await(anime.id, hist.episodeId, onlyUnseen = false)
+                        .firstOrNull { !it.seen }
 
                 targetEpisode?.let { episode ->
                     val isNewEpisode = currentEpisode?.id != episode.id
@@ -184,7 +162,7 @@ class KitsuXHomeScreenModel(
                 .take(15)
 
             mangaHistoryLatest.forEach { hist ->
-                val libManga = libraryManga.find { it.id == hist.mangaId }
+                val libManga = mangaById[hist.mangaId]
                 val manga = libManga?.manga ?: getManga.await(hist.mangaId)
                 if (manga == null) return@forEach
 
@@ -216,7 +194,14 @@ class KitsuXHomeScreenModel(
                     val chapterProgressText = if (isNewChapter) {
                         context.stringResource(MR.strings.kitsux_home_new_badge)
                     } else {
-                        "Ch ${targetChapter.chapterNumber.toInt()}"
+                        if (targetChapter.chapterNumber >= 0) {
+                            context.stringResource(
+                                MR.strings.kitsux_continue_chapter,
+                                formatChapterNumber(targetChapter.chapterNumber),
+                            )
+                        } else {
+                            targetChapter.name
+                        }
                     }
                     val mediaItem = manga.toMediaItem().copy(
                         hasUpdates = hasUpdates || isNewChapter,
@@ -244,30 +229,7 @@ class KitsuXHomeScreenModel(
             }
         }
 
-        // Add library items that have new/unseen episodes/chapters but are NOT in history yet
-        if (showAnime) {
-            libraryAnime.forEach { libItem ->
-                if (libItem.hasStarted &&
-                    libItem.unseenCount > 0 &&
-                    !addedMediaIds.contains(Pair(libItem.id, true))
-                ) {
-                    val nextEpisode = getEpisodesByAnimeId.await(libItem.id)
-                        .getNextUnseen(libItem.anime, animeDownloadManager)
-
-                    nextEpisode?.let { episode ->
-                        continueWatching.add(
-                            episode.toContinueWatchingItem(
-                                anime = libItem,
-                                lastSeen = maxOf(libItem.episodeFetchedAt, libItem.latestUpload),
-                                isNewEpisode = true,
-                            ),
-                        )
-                        addedMediaIds.add(Pair(libItem.id, true))
-                    }
-                }
-            }
-        }
-
+        // Library updates without playback history belong in the new releases section.
         if (showManga) {
             libraryManga.forEach { libItem ->
                 if (libItem.hasStarted &&
@@ -322,7 +284,7 @@ class KitsuXHomeScreenModel(
         val newReleases = mutableListOf<ContinueWatchingItem>()
 
         if (showAnime) {
-            libraryAnime.forEach { libItem ->
+            libraryAnime.distinctBy { it.id }.forEach { libItem ->
                 if (libItem.unseenCount > 0) {
                     val nextEpisode = getEpisodesByAnimeId.await(libItem.id)
                         .getNextUnseen(libItem.anime, animeDownloadManager)
@@ -332,10 +294,6 @@ class KitsuXHomeScreenModel(
                                 anime = libItem,
                                 lastSeen = maxOf(libItem.episodeFetchedAt, libItem.latestUpload),
                                 isNewEpisode = true,
-                                progressTextOverride = context.stringResource(
-                                    MR.strings.kitsux_home_episode_number,
-                                    episode.episodeNumber.toInt(),
-                                ),
                             ),
                         )
                     }
@@ -344,7 +302,7 @@ class KitsuXHomeScreenModel(
         }
 
         if (showManga) {
-            libraryManga.forEach { libItem ->
+            libraryManga.distinctBy { it.id }.forEach { libItem ->
                 if (libItem.unreadCount > 0) {
                     val lastUpdate = if (libItem.chapterFetchedAt >
                         0L
@@ -364,138 +322,63 @@ class KitsuXHomeScreenModel(
             .take(20)
         val newReleaseGroups = groupNewReleases(sortedNewReleases)
 
-        // 2. Group library items by category name
-        val animeCategoryMap = animeCategories.associate { it.id to it.name }
-        val mangaCategoryMap = mangaCategories.associate { it.id to it.name }
-        val homeDefaultCategory = context.stringResource(MR.strings.kitsux_home_my_list)
-        val completedCategory = context.stringResource(MR.strings.kitsux_category_completed)
-
-        val miListaItems = mutableListOf<KitsuXMediaItem>()
-        val categoryGroups = mutableMapOf<String, MutableList<KitsuXMediaItem>>()
-
-        if (showAnime) {
-            libraryAnime.forEach { libAnime ->
-                val rawCatName = animeCategoryMap[libAnime.category]
-                val catName = rawCatName.toHomeCategoryName(homeDefaultCategory)
-                if (catName.isCompletedHomeCategory(completedCategory)) return@forEach
-                val mediaItem = libAnime.anime.toMediaItem().copy(
-                    hasUpdates = libAnime.unseenCount > 0,
-                    unseenCount = libAnime.unseenCount.toInt(),
-                    isStarted = libAnime.hasStarted,
-                )
-                miListaItems.add(mediaItem)
-                categoryGroups.getOrPut(catName) { mutableListOf() }.add(mediaItem)
-            }
-        }
-
-        if (showManga) {
-            libraryManga.forEach { libManga ->
-                val rawCatName = mangaCategoryMap[libManga.category]
-                val catName = rawCatName.toHomeCategoryName(homeDefaultCategory)
-                if (catName.isCompletedHomeCategory(completedCategory)) return@forEach
-                val mediaItem = libManga.manga.toMediaItem().copy(
-                    hasUpdates = libManga.unreadCount > 0,
-                    unseenCount = libManga.unreadCount.toInt(),
-                    isStarted = libManga.hasStarted,
-                )
-                miListaItems.add(mediaItem)
-                categoryGroups.getOrPut(catName) { mutableListOf() }.add(mediaItem)
-            }
-        }
-
-        miListaItems.sortBy { it.title.lowercase() }
-
-        // Sort items inside each category title
-        categoryGroups.forEach { (_, list) ->
-            list.sortBy { it.title.lowercase() }
-        }
-
-        // Sort categories: "Mi Lista" first, others alphabetically
-        val localRows = categoryGroups.map { (name, items) ->
-            KitsuXCategoryRow(name, items)
-        }.sortedWith { a, b ->
-            when {
-                a.name == homeDefaultCategory -> -1
-                b.name == homeDefaultCategory -> 1
-                else -> a.name.compareTo(b.name, ignoreCase = true)
-            }
-        }
-
-        val allCategories = mutableListOf<KitsuXCategoryRow>()
-
-        // 1. "Mi Lista" top: aggregate all active library entries.
-        if (miListaItems.isNotEmpty()) {
-            allCategories.add(KitsuXCategoryRow(homeDefaultCategory, miListaItems))
-        }
-
-        // 2. Intelligent/Recommendation rows
-        if (showRecommendations) {
-            if (showAnime && jikanData.recommendedAnime.isNotEmpty()) {
-                allCategories.add(
-                    KitsuXCategoryRow(
-                        context.stringResource(MR.strings.kitsux_home_recommended_for_you),
-                        jikanData.recommendedAnime,
-                    ),
-                )
-            }
-
+        val libraryItems = buildList {
             if (showAnime) {
-                jikanData.genreRecommendations.forEach { (genre, items) ->
-                    if (items.isNotEmpty()) {
-                        allCategories.add(
-                            KitsuXCategoryRow(
-                                context.stringResource(MR.strings.kitsux_home_because_you_like, genre),
-                                items,
+                libraryAnime.distinctBy { it.id }.forEach { entry ->
+                    add(
+                        HomeLibraryCandidate(
+                            item = entry.anime.toMediaItem().copy(
+                                hasUpdates = entry.unseenCount > 0,
+                                unseenCount = entry.unseenCount.toInt(),
+                                isStarted = entry.hasStarted,
                             ),
-                        )
-                    }
+                            lastViewedAt = entry.lastSeen,
+                            latestContentAt = maxOf(entry.latestUpload, entry.episodeFetchedAt),
+                            addedAt = entry.anime.dateAdded,
+                        ),
+                    )
                 }
             }
-
-            if (showAnime && jikanData.similarToLastWatched.isNotEmpty()) {
-                allCategories.add(
-                    KitsuXCategoryRow(
-                        context.stringResource(MR.strings.kitsux_home_similar_to_watched),
-                        jikanData.similarToLastWatched,
-                    ),
-                )
-            }
-
-            if (showAnime && jikanData.recommendedAnime.isNotEmpty()) {
-                allCategories.add(
-                    KitsuXCategoryRow(
-                        context.stringResource(MR.strings.kitsux_home_popular_this_week),
-                        jikanData.recommendedAnime,
-                    ),
-                )
-            }
-
-            if (showManga && jikanData.recommendedManga.isNotEmpty()) {
-                allCategories.add(
-                    KitsuXCategoryRow(
-                        context.stringResource(MR.strings.kitsux_home_popular_manga),
-                        jikanData.recommendedManga,
-                    ),
-                )
+            if (showManga) {
+                libraryManga.distinctBy { it.id }.forEach { entry ->
+                    add(
+                        HomeLibraryCandidate(
+                            item = entry.manga.toMediaItem().copy(
+                                hasUpdates = entry.unreadCount > 0,
+                                unseenCount = entry.unreadCount.toInt(),
+                                isStarted = entry.hasStarted,
+                            ),
+                            lastViewedAt = entry.lastRead,
+                            latestContentAt = maxOf(entry.latestUpload, entry.chapterFetchedAt),
+                            addedAt = entry.manga.dateAdded,
+                        ),
+                    )
+                }
             }
         }
-
-        // 3. User custom categories below
-        localRows.filter { it.name != homeDefaultCategory }.forEach { allCategories.add(it) }
+        val heroItems = libraryItems
+            .sortedWith(
+                compareBy<HomeLibraryCandidate> { it.priority }
+                    .thenByDescending { it.relevantAt }
+                    .thenByDescending { it.addedAt },
+            )
+            .take(5)
+            .map { it.item }
+        val recentlyAdded = libraryItems
+            .sortedByDescending { it.addedAt }
+            .take(12)
+            .map { it.item }
 
         KitsuXHomeState(
-            heroBannerItems = if (showAnime && showHeroBanner) {
-                jikanData.heroBannerItems.enrichWithLibraryEntries(libraryAnime, libraryManga)
-            } else {
-                emptyList()
-            },
+            heroBannerItems = if (showHeroBanner) heroItems else emptyList(),
             continueWatching = sortedContinueWatching,
             continueReading = sortedContinueReading,
             newReleaseGroups = newReleaseGroups,
-            categories = allCategories,
+            recentlyAdded = recentlyAdded,
+            isLibraryEmpty = libraryAnime.isEmpty() && libraryManga.isEmpty(),
             isLoading = false,
         )
-    }.stateIn(
+    }.flowOn(Dispatchers.IO).stateIn(
         scope = screenModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = KitsuXHomeState(isLoading = true),
@@ -505,82 +388,41 @@ class KitsuXHomeScreenModel(
         id = id,
         title = title,
         thumbnailUrl = thumbnailUrl,
+        heroArtworkUrl = backgroundUrl,
         description = description ?: "",
         genres = genre ?: emptyList(),
         isAnime = true,
+        sourceName = animeSourceManager.get(source)?.name.orEmpty(),
         realModel = this,
     )
-
-    private fun List<KitsuXMediaItem>.enrichWithLibraryEntries(
-        libraryAnime: List<LibraryAnime>,
-        libraryManga: List<LibraryManga>,
-    ): List<KitsuXMediaItem> {
-        val animeByTitle = libraryAnime.associateBy { it.anime.title.normalizedHomeTitle() }
-        val mangaByTitle = libraryManga.associateBy { it.manga.title.normalizedHomeTitle() }
-        return map { item ->
-            if (item.isAnime) {
-                val local = animeByTitle[item.title.normalizedHomeTitle()]
-                if (local != null) {
-                    item.copy(
-                        id = local.id,
-                        thumbnailUrl = local.anime.thumbnailUrl ?: item.thumbnailUrl,
-                        description = local.anime.description ?: item.description,
-                        genres = local.anime.genre ?: item.genres,
-                        realModel = local.anime,
-                        hasUpdates = local.unseenCount > 0,
-                        unseenCount = local.unseenCount.toInt(),
-                        isRecommendation = false,
-                        isStarted = local.hasStarted,
-                    )
-                } else {
-                    item
-                }
-            } else {
-                val local = mangaByTitle[item.title.normalizedHomeTitle()]
-                if (local != null) {
-                    item.copy(
-                        id = local.id,
-                        thumbnailUrl = local.manga.thumbnailUrl ?: item.thumbnailUrl,
-                        description = local.manga.description ?: item.description,
-                        genres = local.manga.genre ?: item.genres,
-                        realModel = local.manga,
-                        hasUpdates = local.unreadCount > 0,
-                        unseenCount = local.unreadCount.toInt(),
-                        isRecommendation = false,
-                        isStarted = local.hasStarted,
-                    )
-                } else {
-                    item
-                }
-            }
-        }
-    }
-
-    private fun String.normalizedHomeTitle(): String {
-        return lowercase()
-            .replace(Regex("[^a-z0-9áéíóúñ]+"), "")
-    }
 
     private fun Episode.toContinueWatchingItem(
         anime: LibraryAnime,
         lastSeen: Long,
         isNewEpisode: Boolean,
-        progressTextOverride: String? = null,
     ): ContinueWatchingItem {
         val progress = if (!isNewEpisode && totalSeconds > 0) {
             (lastSecondSeen.toFloat() / totalSeconds.toFloat()).coerceIn(0f, 1f)
         } else {
             0f
         }
-        val progressLabel = progressTextOverride ?: if (!isNewEpisode && totalSeconds > 0 && lastSecondSeen > 0) {
+        val episodeLabel = if (isRecognizedNumber) {
+            context.stringResource(MR.strings.kitsux_home_episode_number, episodeNumber.toInt())
+        } else {
+            name
+        }
+        val progressLabel = if (!isNewEpisode && totalSeconds > 0 && lastSecondSeen > 0) {
             val remainingSecs = (totalSeconds - lastSecondSeen) / 1000
             if (remainingSecs > 60) {
-                context.stringResource(MR.strings.kitsux_home_minutes_remaining, remainingSecs / 60)
+                "$episodeLabel · ${context.stringResource(
+                    MR.strings.kitsux_home_minutes_remaining,
+                    remainingSecs / 60,
+                )}"
             } else {
-                context.stringResource(MR.strings.kitsux_home_episode_number, episodeNumber.toInt())
+                episodeLabel
             }
         } else {
-            context.stringResource(MR.strings.kitsux_home_episode_number, episodeNumber.toInt())
+            episodeLabel
         }
         val mediaItem = anime.anime.toMediaItem().copy(
             hasUpdates = isNewEpisode,
@@ -610,6 +452,7 @@ class KitsuXHomeScreenModel(
         description = description ?: "",
         genres = genre ?: emptyList(),
         isAnime = false,
+        sourceName = mangaSourceManager.get(source)?.name.orEmpty(),
         realModel = this,
     )
 
@@ -625,7 +468,7 @@ class KitsuXHomeScreenModel(
             thumbnailUrl = manga.thumbnailUrl,
             isAnime = false,
             lastSeen = lastUpdate,
-            progressText = context.stringResource(MR.strings.kitsux_home_new_badge),
+            progressText = context.stringResource(MR.strings.kitsux_home_new_chapters_count, unreadCount.toInt()),
             mediaItem = mediaItem,
             hasUpdates = true,
             unseenCount = unreadCount.toInt(),
@@ -777,11 +620,6 @@ class KitsuXHomeScreenModel(
 
     fun refresh() {
         screenModelScope.launch {
-            try {
-                KitsuXIntelSystem.loadAllRecommendations()
-            } catch (e: Exception) {
-                logcat(LogPriority.ERROR, e) { "Failed to reload recommendations" }
-            }
             withContext(Dispatchers.Main) {
                 AnimeLibraryUpdateJob.startNow(context)
                 MangaLibraryUpdateJob.startNow(context)
@@ -795,7 +633,8 @@ data class KitsuXHomeState(
     val continueWatching: List<ContinueWatchingItem> = emptyList(),
     val continueReading: List<ContinueWatchingItem> = emptyList(),
     val newReleaseGroups: List<KitsuXNewReleaseGroup> = emptyList(),
-    val categories: List<KitsuXCategoryRow> = emptyList(),
+    val recentlyAdded: List<KitsuXMediaItem> = emptyList(),
+    val isLibraryEmpty: Boolean = true,
     val isLoading: Boolean = true,
 )
 
@@ -804,15 +643,11 @@ data class KitsuXNewReleaseGroup(
     val items: List<ContinueWatchingItem>,
 )
 
-data class KitsuXCategoryRow(
-    val name: String,
-    val items: List<KitsuXMediaItem>,
-)
-
 data class ContinueWatchingItem(
     val id: Long,
     val title: String,
     val thumbnailUrl: String?,
+    val heroArtworkUrl: String? = null,
     val isAnime: Boolean,
     val lastSeen: Long,
     val progressText: String,
@@ -833,6 +668,8 @@ data class KitsuXMediaItem(
     val id: Long,
     val title: String,
     val thumbnailUrl: String?,
+    val heroArtworkUrl: String? = null,
+    val sourceName: String = "",
     val description: String,
     val genres: List<String>,
     val rating: String = "8.8",
@@ -842,54 +679,36 @@ data class KitsuXMediaItem(
     val unseenCount: Int = 0,
     val isRecommendation: Boolean = false,
     val isStarted: Boolean = false,
-)
+) {
+    val coverData: EntryCover?
+        get() = when (val entry = realModel) {
+            is Anime -> entry.asAnimeCover()
+            is Manga -> entry.asMangaCover()
+            else -> null
+        }
+}
 
 private data class HomePreferenceState(
     val showAnime: Boolean,
     val showManga: Boolean,
-    val showRecommendations: Boolean,
     val showHeroBanner: Boolean,
 )
 
-data class JikanData(
-    val heroBannerItems: List<KitsuXMediaItem>,
-    val recommendedAnime: List<KitsuXMediaItem>,
-    val recommendedManga: List<KitsuXMediaItem>,
-    val genreRecommendations: Map<String, List<KitsuXMediaItem>>,
-    val similarToLastWatched: List<KitsuXMediaItem>,
-)
+private data class HomeLibraryCandidate(
+    val item: KitsuXMediaItem,
+    val lastViewedAt: Long,
+    val latestContentAt: Long,
+    val addedAt: Long,
+) {
+    val priority: Int
+        get() = when {
+            item.isStarted && item.hasUpdates -> 0
+            lastViewedAt > 0 -> 1
+            item.isStarted -> 2
+            item.hasUpdates -> 3
+            else -> 4
+        }
 
-private fun String?.toHomeCategoryName(defaultName: String): String {
-    if (isNullOrBlank() || equals("Default", ignoreCase = true)) return defaultName
-    return if (looksLikeSourceTagCategory(this)) defaultName else this
+    val relevantAt: Long
+        get() = if (item.hasUpdates) maxOf(lastViewedAt, latestContentAt) else lastViewedAt
 }
-
-private fun looksLikeSourceTagCategory(name: String): Boolean {
-    val normalized = name.trim().lowercase()
-    return normalized in SOURCE_TAG_CATEGORY_NAMES ||
-        (normalized.contains("anime") && normalized !in ALLOWED_ANIME_CATEGORY_NAMES) ||
-        normalized.endsWith("flv") ||
-        normalized.contains("jkanime") ||
-        normalized.contains("otakus")
-}
-
-private fun String.isCompletedHomeCategory(localizedName: String): Boolean {
-    return equals(localizedName, ignoreCase = true) ||
-        equals("Terminados", ignoreCase = true) ||
-        equals("Terminado", ignoreCase = true)
-}
-
-private val ALLOWED_ANIME_CATEGORY_NAMES = setOf("anime", "animes")
-
-private val SOURCE_TAG_CATEGORY_NAMES = setOf(
-    "anime flv",
-    "anime id",
-    "anime movil",
-    "anime online",
-    "anime tv",
-    "anime yt",
-    "anime-pro",
-    "descargar animes",
-    "jk anime",
-    "series flv",
-)

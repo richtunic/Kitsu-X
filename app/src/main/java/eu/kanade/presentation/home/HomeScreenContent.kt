@@ -2,7 +2,6 @@ package eu.kanade.presentation.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -27,15 +26,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.CollectionsBookmark
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,10 +50,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
+import eu.kanade.presentation.components.HomeLoadingSkeleton
+import eu.kanade.presentation.components.MediaProgressCard
 import eu.kanade.presentation.entries.components.ItemCover
+import eu.kanade.presentation.theme.KitsuXLayoutTokens
 import eu.kanade.tachiyomi.ui.home.ContinueWatchingItem
 import eu.kanade.tachiyomi.ui.home.KitsuXHomeState
 import eu.kanade.tachiyomi.ui.home.KitsuXMediaItem
+import eu.kanade.tachiyomi.ui.home.KitsuXNewReleaseGroup
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
@@ -66,26 +67,18 @@ import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun HomeScreenContent(
+    bottomPadding: androidx.compose.ui.unit.Dp = 0.dp,
     state: KitsuXHomeState,
     onItemClick: (KitsuXMediaItem) -> Unit,
     onHeroClick: (KitsuXMediaItem) -> Unit,
     onContinueClick: (ContinueWatchingItem) -> Unit,
     onRemoveContinueItem: (ContinueWatchingItem) -> Unit,
+    onExploreClick: () -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     if (state.isLoading) {
-        Box(
-            modifier = modifier
-                .fillMaxSize()
-                .background(Color(0xFF000000)),
-            contentAlignment = Alignment.Center,
-        ) {
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.primary,
-                strokeWidth = 3.dp,
-            )
-        }
+        HomeLoadingSkeleton(modifier)
         return
     }
 
@@ -157,12 +150,12 @@ fun HomeScreenContent(
         if (continueWatchingItems.isEmpty() &&
             continueReadingItems.isEmpty() &&
             state.newReleaseGroups.isEmpty() &&
-            state.categories.isEmpty()
+            state.recentlyAdded.isEmpty()
         ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFF000000))
+                    .background(MaterialTheme.colorScheme.background)
                     .verticalScroll(rememberScrollState())
                     .padding(32.dp),
                 contentAlignment = Alignment.Center,
@@ -172,32 +165,49 @@ fun HomeScreenContent(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.fillMaxWidth(),
                 ) {
-                    Text(
-                        text = "🍿",
-                        fontSize = 64.sp,
+                    Icon(
+                        imageVector = Icons.Outlined.CollectionsBookmark,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(48.dp),
                     )
                     Text(
-                        text = stringResource(MR.strings.kitsux_home_empty_library_title),
+                        text = stringResource(
+                            if (state.isLibraryEmpty) {
+                                MR.strings.kitsux_home_empty_library_title
+                            } else {
+                                MR.strings.kitsux_home_nothing_to_show_title
+                            },
+                        ),
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
                             letterSpacing = 0.1.sp,
                         ),
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onBackground,
                         textAlign = TextAlign.Center,
                     )
                     Text(
-                        text = stringResource(MR.strings.kitsux_home_empty_library_description),
+                        text = stringResource(
+                            if (state.isLibraryEmpty) {
+                                MR.strings.kitsux_home_empty_library_description
+                            } else {
+                                MR.strings.kitsux_home_nothing_to_show_description
+                            },
+                        ),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 16.dp),
                     )
+                    TextButton(onClick = onExploreClick) {
+                        Text(stringResource(MR.strings.browse))
+                    }
                 }
             }
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 16.dp),
+                contentPadding = PaddingValues(bottom = bottomPadding + 16.dp),
             ) {
                 // Spacer to avoid status bar overlap and add premium top spacing
                 item {
@@ -207,11 +217,15 @@ fun HomeScreenContent(
                 // Hero Banner Section (Slider)
                 if (state.heroBannerItems.isNotEmpty()) {
                     item {
-                        HeroBannerSection(
-                            items = state.heroBannerItems,
-                            onClick = onHeroClick,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                        )
+                        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            HeroBannerSection(
+                                items = state.heroBannerItems,
+                                onClick = onHeroClick,
+                                modifier = Modifier
+                                    .widthIn(max = KitsuXLayoutTokens.heroMaxWidth)
+                                    .padding(horizontal = KitsuXLayoutTokens.gutter, vertical = 8.dp),
+                            )
+                        }
                     }
                 }
 
@@ -223,6 +237,7 @@ fun HomeScreenContent(
                             items = continueWatchingItems,
                             onContinueClick = onContinueClick,
                             onContinueLongClick = { itemToRemove = it },
+                            onDetails = onItemClick,
                         )
                     }
                 }
@@ -235,36 +250,27 @@ fun HomeScreenContent(
                             items = continueReadingItems,
                             onContinueClick = onContinueClick,
                             onContinueLongClick = { itemToRemove = it },
+                            onDetails = onItemClick,
                         )
                     }
                 }
 
                 if (state.newReleaseGroups.isNotEmpty()) {
                     item {
-                        Column {
-                            SectionTitle(title = stringResource(MR.strings.kitsux_home_news_tray))
-                            state.newReleaseGroups.forEach { group ->
-                                ContinueWatchingSection(
-                                    title = group.title,
-                                    items = group.items,
-                                    onContinueClick = onContinueClick,
-                                    onContinueLongClick = {},
-                                )
-                            }
-                        }
+                        NewReleaseSection(
+                            groups = state.newReleaseGroups,
+                            onItemClick = onItemClick,
+                        )
                     }
                 }
 
-                // 2. Custom Category Rows
-                state.categories.forEach { categoryRow ->
-                    if (categoryRow.items.isNotEmpty()) {
-                        item(key = categoryRow.name) {
-                            MediaSection(
-                                title = categoryRow.name,
-                                items = categoryRow.items,
-                                onItemClick = onItemClick,
-                            )
-                        }
+                if (state.recentlyAdded.isNotEmpty()) {
+                    item {
+                        MediaSection(
+                            title = stringResource(MR.strings.kitsux_home_recently_added),
+                            items = state.recentlyAdded,
+                            onItemClick = onItemClick,
+                        )
                     }
                 }
             }
@@ -278,6 +284,7 @@ fun ContinueWatchingSection(
     items: List<ContinueWatchingItem>,
     onContinueClick: (ContinueWatchingItem) -> Unit,
     onContinueLongClick: (ContinueWatchingItem) -> Unit,
+    onDetails: (KitsuXMediaItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -288,136 +295,79 @@ fun ContinueWatchingSection(
         SectionTitle(title = title ?: stringResource(MR.strings.kitsux_home_continue_watching))
 
         LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            contentPadding = PaddingValues(horizontal = KitsuXLayoutTokens.gutter),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.fillMaxWidth(),
         ) {
             val distinctItems = items.distinctBy { "${it.id}_${it.isAnime}" }
             items(distinctItems, key = { "${it.id}_${it.isAnime}" }) { continueItem ->
-                Box(
-                    modifier = Modifier
-                        .width(180.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(Color(0xFF141414))
-                        .combinedClickable(
-                            onClick = { onContinueClick(continueItem) },
-                            onLongClick = { onContinueLongClick(continueItem) },
-                        ),
-                ) {
-                    Column {
-                        // Poster thumb aspect ratio (16:9)
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .aspectRatio(1.77f),
-                        ) {
-                            ItemCover.Thumb(
-                                data = continueItem.thumbnailUrl,
+                MediaProgressCard(
+                    title = continueItem.mediaItem.title,
+                    coverData = continueItem.mediaItem.coverData ?: continueItem.thumbnailUrl,
+                    progressText = continueItem.progressText,
+                    progress = continueItem.episodeProgress,
+                    isAnime = continueItem.isAnime,
+                    hasUpdates = continueItem.hasUpdates,
+                    unseenCount = continueItem.unseenCount,
+                    onContinue = { onContinueClick(continueItem) },
+                    onRemove = { onContinueLongClick(continueItem) },
+                    onDetails = { onDetails(continueItem.mediaItem) },
+                    sourceName = continueItem.mediaItem.sourceName,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun NewReleaseSection(
+    groups: List<KitsuXNewReleaseGroup>,
+    onItemClick: (KitsuXMediaItem) -> Unit,
+) {
+    Column(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
+        SectionTitle(stringResource(MR.strings.kitsux_home_news_tray))
+        LazyRow(
+            contentPadding = PaddingValues(horizontal = KitsuXLayoutTokens.gutter),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            groups.forEach { group ->
+                items(group.items, key = { "${it.isAnime}_${it.id}" }) { item ->
+                    Column(
+                        modifier = Modifier.width(108.dp).clickable { onItemClick(item.mediaItem) },
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        Box(modifier = Modifier.fillMaxWidth().aspectRatio(0.67f).clip(RoundedCornerShape(6.dp))) {
+                            ItemCover.Book(
+                                data = item.mediaItem.coverData ?: item.thumbnailUrl,
                                 modifier = Modifier.fillMaxSize(),
                             )
-
-                            // Play overlay icon in the middle
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(Color.Black.copy(alpha = 0.25f)),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(RoundedCornerShape(18.dp))
-                                        .background(Color.Black.copy(alpha = 0.6f)),
-                                    contentAlignment = Alignment.Center,
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.PlayArrow,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(24.dp),
-                                    )
-                                }
-                            }
-
-                            // "NUEVO" update badge at top left of thumbnail
-                            if (continueItem.hasUpdates) {
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.TopStart)
-                                        .padding(6.dp)
-                                        .clip(RoundedCornerShape(3.dp))
-                                        .background(Color(0xFFE50914)) // Rojo KitsuX
-                                        .padding(horizontal = 6.dp, vertical = 2.dp),
-                                ) {
-                                    val text = if (continueItem.unseenCount > 0) {
-                                        stringResource(MR.strings.kitsux_home_new_count, continueItem.unseenCount)
-                                    } else {
-                                        stringResource(MR.strings.kitsux_home_new_badge)
-                                    }
-                                    Text(
-                                        text = text,
-                                        color = Color.White,
-                                        fontSize = 9.sp,
-                                        fontWeight = FontWeight.Bold,
-                                    )
-                                }
-                            }
-
-                            // Episode progress text at bottom right
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .padding(6.dp)
-                                    .clip(RoundedCornerShape(3.dp))
-                                    .background(Color.Black.copy(alpha = 0.7f))
-                                    .padding(horizontal = 6.dp, vertical = 2.dp),
-                            ) {
-                                Text(
-                                    text = continueItem.progressText,
-                                    color = Color.White,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                            }
+                            Text(
+                                text = stringResource(MR.strings.kitsux_home_new_badge),
+                                modifier = Modifier.align(Alignment.TopStart)
+                                    .padding(4.dp)
+                                    .background(Color(0xFFE50914), RoundedCornerShape(3.dp))
+                                    .padding(horizontal = 5.dp, vertical = 2.dp),
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                            )
                         }
-
-                        // Progress indicator (Dynamic progress bar)
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(3.dp)
-                                .background(Color.Gray.copy(alpha = 0.4f)),
-                        ) {
-                            if (continueItem.episodeProgress > 0f) {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxHeight()
-                                        .fillMaxWidth(continueItem.episodeProgress)
-                                        .background(Color(0xFFE50914)),
-                                )
-                            }
-                        }
-
-                        // Text Title (Crunchyroll-style bold)
                         Text(
-                            text = continueItem.mediaItem.title,
-                            color = Color.White,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
+                            item.title,
+                            maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 2.dp),
+                            style = MaterialTheme.typography.bodySmall,
                         )
-                        // Subtitle with type and progress info
-                        val mediaType = if (continueItem.isAnime) "Anime" else "Manga"
                         Text(
-                            text = "$mediaType • ${continueItem.progressText}",
-                            color = Color.Gray,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium,
+                            item.progressText,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                        )
+                        Text(
+                            group.title,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.labelSmall,
                         )
                     }
                 }
@@ -441,7 +391,7 @@ fun MediaSection(
         SectionTitle(title = title)
 
         LazyRow(
-            contentPadding = PaddingValues(horizontal = 16.dp),
+            contentPadding = PaddingValues(horizontal = KitsuXLayoutTokens.gutter),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.fillMaxWidth(),
         ) {
@@ -449,7 +399,7 @@ fun MediaSection(
             items(distinctItems, key = { "${it.id}_${it.isAnime}" }) { item ->
                 Column(
                     modifier = Modifier
-                        .width(125.dp)
+                        .width(108.dp)
                         .clickable { onItemClick(item) },
                 ) {
                     Box(
@@ -459,7 +409,7 @@ fun MediaSection(
                             .clip(RoundedCornerShape(6.dp)),
                     ) {
                         ItemCover.Book(
-                            data = item.thumbnailUrl,
+                            data = item.coverData ?: item.thumbnailUrl,
                             modifier = Modifier.fillMaxSize(),
                         )
 
@@ -523,7 +473,12 @@ fun SectionTitle(
         fontSize = 20.sp,
         fontWeight = FontWeight.Bold,
         color = Color.White,
-        modifier = modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 8.dp),
+        modifier = modifier.padding(
+            start = KitsuXLayoutTokens.gutter,
+            end = KitsuXLayoutTokens.gutter,
+            top = 12.dp,
+            bottom = 8.dp,
+        ),
     )
 }
 
@@ -537,17 +492,6 @@ fun HeroBannerSection(
 
     val pagerState = rememberPagerState(pageCount = { items.size })
 
-    // Auto-scroll loop
-    LaunchedEffect(pagerState) {
-        while (true) {
-            kotlinx.coroutines.delay(6000)
-            if (items.isNotEmpty()) {
-                val nextPage = (pagerState.currentPage + 1) % items.size
-                pagerState.animateScrollToPage(nextPage)
-            }
-        }
-    }
-
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -560,6 +504,9 @@ fun HeroBannerSection(
             modifier = Modifier.fillMaxSize(),
         ) { page ->
             val item = items[page]
+            var useCover by remember(item.id, item.heroArtworkUrl) {
+                mutableStateOf(item.heroArtworkUrl.isNullOrBlank())
+            }
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -567,10 +514,11 @@ fun HeroBannerSection(
             ) {
                 // Image
                 AsyncImage(
-                    model = item.thumbnailUrl,
+                    model = if (useCover) item.coverData ?: item.thumbnailUrl else item.heroArtworkUrl,
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop,
+                    onError = { if (!useCover) useCover = true },
                 )
 
                 // Gradient overlay (Netflix style)
@@ -596,31 +544,6 @@ fun HeroBannerSection(
                         .fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
-                    // Rating Badges
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .background(Color(0xFFE50914), RoundedCornerShape(3.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp),
-                        ) {
-                            Text(
-                                text = "POPULAR",
-                                color = Color.White,
-                                fontSize = 8.sp,
-                                fontWeight = FontWeight.Bold,
-                            )
-                        }
-                        Text(
-                            text = "★ ${item.rating}",
-                            color = Color(0xFFFFB300),
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-
                     // Title
                     Text(
                         text = item.title,
@@ -631,35 +554,21 @@ fun HeroBannerSection(
                         overflow = TextOverflow.Ellipsis,
                     )
 
-                    // Genres
-                    if (item.genres.isNotEmpty()) {
-                        Text(
-                            text = item.genres.take(3).joinToString(" • "),
-                            color = Color.LightGray,
-                            fontSize = 11.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-
-                    // Synopsis
-                    if (item.description.isNotBlank()) {
-                        Text(
-                            text = item.description,
-                            color = Color.Gray,
-                            fontSize = 11.sp,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            lineHeight = 15.sp,
-                        )
-                    }
+                    Text(
+                        text = if (item.unseenCount > 0) {
+                            stringResource(MR.strings.kitsux_home_new_count, item.unseenCount)
+                        } else {
+                            stringResource(MR.strings.kitsux_home_in_library)
+                        },
+                        color = Color.LightGray,
+                        fontSize = 11.sp,
+                    )
 
                     // Action Buttons
                     Row(
                         modifier = Modifier.padding(top = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                     ) {
-                        // Play / Search Button
                         Row(
                             modifier = Modifier
                                 .background(Color(0xFFE50914), RoundedCornerShape(4.dp))
@@ -668,19 +577,13 @@ fun HeroBannerSection(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.PlayArrow,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(14.dp),
-                            )
                             Text(
                                 text = when {
                                     item.isStarted && item.isAnime -> stringResource(
                                         MR.strings.kitsux_home_continue_watching,
                                     )
                                     item.isStarted -> stringResource(MR.strings.kitsux_home_continue_reading)
-                                    else -> stringResource(MR.strings.kitsux_home_watch_now)
+                                    else -> stringResource(MR.strings.kitsux_home_view_details)
                                 },
                                 color = Color.White,
                                 fontSize = 11.sp,

@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.core.model.ScreenModel
@@ -27,15 +28,19 @@ import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.manga.MangaDownloadManager
 import eu.kanade.tachiyomi.ui.category.CategoriesTab
 import eu.kanade.tachiyomi.ui.download.DownloadsTab
+import eu.kanade.tachiyomi.ui.history.HistoriesTab
+import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.setting.PlayerSettingsScreen
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.ui.stats.StatsTab
 import eu.kanade.tachiyomi.ui.storage.StorageTab
+import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -51,7 +56,7 @@ data object MoreTab : Tab {
             val isSelected = LocalTabNavigator.current.current.key == key
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_more_enter)
             return TabOptions(
-                index = 4u,
+                index = 5u,
                 title = stringResource(MR.strings.label_more),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
@@ -65,9 +70,9 @@ data object MoreTab : Tab {
     override fun Content() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
+        val scope = rememberCoroutineScope()
         val screenModel = rememberScreenModel { MoreScreenModel() }
         val downloadQueueState by screenModel.downloadQueueState.collectAsState()
-        val navStyle = currentNavigationStyle()
         val uiPreferences = remember { Injekt.get<UiPreferences>() }
         val showAnime by uiPreferences.showAnime().collectPreferencesAsState()
         MoreScreen(
@@ -76,11 +81,18 @@ data object MoreTab : Tab {
             onDownloadedOnlyChange = { screenModel.downloadedOnly = it },
             incognitoMode = screenModel.incognitoMode,
             onIncognitoModeChange = { screenModel.incognitoMode = it },
-            navStyle = navStyle,
             showAnime = showAnime,
-            onClickAlt = { navigator.push(navStyle.moreTab) },
+            onClickHistory = { navigator.push(HistoriesTab) },
+            onClickUpdates = { navigator.push(UpdatesTab) },
             onClickDownloadQueue = { navigator.push(DownloadsTab) },
             onClickCategories = { navigator.push(CategoriesTab) },
+            onClickSources = {
+                scope.launch { HomeScreen.openTab(HomeScreen.Tab.Browse(toSources = true, anime = showAnime)) }
+            },
+            onClickExtensions = {
+                scope.launch { HomeScreen.openTab(HomeScreen.Tab.Browse(toExtensions = true, anime = showAnime)) }
+            },
+            onClickTracking = { navigator.push(SettingsScreen(SettingsScreen.Destination.Tracking)) },
             onClickStats = { navigator.push(StatsTab) },
             onClickStorage = { navigator.push(StorageTab) },
             onClickDataAndStorage = { navigator.push(SettingsScreen(SettingsScreen.Destination.DataAndStorage)) },

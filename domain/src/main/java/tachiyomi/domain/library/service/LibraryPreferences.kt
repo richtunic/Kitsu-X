@@ -15,6 +15,13 @@ class LibraryPreferences(
     private val preferenceStore: PreferenceStore,
 ) {
 
+    enum class OrganizationOnAdd { Automatic, Ask, DefaultCategory, Uncategorized }
+
+    fun organizationOnAdd() = preferenceStore.getEnum(
+        "library_organization_on_add",
+        OrganizationOnAdd.Automatic,
+    )
+
     fun displayMode() = preferenceStore.getObject(
         "pref_display_mode_library",
         LibraryDisplayMode.default,
@@ -155,6 +162,14 @@ class LibraryPreferences(
 
     fun lastUsedAnimeCategory() = preferenceStore.getInt(Preference.appStateKey("last_used_anime_category"), 0)
     fun lastUsedMangaCategory() = preferenceStore.getInt(Preference.appStateKey("last_used_category"), 0)
+    fun animeAllTabIndexMigrated() = preferenceStore.getBoolean(
+        Preference.appStateKey("anime_all_tab_index_migrated"),
+        false,
+    )
+    fun mangaAllTabIndexMigrated() = preferenceStore.getBoolean(
+        Preference.appStateKey("manga_all_tab_index_migrated"),
+        false,
+    )
 
     fun animeUpdateCategories() =
         preferenceStore.getStringSet(LIBRARY_UPDATE_ANIME_CATEGORIES_PREF_KEY, emptySet())

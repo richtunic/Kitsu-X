@@ -3,12 +3,15 @@ package eu.kanade.presentation.history.anime
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.relativeDateText
 import eu.kanade.presentation.history.anime.components.AnimeHistoryItem
 import eu.kanade.presentation.theme.TachiyomiPreviewTheme
@@ -18,8 +21,8 @@ import tachiyomi.domain.history.anime.model.AnimeHistoryWithRelations
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
-import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.material.Scaffold
+import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
 import java.time.LocalDate
@@ -88,9 +91,15 @@ private fun AnimeHistoryScreenContent(
         ) { item ->
             when (item) {
                 is AnimeHistoryUiModel.Header -> {
-                    ListGroupHeader(
-                        modifier = Modifier.animateItemFastScroll(),
-                        text = relativeDateText(item.date),
+                    Text(
+                        modifier = Modifier.animateItemFastScroll().padding(horizontal = 20.dp, vertical = 16.dp),
+                        text = when (item.date) {
+                            LocalDate.now() -> stringResource(MR.strings.kitsux_home_today)
+                            LocalDate.now().minusDays(1) -> stringResource(MR.strings.kitsux_home_yesterday)
+                            else -> relativeDateText(item.date)
+                        },
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
                 is AnimeHistoryUiModel.Item -> {

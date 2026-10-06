@@ -50,20 +50,15 @@ fun TabbedScreen(
     Scaffold(
         topBar = {
             if (titleRes != null) {
-                val tab = tabs[state.currentPage]
+                val tab = tabs.getOrElse(state.currentPage) { tabs.last() }
                 val searchEnabled = tab.searchEnabled
 
-                val actualQuery = when (state.currentPage % 2) {
-                    1 -> mangaSearchQuery // History and Browse
-                    else -> animeSearchQuery
-                }
-
-                val actualOnChange = when (state.currentPage % 2) {
-                    1 -> onChangeMangaSearchQuery // History and Browse
-                    else -> onChangeAnimeSearchQuery
-                }
+                val searchManga = tab.searchManga ?: (state.currentPage % 2 == 1)
+                val actualQuery = if (searchManga) mangaSearchQuery else animeSearchQuery
+                val actualOnChange = if (searchManga) onChangeMangaSearchQuery else onChangeAnimeSearchQuery
 
                 SearchToolbar(
+                    backgroundColor = MaterialTheme.colorScheme.background,
                     titleContent = {
                         AppBarTitle(
                             stringResource(titleRes),
@@ -126,6 +121,7 @@ data class TabContent(
     val titleRes: StringResource,
     val badgeNumber: Int? = null,
     val searchEnabled: Boolean = false,
+    val searchManga: Boolean? = null,
     val actions: ImmutableList<AppBar.AppBarAction> = persistentListOf(),
     val content: @Composable (contentPadding: PaddingValues, snackbarHostState: SnackbarHostState) -> Unit,
     val numberTitle: Int = 0,
@@ -143,12 +139,16 @@ private fun FlexibleTabRow(
         ScrollableTabRow(
             selectedTabIndex = selectedTabIndex,
             edgePadding = 13.dp,
+            containerColor = MaterialTheme.colorScheme.background,
+            divider = {},
             modifier = Modifier.zIndex(1f),
         ) {
             block()
         }
     } else {
         PrimaryTabRow(
+            containerColor = MaterialTheme.colorScheme.background,
+            divider = {},
             selectedTabIndex = selectedTabIndex,
             modifier = Modifier.zIndex(1f),
         ) {

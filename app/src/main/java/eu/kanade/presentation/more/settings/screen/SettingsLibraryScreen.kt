@@ -15,6 +15,7 @@ import androidx.core.content.ContextCompat
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.category.visualName
 import eu.kanade.presentation.more.settings.Preference
 import eu.kanade.presentation.more.settings.PreferenceItem
@@ -63,6 +64,7 @@ object SettingsLibraryScreen : SearchableSettings {
         val getAnimeCategories = remember { Injekt.get<GetAnimeCategories>() }
         val allAnimeCategories by getAnimeCategories.subscribe().collectAsState(initial = emptyList())
         val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
+        val uiPreferences = remember { Injekt.get<UiPreferences>() }
 
         return listOf(
             getCategoriesGroup(
@@ -70,6 +72,7 @@ object SettingsLibraryScreen : SearchableSettings {
                 allCategories,
                 allAnimeCategories,
                 libraryPreferences,
+                uiPreferences,
             ),
             getGlobalUpdateGroup(allCategories, allAnimeCategories, libraryPreferences),
             getSeasonBehaviorGroup(libraryPreferences),
@@ -84,6 +87,7 @@ object SettingsLibraryScreen : SearchableSettings {
         allCategories: List<Category>,
         allAnimeCategories: List<Category>,
         libraryPreferences: LibraryPreferences,
+        uiPreferences: UiPreferences,
     ): Preference.PreferenceGroup {
         val scope = rememberCoroutineScope()
         val userCategoriesCount = allCategories.filterNot(Category::isSystemCategory).size
@@ -103,6 +107,24 @@ object SettingsLibraryScreen : SearchableSettings {
         return Preference.PreferenceGroup(
             title = stringResource(AYMR.strings.general_categories),
             preferenceItems = persistentListOf(
+                Preference.PreferenceItem.ListPreference(
+                    preference = libraryPreferences.organizationOnAdd(),
+                    entries = persistentMapOf(
+                        LibraryPreferences.OrganizationOnAdd.Automatic to
+                            stringResource(MR.strings.kitsux_organization_automatic),
+                        LibraryPreferences.OrganizationOnAdd.Ask to stringResource(MR.strings.kitsux_organization_ask),
+                        LibraryPreferences.OrganizationOnAdd.DefaultCategory to
+                            stringResource(MR.strings.kitsux_organization_default),
+                        LibraryPreferences.OrganizationOnAdd.Uncategorized to
+                            stringResource(MR.strings.kitsux_organization_none),
+                    ),
+                    title = stringResource(MR.strings.kitsux_organization_on_add),
+                ),
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = uiPreferences.autoCategorizeLibrary(),
+                    title = stringResource(MR.strings.kitsux_pref_auto_category),
+                    subtitle = stringResource(MR.strings.kitsux_pref_auto_category_summary),
+                ),
                 Preference.PreferenceItem.TextPreference(
                     title = stringResource(AYMR.strings.action_edit_anime_categories),
                     subtitle = pluralStringResource(

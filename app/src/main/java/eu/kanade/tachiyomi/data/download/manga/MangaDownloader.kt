@@ -9,6 +9,7 @@ import eu.kanade.domain.items.chapter.model.toSChapter
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.download.manga.model.MangaDownload
+import eu.kanade.tachiyomi.data.download.prepareMangaRetry
 import eu.kanade.tachiyomi.data.library.manga.MangaLibraryUpdateNotifier
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
 import eu.kanade.tachiyomi.source.UnmeteredSource
@@ -29,7 +30,6 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapMerge
@@ -66,6 +66,7 @@ import tachiyomi.i18n.aniyomi.AYMR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
+import java.io.IOException
 import java.util.Locale
 
 /**
@@ -115,6 +116,7 @@ class MangaDownloader(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var downloaderJob: Job? = null
+    private val retryGeneration = MutableStateFlow(0L)
 
     /**
      * Whether the downloader is running.
@@ -141,18 +143,21 @@ class MangaDownloader(
      *
      * @return true if the downloader is started, false otherwise.
      */
-    fun start(): Boolean {
-        if (isRunning || queueState.value.isEmpty()) {
-            return false
+    fun start(retryId: Long? = null): Boolean {
+        if (queueState.value.isEmpty() || (isRunning && retryId == null)) return false
+        if (retryId != null && !prepareMangaRetry(queueState.value, retryId)) return false
+        if (isRunning) {
+            retryGeneration.update { it + 1 }
+            return true
         }
-
-        val pending = queueState.value.filter { it.status != MangaDownload.State.DOWNLOADED }
+        val pending = queueState.value.filter {
+            it.status != MangaDownload.State.DOWNLOADED &&
+                (retryId == null || it.status != MangaDownload.State.ERROR)
+        }
         pending.forEach { if (it.status != MangaDownload.State.QUEUE) it.status = MangaDownload.State.QUEUE }
-
         isPaused = false
 
         launchDownloaderJob()
-
         return pending.isNotEmpty()
     }
 
@@ -209,7 +214,9 @@ class MangaDownloader(
         if (isRunning) return
 
         downloaderJob = scope.launch {
-            val activeDownloadsFlow = queueState.transformLatest { queue ->
+            val activeDownloadsFlow = combine(queueState, retryGeneration) { queue, _ ->
+                queue
+            }.transformLatest { queue ->
                 while (true) {
                     val activeDownloads = queue.asSequence()
                         .filter {
@@ -228,13 +235,14 @@ class MangaDownloader(
                         }.filter { it }
                     activeDownloadsErroredFlow.first()
                 }
-            }.distinctUntilChanged()
+            }
 
             // Use supervisorScope to cancel child jobs when the downloader job is cancelled
             supervisorScope {
                 val downloadJobs = mutableMapOf<MangaDownload, Job>()
 
                 activeDownloadsFlow.collectLatest { activeDownloads ->
+                    downloadJobs.entries.removeAll { !it.value.isActive }
                     val downloadJobsToStop = downloadJobs.filter { it.key !in activeDownloads }
                     downloadJobsToStop.forEach { (download, job) ->
                         job.cancel()
@@ -243,7 +251,9 @@ class MangaDownloader(
 
                     val downloadsToStart = activeDownloads.filter { it !in downloadJobs }
                     downloadsToStart.forEach { download ->
-                        downloadJobs[download] = launchDownloadJob(download)
+                        downloadJobs[download] = launchDownloadJob(download).also { job ->
+                            job.invokeOnCompletion { retryGeneration.update { it + 1 } }
+                        }
                     }
                 }
             }
@@ -263,6 +273,8 @@ class MangaDownloader(
             }
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
+            download.errorMessage = e.message
+            download.status = MangaDownload.State.ERROR
             logcat(LogPriority.ERROR, e)
             notifier.onError(e.message)
             stop()
@@ -332,13 +344,15 @@ class MangaDownloader(
      * @param download the chapter to be downloaded.
      */
     private suspend fun downloadChapter(download: MangaDownload) {
+        download.errorMessage = null
         val mangaDir = provider.getMangaDir(download.manga.title, download.source)
 
         val availSpace = DiskUtil.getAvailableStorageSpace(mangaDir)
         if (availSpace != -1L && availSpace < MIN_DISK_SPACE) {
+            download.errorMessage = context.stringResource(AYMR.strings.download_insufficient_space)
             download.status = MangaDownload.State.ERROR
             notifier.onError(
-                context.stringResource(AYMR.strings.download_insufficient_space),
+                download.errorMessage,
                 download.chapter.name,
                 download.manga.title,
                 download.manga.id,
@@ -347,7 +361,8 @@ class MangaDownloader(
         }
 
         val chapterDirname = provider.getChapterDirName(download.chapter.name, download.chapter.scanlator)
-        val tmpDir = mangaDir.createDirectory(chapterDirname + TMP_DIR_SUFFIX)!!
+        val tmpDir = mangaDir.createDirectory(chapterDirname + TMP_DIR_SUFFIX)
+            ?: throw IOException(context.stringResource(MR.strings.download_storage_write_error))
 
         try {
             // If the page list already exists, start from the file
@@ -395,6 +410,8 @@ class MangaDownloader(
                             try {
                                 page.imageUrl = download.source.getImageUrl(page)
                             } catch (e: Throwable) {
+                                if (e is CancellationException) throw e
+                                download.errorMessage = e.message
                                 page.status = Page.State.ERROR
                             }
                         }
@@ -436,6 +453,7 @@ class MangaDownloader(
             if (error is CancellationException) throw error
             // If the page list threw, it will resume here
             logcat(LogPriority.ERROR, error)
+            download.errorMessage = error.message
             download.status = MangaDownload.State.ERROR
             notifier.onError(error.message, download.chapter.name, download.manga.title, download.manga.id)
         }
@@ -494,6 +512,7 @@ class MangaDownloader(
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
             // Mark this page as error and allow to download the remaining
+            download.errorMessage = e.message
             page.progress = 0
             page.status = Page.State.ERROR
             notifier.onError(e.message, download.chapter.name, download.manga.title, download.manga.id)
@@ -519,7 +538,10 @@ class MangaDownloader(
         page.progress = 0
         return flow {
             val response = source.getImage(page, dataSaver)
-            val file = tmpDir.createFile("$filename.tmp")!!
+            val file = tmpDir.createFile("$filename.tmp") ?: run {
+                response.close()
+                throw IOException(context.stringResource(MR.strings.download_storage_write_error))
+            }
             try {
                 throttler.apply {
                     bytesPerSecond(downloadPreferences.downloadSpeedLimit().get().toLong() * 1024)
@@ -557,7 +579,8 @@ class MangaDownloader(
      * @param filename the filename of the image.
      */
     private fun copyImageFromCache(cacheFile: File, tmpDir: UniFile, filename: String): UniFile {
-        val tmpFile = tmpDir.createFile("$filename.tmp")!!
+        val tmpFile = tmpDir.createFile("$filename.tmp")
+            ?: throw IOException(context.stringResource(MR.strings.download_storage_write_error))
         cacheFile.inputStream().use { input ->
             tmpFile.openOutputStream().use { output ->
                 input.copyTo(output)
@@ -636,7 +659,8 @@ class MangaDownloader(
         dirname: String,
         tmpDir: UniFile,
     ) {
-        val zip = mangaDir.createFile("$dirname.cbz$TMP_DIR_SUFFIX")!!
+        val zip = mangaDir.createFile("$dirname.cbz$TMP_DIR_SUFFIX")
+            ?: throw IOException(context.stringResource(MR.strings.download_storage_write_error))
         ZipWriter(context, zip).use { writer ->
             tmpDir.listFiles()?.forEach { file ->
                 writer.write(file)
