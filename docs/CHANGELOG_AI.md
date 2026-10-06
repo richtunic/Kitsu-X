@@ -606,3 +606,8 @@ Notas:
 - «Todo» usa el orden global guardado y el estado vacío de filtros rápidos explica que no hay coincidencias.
 - Descubrir reutiliza la caché Jikan existente durante seis horas y conserva resultados visibles si un reintento falla.
 - Ajustes de Biblioteca ofrece cuatro modos de organización al añadir; el diálogo manual guarda la obra antes de vincular tracking, y cancelarlo no abre tracking.
+
+
+## 2026-10-06: notas 1.1.0 limitadas al delta de 1.0.7
+
+Se reescriben docs/releases/1.1.0.md y el cuerpo del borrador GitHub con cambios verificables frente a v1.0.7: navegación/diseño, rendimiento, error gzip, descargas, decimales y distribución ARM64. Se retiran presentación general, instrucciones de uso y avisos propios del README. Se mantienen secciones es/en para el selector de idioma de la app y checksum del APK sin modificar el binario. Validación: comparación del diff y notas públicas de 1.0.7, revisión de texto y cotejo del cuerpo remoto. Solo documentación, sin cambios de código ni secretos.

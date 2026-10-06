@@ -373,3 +373,8 @@ El proyecto compila correctamente. Se han integrado `NavHost` y `NavController` 
 
 ## Siguiente paso recomendado
 Iniciar la Fase 4 del MVP: Home Screen para diseñar y estructurar la pantalla de inicio al estilo Netflix (Hero banner carrusel rotativo, synopsis, secciones de continuar viendo, tendencias, etc.).
+
+
+## 2026-10-06: notas 1.1.0 limitadas al delta de 1.0.7
+
+Se reescriben docs/releases/1.1.0.md y el cuerpo del borrador GitHub con cambios verificables frente a v1.0.7: navegación/diseño, rendimiento, error gzip, descargas, decimales y distribución ARM64. Se retiran presentación general, instrucciones de uso y avisos propios del README. Se mantienen secciones es/en para el selector de idioma de la app y checksum del APK sin modificar el binario. Validación: comparación del diff y notas públicas de 1.0.7, revisión de texto y cotejo del cuerpo remoto. Solo documentación, sin cambios de código ni secretos.
