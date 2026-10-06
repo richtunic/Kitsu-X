@@ -611,3 +611,8 @@ Notas:
 ## 2026-10-06: notas 1.1.0 limitadas al delta de 1.0.7
 
 Se reescriben docs/releases/1.1.0.md y el cuerpo del borrador GitHub con cambios verificables frente a v1.0.7: navegación/diseño, rendimiento, error gzip, descargas, decimales y distribución ARM64. Se retiran presentación general, instrucciones de uso y avisos propios del README. Se mantienen secciones es/en para el selector de idioma de la app y checksum del APK sin modificar el binario. Validación: comparación del diff y notas públicas de 1.0.7, revisión de texto y cotejo del cuerpo remoto. Solo documentación, sin cambios de código ni secretos.
+
+
+## 2026-10-06: README detallado y capturas reales
+
+README renovado en español e inglés con funciones contrastadas con el código: Inicio/progreso, bibliotecas/categorías, las cuatro páginas de Explorar, modos de Recientes, lector/reproductor, descargas, tracking, actualizaciones y respaldos. Galería de tres PNG originales del S23 (sin fabricar UI) guardados en .github/assets/screenshots: Home/progreso, biblioteca release 1.1.0 y Recientes agrupado con búsqueda. Se indica procedencia de pruebas y variación de navegación según preferencias. No se afirma que Aniyomi esté discontinuado: repositorio no archivado y release oficial v0.18.2.1 del 2026-09-14 verificados con GitHub API. Se describe continuación independiente y se reconocen créditos. El enlace de descarga lleva a releases publicadas mientras 1.1.0 siga en borrador; se mantienen marcadores ES/EN para automatización al publicar. Validación de rutas locales y marcadores pasa, diff limpio; solo documentación/assets, sin modificar APK, código o secretos.
