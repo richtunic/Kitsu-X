@@ -110,10 +110,13 @@ object SettingsLibraryScreen : SearchableSettings {
                 Preference.PreferenceItem.ListPreference(
                     preference = libraryPreferences.organizationOnAdd(),
                     entries = persistentMapOf(
-                        LibraryPreferences.OrganizationOnAdd.Automatic to stringResource(MR.strings.kitsux_organization_automatic),
+                        LibraryPreferences.OrganizationOnAdd.Automatic to
+                            stringResource(MR.strings.kitsux_organization_automatic),
                         LibraryPreferences.OrganizationOnAdd.Ask to stringResource(MR.strings.kitsux_organization_ask),
-                        LibraryPreferences.OrganizationOnAdd.DefaultCategory to stringResource(MR.strings.kitsux_organization_default),
-                        LibraryPreferences.OrganizationOnAdd.Uncategorized to stringResource(MR.strings.kitsux_organization_none),
+                        LibraryPreferences.OrganizationOnAdd.DefaultCategory to
+                            stringResource(MR.strings.kitsux_organization_default),
+                        LibraryPreferences.OrganizationOnAdd.Uncategorized to
+                            stringResource(MR.strings.kitsux_organization_none),
                     ),
                     title = stringResource(MR.strings.kitsux_organization_on_add),
                 ),

@@ -82,7 +82,9 @@ internal fun LazyListScope.mangaUpdatesUiItems(
 ) {
     val groupItems = uiModels.filterIsInstance<MangaUpdatesUiModel.Item>().associateBy { it.item.update.mangaId }
     val visibleModels = uiModels.filter {
-        it !is MangaUpdatesUiModel.Item || expandedGroups == null || selectionMode ||
+        it !is MangaUpdatesUiModel.Item ||
+            expandedGroups == null ||
+            selectionMode ||
             it.item.update.mangaId in expandedGroups
     }
     items(

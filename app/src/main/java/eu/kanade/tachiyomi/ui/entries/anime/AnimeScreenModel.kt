@@ -185,7 +185,6 @@ class AnimeScreenModel(
     private val selectedPositions: Array<Int> = arrayOf(-1, -1) // first and last selected index in list
     private val selectedEpisodeIds: HashSet<Long> = HashSet()
 
-
     internal val autoOpenTrack: Boolean
         get() = successState?.hasLoggedInTrackers == true && trackPreferences.trackOnAddingToLibrary().get()
 
@@ -276,7 +275,6 @@ class AnimeScreenModel(
 
             // Initial loading finished
             updateSuccessState { it.copy(isRefreshingData = false) }
-
         }
     }
 
@@ -397,7 +395,10 @@ class AnimeScreenModel(
                         moveAnimeToCategory(targetCategory)
                     }
                     defaultCategoryId == 0L ||
-                        (organizationMode == LibraryPreferences.OrganizationOnAdd.Automatic && categories.isEmpty()) -> {
+                        (
+                            organizationMode == LibraryPreferences.OrganizationOnAdd.Automatic &&
+                                categories.isEmpty()
+                            ) -> {
                         if (!updateAnime.awaitUpdateFavorite(anime.id, true)) return@launchIO
                         moveAnimeToCategory(null)
                     }

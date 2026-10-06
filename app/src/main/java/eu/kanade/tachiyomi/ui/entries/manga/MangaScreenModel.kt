@@ -167,7 +167,6 @@ class MangaScreenModel(
     private val selectedPositions: Array<Int> = arrayOf(-1, -1) // first and last selected index in list
     private val selectedChapterIds: HashSet<Long> = HashSet()
 
-
     internal val autoOpenTrack: Boolean
         get() = successState?.trackingAvailable == true && trackPreferences.trackOnAddingToLibrary().get()
 
@@ -265,7 +264,6 @@ class MangaScreenModel(
 
             // Initial loading finished
             updateSuccessState { it.copy(isRefreshingData = false) }
-
         }
     }
 
@@ -386,7 +384,10 @@ class MangaScreenModel(
                         moveMangaToCategory(targetCategory)
                     }
                     defaultCategoryId == 0L ||
-                        (organizationMode == LibraryPreferences.OrganizationOnAdd.Automatic && categories.isEmpty()) -> {
+                        (
+                            organizationMode == LibraryPreferences.OrganizationOnAdd.Automatic &&
+                                categories.isEmpty()
+                            ) -> {
                         if (!updateManga.awaitUpdateFavorite(manga.id, true)) return@launchIO
                         moveMangaToCategory(null)
                     }
