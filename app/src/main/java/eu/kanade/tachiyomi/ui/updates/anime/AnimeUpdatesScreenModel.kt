@@ -360,11 +360,12 @@ class AnimeUpdatesScreenModel(
         }
     }
 
-    fun toggleAllSelection(selected: Boolean) {
+    fun toggleAllSelection(selected: Boolean, visibleIds: Set<Long>? = null) {
         mutableState.update { state ->
             val newItems = state.items.map {
-                selectedEpisodeIds.addOrRemove(it.update.episodeId, selected)
-                it.copy(selected = selected)
+                val select = selected && (visibleIds == null || it.update.episodeId in visibleIds)
+                selectedEpisodeIds.addOrRemove(it.update.episodeId, select)
+                it.copy(selected = select)
             }
             state.copy(items = newItems.toPersistentList())
         }
@@ -373,11 +374,12 @@ class AnimeUpdatesScreenModel(
         selectedPositions[1] = -1
     }
 
-    fun invertSelection() {
+    fun invertSelection(visibleIds: Set<Long>? = null) {
         mutableState.update { state ->
             val newItems = state.items.map {
-                selectedEpisodeIds.addOrRemove(it.update.episodeId, !it.selected)
-                it.copy(selected = !it.selected)
+                val select = !it.selected && (visibleIds == null || it.update.episodeId in visibleIds)
+                selectedEpisodeIds.addOrRemove(it.update.episodeId, select)
+                it.copy(selected = select)
             }
             state.copy(items = newItems.toPersistentList())
         }
@@ -402,7 +404,32 @@ class AnimeUpdatesScreenModel(
         val selected = items.filter { it.selected }
         val selectionMode = selected.isNotEmpty()
 
-        fun getUiModel(): List<AnimeUpdatesUiModel> {
+        fun filtered(query: String, onlyNew: Boolean): State {
+            val term = query.trim()
+            return copy(
+                items = items.filter {
+                    (!onlyNew || !it.update.seen) &&
+                        (
+                            it.update.animeTitle.contains(term, ignoreCase = true) ||
+                                it.update.episodeName.contains(term, ignoreCase = true)
+                            )
+                }.toPersistentList(),
+            )
+        }
+
+        fun getUiModel(grouped: Boolean = false): List<AnimeUpdatesUiModel> {
+            if (grouped) {
+                return items.groupBy { it.update.animeId }.values.flatMap { group ->
+                    listOf(
+                        AnimeUpdatesUiModel.Group(
+                            group.first().update.animeId,
+                            group.first().update.animeTitle,
+                            group.size,
+                        ),
+                    ) +
+                        group.map { AnimeUpdatesUiModel.Item(it) }
+                }
+            }
             return items
                 .map { AnimeUpdatesUiModel.Item(it) }
                 .insertSeparators { before, after ->

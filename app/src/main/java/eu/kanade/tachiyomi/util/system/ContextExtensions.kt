@@ -16,6 +16,7 @@ import androidx.core.content.getSystemService
 import androidx.core.net.toUri
 import com.hippo.unifile.UniFile
 import eu.kanade.domain.ui.UiPreferences
+import eu.kanade.domain.ui.model.AppTheme
 import eu.kanade.domain.ui.model.ThemeMode
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.base.delegate.ThemingDelegate
@@ -137,7 +138,7 @@ fun Context.createReaderThemeContext(): Context {
         val wrappedContext = ContextThemeWrapper(this, R.style.Theme_Tachiyomi)
         wrappedContext.applyOverrideConfiguration(overrideConf)
         ThemingDelegate.getThemeResIds(
-            preferences.appTheme().get(),
+            AppTheme.DEFAULT,
             preferences.themeDarkAmoled().get(),
         )
             .forEach { wrappedContext.theme.applyStyle(it, true) }

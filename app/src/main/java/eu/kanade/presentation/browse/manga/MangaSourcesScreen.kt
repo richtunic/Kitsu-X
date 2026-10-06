@@ -158,7 +158,7 @@ private fun SourceHeader(
 }
 
 @Composable
-private fun SourceItem(
+internal fun SourceItem(
     source: Source,
     onClickItem: (Source, Listing) -> Unit,
     onLongClickItem: (Source) -> Unit,

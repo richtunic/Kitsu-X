@@ -1,11 +1,13 @@
 package eu.kanade.presentation.history.anime.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -18,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.PreviewLightDark
@@ -33,8 +36,6 @@ import tachiyomi.i18n.aniyomi.AYMR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
-private val HistoryItemHeight = 96.dp
-
 @Composable
 fun AnimeHistoryItem(
     history: AnimeHistoryWithRelations,
@@ -46,17 +47,18 @@ fun AnimeHistoryItem(
 ) {
     Row(
         modifier = modifier
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .clickable(onClick = onClickResume)
-            .height(HistoryItemHeight)
-            .padding(
-                horizontal = MaterialTheme.padding.medium,
-                vertical = MaterialTheme.padding.small,
-            ),
+            .height(112.dp)
+            .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         ItemCover.Book(
             modifier = Modifier.fillMaxHeight(),
             data = history.coverData,
+            shape = RoundedCornerShape(12.dp),
             onClick = onClickCover,
         )
         Column(
@@ -72,7 +74,7 @@ fun AnimeHistoryItem(
                 overflow = TextOverflow.Ellipsis,
                 style = textStyle,
             )
-            val seenAt = remember { history.seenAt?.toTimestampString() ?: "" }
+            val seenAt = remember(history) { history.seenAt?.toTimestampString() ?: "" }
             Text(
                 text = if (history.episodeNumber > -1) {
                     stringResource(
@@ -84,7 +86,8 @@ fun AnimeHistoryItem(
                     seenAt
                 },
                 modifier = Modifier.padding(top = 4.dp),
-                style = textStyle,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
             )
         }
 

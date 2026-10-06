@@ -44,6 +44,7 @@ val resumeLastChapterReadEvent = Channel<Unit>()
 fun Screen.mangaHistoryTab(
     context: Context,
     fromMore: Boolean,
+    externalQuery: String? = null,
 ): TabContent {
     val snackbarHostState = SnackbarHostState()
 
@@ -51,6 +52,9 @@ fun Screen.mangaHistoryTab(
     val screenModel = rememberScreenModel { MangaHistoryScreenModel() }
     val state by screenModel.state.collectAsState()
     val searchQuery by screenModel.query.collectAsState()
+    LaunchedEffect(externalQuery) {
+        if (externalQuery != null) screenModel.search(externalQuery)
+    }
 
     suspend fun openChapter(context: Context, chapter: Chapter?) {
         if (chapter != null) {

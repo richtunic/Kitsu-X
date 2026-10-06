@@ -30,6 +30,7 @@ fun GlobalAnimeSearchScreen(
     onClickSource: (AnimeCatalogueSource) -> Unit,
     onClickItem: (Anime) -> Unit,
     onLongClickItem: (Anime) -> Unit,
+    onRetrySource: (AnimeCatalogueSource) -> Unit,
 ) {
     Scaffold(
         topBar = { scrollBehavior ->
@@ -55,6 +56,7 @@ fun GlobalAnimeSearchScreen(
             onClickSource = onClickSource,
             onClickItem = onClickItem,
             onLongClickItem = onLongClickItem,
+            onRetrySource = onRetrySource,
         )
     }
 }
@@ -68,6 +70,7 @@ internal fun GlobalSearchContent(
     onClickItem: (Anime) -> Unit,
     onLongClickItem: (Anime) -> Unit,
     fromSourceId: Long? = null,
+    onRetrySource: ((AnimeCatalogueSource) -> Unit)? = null,
 ) {
     LazyColumn(
         contentPadding = contentPadding,
@@ -95,7 +98,10 @@ internal fun GlobalSearchContent(
                             )
                         }
                         is AnimeSearchItemResult.Error -> {
-                            GlobalSearchErrorResultItem(message = result.throwable.message)
+                            GlobalSearchErrorResultItem(
+                                error = result.throwable,
+                                onRetry = onRetrySource?.let { retry -> { retry(source) } },
+                            )
                         }
                     }
                 }

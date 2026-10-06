@@ -1,5 +1,6 @@
 package eu.kanade.presentation.updates.manga
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Circle
@@ -26,10 +28,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.relativeDateText
@@ -37,17 +39,18 @@ import eu.kanade.presentation.entries.components.DotSeparatorText
 import eu.kanade.presentation.entries.components.ItemCover
 import eu.kanade.presentation.entries.manga.components.ChapterDownloadAction
 import eu.kanade.presentation.entries.manga.components.ChapterDownloadIndicator
+import eu.kanade.presentation.updates.RecentGroupCard
 import eu.kanade.presentation.util.animateItemFastScroll
 import eu.kanade.presentation.util.relativeTimeSpanString
 import eu.kanade.tachiyomi.data.download.manga.model.MangaDownload
 import eu.kanade.tachiyomi.ui.updates.manga.MangaUpdatesItem
 import tachiyomi.domain.updates.manga.model.MangaUpdatesWithRelations
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.selectedBackground
+import java.time.LocalDate
 
 internal fun LazyListScope.mangaUpdatesLastUpdatedItem(
     lastUpdated: Long,
@@ -60,7 +63,8 @@ internal fun LazyListScope.mangaUpdatesLastUpdatedItem(
         ) {
             Text(
                 text = stringResource(MR.strings.updates_last_update_info, relativeTimeSpanString(lastUpdated)),
-                fontStyle = FontStyle.Italic,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -68,32 +72,59 @@ internal fun LazyListScope.mangaUpdatesLastUpdatedItem(
 
 internal fun LazyListScope.mangaUpdatesUiItems(
     uiModels: List<MangaUpdatesUiModel>,
+    expandedGroups: Set<Long>? = null,
+    onToggleGroup: (Long) -> Unit = {},
     selectionMode: Boolean,
     onUpdateSelected: (MangaUpdatesItem, Boolean, Boolean, Boolean) -> Unit,
     onClickCover: (MangaUpdatesItem) -> Unit,
     onClickUpdate: (MangaUpdatesItem) -> Unit,
     onDownloadChapter: (List<MangaUpdatesItem>, ChapterDownloadAction) -> Unit,
 ) {
+    val groupItems = uiModels.filterIsInstance<MangaUpdatesUiModel.Item>().associateBy { it.item.update.mangaId }
+    val visibleModels = uiModels.filter {
+        it !is MangaUpdatesUiModel.Item || expandedGroups == null || selectionMode ||
+            it.item.update.mangaId in expandedGroups
+    }
     items(
-        items = uiModels,
+        items = visibleModels,
         contentType = {
             when (it) {
+                is MangaUpdatesUiModel.Group -> "group"
                 is MangaUpdatesUiModel.Header -> "header"
                 is MangaUpdatesUiModel.Item -> "item"
             }
         },
         key = {
             when (it) {
+                is MangaUpdatesUiModel.Group -> "mangaUpdatesGroup-${it.id}"
                 is MangaUpdatesUiModel.Header -> "mangaUpdatesHeader-${it.hashCode()}"
                 is MangaUpdatesUiModel.Item -> "mangaUpdates-${it.item.update.mangaId}-${it.item.update.chapterId}"
             }
         },
     ) { item ->
         when (item) {
+            is MangaUpdatesUiModel.Group -> {
+                val representative = groupItems.getValue(item.id).item
+                RecentGroupCard(
+                    title = item.title,
+                    cover = representative.update.coverData,
+                    count = item.count,
+                    expanded = selectionMode || item.id in expandedGroups.orEmpty(),
+                    enabled = !selectionMode,
+                    onToggle = { onToggleGroup(item.id) },
+                    onCoverClick = { onClickCover(representative) },
+                )
+            }
             is MangaUpdatesUiModel.Header -> {
-                ListGroupHeader(
-                    modifier = Modifier.animateItemFastScroll(),
-                    text = relativeDateText(item.date),
+                Text(
+                    modifier = Modifier.animateItemFastScroll().padding(horizontal = 20.dp, vertical = 16.dp),
+                    text = when (item.date) {
+                        LocalDate.now() -> stringResource(MR.strings.kitsux_home_today)
+                        LocalDate.now().minusDays(1) -> stringResource(MR.strings.kitsux_home_yesterday)
+                        else -> relativeDateText(item.date)
+                    },
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
             is MangaUpdatesUiModel.Item -> {
@@ -101,6 +132,7 @@ internal fun LazyListScope.mangaUpdatesUiItems(
                 MangaUpdatesUiItem(
                     modifier = Modifier.animateItemFastScroll(),
                     update = updatesItem.update,
+                    compact = expandedGroups != null,
                     selected = updatesItem.selected,
                     readProgress = updatesItem.update.lastPageRead
                         .takeIf { !updatesItem.update.read && it > 0L }
@@ -139,6 +171,7 @@ internal fun LazyListScope.mangaUpdatesUiItems(
 @Composable
 private fun MangaUpdatesUiItem(
     update: MangaUpdatesWithRelations,
+    compact: Boolean = false,
     selected: Boolean,
     readProgress: String?,
     onClick: () -> Unit,
@@ -155,6 +188,9 @@ private fun MangaUpdatesUiItem(
 
     Row(
         modifier = modifier
+            .padding(horizontal = 12.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
             .selectedBackground(selected)
             .combinedClickable(
                 onClick = onClick,
@@ -163,29 +199,34 @@ private fun MangaUpdatesUiItem(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 },
             )
-            .height(56.dp)
+            .height(if (compact) 64.dp else 88.dp)
             .padding(horizontal = MaterialTheme.padding.medium),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        ItemCover.Square(
-            modifier = Modifier
-                .padding(vertical = 6.dp)
-                .fillMaxHeight(),
-            data = update.coverData,
-            onClick = onClickCover,
-        )
+        if (!compact) {
+            ItemCover.Book(
+                modifier = Modifier
+                    .padding(vertical = 10.dp)
+                    .fillMaxHeight(),
+                data = update.coverData,
+                shape = RoundedCornerShape(10.dp),
+                onClick = onClickCover,
+            )
+        }
         Column(
             modifier = Modifier
                 .padding(horizontal = MaterialTheme.padding.medium)
                 .weight(1f),
         ) {
-            Text(
-                text = update.mangaTitle,
-                maxLines = 1,
-                style = MaterialTheme.typography.bodyMedium,
-                color = LocalContentColor.current.copy(alpha = textAlpha),
-                overflow = TextOverflow.Ellipsis,
-            )
+            if (!compact) {
+                Text(
+                    text = update.mangaTitle,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = LocalContentColor.current.copy(alpha = textAlpha),
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 var textHeight by remember { mutableIntStateOf(0) }
                 if (!update.read) {
@@ -212,7 +253,7 @@ private fun MangaUpdatesUiItem(
                 }
                 Text(
                     text = update.chapterName,
-                    maxLines = 1,
+                    maxLines = if (compact) 2 else 1,
                     style = MaterialTheme.typography.bodySmall,
                     color = LocalContentColor.current.copy(alpha = textAlpha),
                     overflow = TextOverflow.Ellipsis,

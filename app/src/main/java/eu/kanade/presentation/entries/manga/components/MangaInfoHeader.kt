@@ -12,17 +12,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.FlowRowScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Brush
@@ -48,6 +49,7 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.SuggestionChip
+import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -60,6 +62,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.Brush
@@ -68,7 +71,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
@@ -80,11 +83,13 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import eu.kanade.presentation.components.DropdownMenu
 import eu.kanade.presentation.entries.components.DotSeparatorText
+import eu.kanade.presentation.entries.components.EntryInfoLayout
 import eu.kanade.presentation.entries.components.ItemCover
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import tachiyomi.domain.entries.manga.model.Manga
+import tachiyomi.domain.entries.manga.model.asMangaCover
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.components.material.TextButton
 import tachiyomi.presentation.core.components.material.padding
@@ -176,8 +181,8 @@ fun MangaActionRow(
     onMarkCompletedClicked: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
-    val defaultActionButtonColor = Color.White.copy(alpha = 0.7f)
-    val activeActionButtonColor = Color(0xFFE50914) // KitsuX Red
+    val defaultActionButtonColor = MaterialTheme.colorScheme.onSurfaceVariant
+    val activeActionButtonColor = MaterialTheme.colorScheme.primary
 
     // TODO: show something better when using custom interval
     val nextUpdateDays = remember(nextUpdate) {
@@ -189,7 +194,12 @@ fun MangaActionRow(
         }
     }
 
-    Row(modifier = modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp)) {
+    FlowRow(
+        modifier = modifier.padding(start = 16.dp, top = 8.dp, end = 16.dp),
+        maxItemsInEachRow = if (LocalDensity.current.fontScale > 1.1f) 2 else 3,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
         MangaActionButton(
             title = if (favorite) {
                 stringResource(MR.strings.in_library)
@@ -254,7 +264,12 @@ fun ExpandableMangaDescription(
     onCopyTagToClipboard: (tag: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .padding(14.dp),
+    ) {
         val (expanded, onExpanded) = rememberSaveable {
             mutableStateOf(defaultExpandState)
         }
@@ -273,7 +288,6 @@ fun ExpandableMangaDescription(
             expanded = expanded,
             modifier = Modifier
                 .padding(top = 8.dp)
-                .padding(horizontal = 16.dp)
                 .clickableNoIndication { onExpanded(!expanded) },
         )
         val tags = tagsProvider()
@@ -361,6 +375,7 @@ private fun MangaAndSourceTitlesLarge(
     ) {
         ItemCover.Book(
             modifier = Modifier.fillMaxWidth(0.65f),
+            shape = RoundedCornerShape(16.dp),
             data = ImageRequest.Builder(LocalContext.current)
                 .data(manga)
                 .crossfade(true)
@@ -391,118 +406,21 @@ private fun MangaAndSourceTitlesSmall(
     onCoverClick: () -> Unit,
     doSearch: (query: String, global: Boolean) -> Unit,
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth(),
+    EntryInfoLayout(
+        cover = manga.asMangaCover(),
+        coverDescription = stringResource(MR.strings.manga_cover),
+        appBarPadding = appBarPadding,
+        onCoverClick = onCoverClick,
     ) {
-        // Backdrop Image Box
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(280.dp),
-        ) {
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(manga)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .alpha(0.85f)
-                    .clickableNoIndication(onClick = onCoverClick),
-            )
-
-            // Dark gradient overlay
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                Color.Black.copy(alpha = 0.5f),
-                                Color.Black,
-                            ),
-                            startY = 0f,
-                        ),
-                    ),
-            )
-
-            // Overlaid Title at bottom left of backdrop
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-            ) {
-                Text(
-                    text = manga.title.ifBlank { stringResource(MR.strings.unknown_title) },
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp,
-                    ),
-                    color = Color.White,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-
-        // Metadata & Info section below the backdrop
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            // One-line Metadata separated by bullet
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                // Status tag
-                val statusText = when (manga.status) {
-                    SManga.ONGOING.toLong() -> "En emisión"
-                    SManga.COMPLETED.toLong() -> "Completado"
-                    SManga.LICENSED.toLong() -> "Licenciado"
-                    SManga.PUBLISHING_FINISHED.toLong() -> "Finalizado"
-                    SManga.CANCELLED.toLong() -> "Cancelado"
-                    SManga.ON_HIATUS.toLong() -> "En pausa"
-                    else -> "Desconocido"
-                }
-                Text(
-                    text = statusText,
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                )
-
-                Text(text = "•", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
-
-                // Source tag
-                Text(
-                    text = sourceName,
-                    color = Color.LightGray,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.clickableNoIndication {
-                        doSearch(sourceName, false)
-                    },
-                )
-
-                if (manga.author?.isNotBlank() == true) {
-                    Text(text = "•", color = Color.Gray, style = MaterialTheme.typography.bodyMedium)
-                    Text(
-                        text = manga.author!!,
-                        color = Color.LightGray,
-                        style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.clickableNoIndication {
-                            doSearch(manga.author!!, true)
-                        },
-                    )
-                }
-            }
-        }
+        MangaContentInfo(
+            title = manga.title,
+            author = manga.author,
+            artist = manga.artist,
+            status = manga.status,
+            sourceName = sourceName,
+            isStubSource = isStubSource,
+            doSearch = doSearch,
+        )
     }
 }
 
@@ -593,9 +511,10 @@ private fun ColumnScope.MangaContentInfo(
 
     Spacer(modifier = Modifier.height(2.dp))
 
-    Row(
+    FlowRow(
         modifier = Modifier.secondaryItemAlpha(),
-        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Icon(
             imageVector = when (status) {
@@ -690,7 +609,7 @@ private fun MangaSummary(
                 }
             },
             {
-                val colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background)
+                val colors = listOf(Color.Transparent, MaterialTheme.colorScheme.surfaceContainer)
                 Box(
                     modifier = Modifier.background(Brush.verticalGradient(colors = colors)),
                     contentAlignment = Alignment.Center,
@@ -740,17 +659,23 @@ private fun TagsChip(
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
-    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 48.dp) {
         SuggestionChip(
             modifier = modifier,
             onClick = onClick,
             label = { Text(text = text, style = MaterialTheme.typography.bodySmall) },
+            shape = RoundedCornerShape(12.dp),
+            border = null,
+            colors = SuggestionChipDefaults.suggestionChipColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                labelColor = MaterialTheme.colorScheme.onSurface,
+            ),
         )
     }
 }
 
 @Composable
-private fun RowScope.MangaActionButton(
+private fun FlowRowScope.MangaActionButton(
     title: String,
     icon: ImageVector,
     color: Color,
@@ -759,7 +684,10 @@ private fun RowScope.MangaActionButton(
 ) {
     TextButton(
         onClick = onClick,
-        modifier = Modifier.weight(1f),
+        modifier = Modifier.weight(1f)
+            .clip(RoundedCornerShape(14.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .heightIn(min = 76.dp),
         onLongClick = onLongClick,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {

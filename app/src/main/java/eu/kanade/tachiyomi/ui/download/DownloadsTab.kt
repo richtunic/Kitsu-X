@@ -7,6 +7,7 @@ import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.res.rememberAnimatedVectorPainter
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -16,15 +17,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Sort
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -48,7 +51,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Velocity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -105,6 +107,13 @@ data object DownloadsTab : Tab {
         }
 
         val state = rememberPagerState { 2 }
+        val animeIsRunning by animeScreenModel.isDownloaderRunning.collectAsState()
+        val mangaIsRunning by mangaScreenModel.isDownloaderRunning.collectAsState()
+        val currentCount = if (state.currentPage == 0) animeDownloadCount else mangaDownloadCount
+        val currentRunning = if (state.currentPage == 0) animeIsRunning else mangaIsRunning
+        val animeErrorCount by animeScreenModel.errorCount.collectAsState()
+        val mangaErrorCount by mangaScreenModel.errorCount.collectAsState()
+        val errorCount = if (state.currentPage == 0) animeErrorCount else mangaErrorCount
         val snackbarHostState = remember { SnackbarHostState() }
 
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -142,10 +151,10 @@ data object DownloadsTab : Tab {
                                 modifier = Modifier.weight(1f, false),
                                 overflow = TextOverflow.Ellipsis,
                             )
-                            if (animeDownloadCount > 0) {
+                            if (currentCount > 0) {
                                 val pillAlpha = if (isSystemInDarkTheme()) 0.12f else 0.08f
                                 Pill(
-                                    text = "$animeDownloadCount",
+                                    text = "$currentCount",
                                     modifier = Modifier.padding(start = 4.dp),
                                     color = MaterialTheme.colorScheme.onBackground
                                         .copy(alpha = pillAlpha),
@@ -174,8 +183,6 @@ data object DownloadsTab : Tab {
                     enter = fadeIn(),
                     exit = fadeOut(),
                 ) {
-                    val animeIsRunning by animeScreenModel.isDownloaderRunning.collectAsState()
-                    val mangaIsRunning by mangaScreenModel.isDownloaderRunning.collectAsState()
                     ExtendedFloatingActionButton(
                         text = {
                             val id = when (state.currentPage) {
@@ -236,34 +243,54 @@ data object DownloadsTab : Tab {
                     end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
                 ),
             ) {
-                PrimaryTabRow(
-                    selectedTabIndex = state.currentPage,
-                    modifier = Modifier.zIndex(1f),
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    listOf(
-                        Tab(
-                            selected = state.currentPage == 0,
-                            onClick = { scope.launch { state.animateScrollToPage(0) } },
-                            text = {
+                    listOf(AYMR.strings.label_anime, AYMR.strings.label_manga).forEachIndexed { index, title ->
+                        FilterChip(
+                            selected = state.currentPage == index,
+                            onClick = { scope.launch { state.animateScrollToPage(index) } },
+                            shape = RoundedCornerShape(14.dp),
+                            border = null,
+                            colors = FilterChipDefaults.filterChipColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                            ),
+                            label = {
                                 TabText(
-                                    text = stringResource(AYMR.strings.label_anime),
-                                    badgeCount = animeDownloadCount,
+                                    text = stringResource(title),
+                                    badgeCount = if (index == 0) animeDownloadCount else mangaDownloadCount,
                                 )
                             },
-                            unselectedContentColor = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
+                }
+                if (currentCount > 0) {
+                    Text(
+                        text = stringResource(
+                            MR.strings.kitsux_download_summary,
+                            currentCount,
+                            stringResource(
+                                if (currentRunning) {
+                                    MR.strings.update_check_notification_download_in_progress
+                                } else {
+                                    MR.strings.download_notifier_download_paused
+                                },
+                            ),
                         ),
-                        Tab(
-                            selected = state.currentPage == 1,
-                            onClick = { scope.launch { state.animateScrollToPage(1) } },
-                            text = {
-                                TabText(
-                                    text = stringResource(AYMR.strings.manga),
-                                    badgeCount = mangaDownloadCount,
-                                )
-                            },
-                            unselectedContentColor = MaterialTheme.colorScheme.onSurface,
-                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
                     )
+                    if (errorCount > 0) {
+                        Text(
+                            text = stringResource(MR.strings.kitsux_download_errors, errorCount),
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+                        )
+                    }
                 }
 
                 HorizontalPager(

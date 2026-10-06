@@ -67,6 +67,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun HomeScreenContent(
+    bottomPadding: androidx.compose.ui.unit.Dp = 0.dp,
     state: KitsuXHomeState,
     onItemClick: (KitsuXMediaItem) -> Unit,
     onHeroClick: (KitsuXMediaItem) -> Unit,
@@ -172,8 +173,11 @@ fun HomeScreenContent(
                     )
                     Text(
                         text = stringResource(
-                            if (state.isLibraryEmpty) MR.strings.kitsux_home_empty_library_title
-                            else MR.strings.kitsux_home_nothing_to_show_title,
+                            if (state.isLibraryEmpty) {
+                                MR.strings.kitsux_home_empty_library_title
+                            } else {
+                                MR.strings.kitsux_home_nothing_to_show_title
+                            },
                         ),
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold,
@@ -184,8 +188,11 @@ fun HomeScreenContent(
                     )
                     Text(
                         text = stringResource(
-                            if (state.isLibraryEmpty) MR.strings.kitsux_home_empty_library_description
-                            else MR.strings.kitsux_home_nothing_to_show_description,
+                            if (state.isLibraryEmpty) {
+                                MR.strings.kitsux_home_empty_library_description
+                            } else {
+                                MR.strings.kitsux_home_nothing_to_show_description
+                            },
                         ),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -200,7 +207,7 @@ fun HomeScreenContent(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 16.dp),
+                contentPadding = PaddingValues(bottom = bottomPadding + 16.dp),
             ) {
                 // Spacer to avoid status bar overlap and add premium top spacing
                 item {
@@ -230,6 +237,7 @@ fun HomeScreenContent(
                             items = continueWatchingItems,
                             onContinueClick = onContinueClick,
                             onContinueLongClick = { itemToRemove = it },
+                            onDetails = onItemClick,
                         )
                     }
                 }
@@ -242,6 +250,7 @@ fun HomeScreenContent(
                             items = continueReadingItems,
                             onContinueClick = onContinueClick,
                             onContinueLongClick = { itemToRemove = it },
+                            onDetails = onItemClick,
                         )
                     }
                 }
@@ -275,6 +284,7 @@ fun ContinueWatchingSection(
     items: List<ContinueWatchingItem>,
     onContinueClick: (ContinueWatchingItem) -> Unit,
     onContinueLongClick: (ContinueWatchingItem) -> Unit,
+    onDetails: (KitsuXMediaItem) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -301,6 +311,8 @@ fun ContinueWatchingSection(
                     unseenCount = continueItem.unseenCount,
                     onContinue = { onContinueClick(continueItem) },
                     onRemove = { onContinueLongClick(continueItem) },
+                    onDetails = { onDetails(continueItem.mediaItem) },
+                    sourceName = continueItem.mediaItem.sourceName,
                 )
             }
         }
@@ -340,9 +352,23 @@ fun NewReleaseSection(
                                 fontWeight = FontWeight.Bold,
                             )
                         }
-                        Text(item.title, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall)
-                        Text(item.progressText, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.labelSmall)
-                        Text(group.title, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
+                        Text(
+                            item.title,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.bodySmall,
+                        )
+                        Text(
+                            item.progressText,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.labelSmall,
+                        )
+                        Text(
+                            group.title,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.labelSmall,
+                        )
                     }
                 }
             }

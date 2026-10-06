@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.ui.download.manga
 
 import android.view.MenuItem
+import android.view.View
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.tachiyomi.R
@@ -17,6 +18,8 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -31,7 +34,7 @@ class MangaDownloadQueueScreenModel(
     private val _state = MutableStateFlow(emptyList<MangaDownloadHeaderItem>())
     val state = _state.asStateFlow()
 
-    lateinit var controllerBinding: DownloadListBinding
+    var controllerBinding: DownloadListBinding? = null
 
     /**
      * Adapter containing the active downloads.
@@ -132,21 +135,44 @@ class MangaDownloadQueueScreenModel(
     }
 
     override fun onDispose() {
+        detachView()
+    }
+
+    fun detachView(view: View? = null) {
+        if (view != null && controllerBinding?.root !== view) return
         for (job in progressJobs.values) {
             job.cancel()
         }
         progressJobs.clear()
         adapter = null
+        controllerBinding?.root?.adapter = null
+        controllerBinding = null
     }
 
     val isDownloaderRunning = downloadManager.isDownloaderRunning
         .stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val errorCount = downloadManager.queueState.flatMapLatest { downloads ->
+        if (downloads.isEmpty()) {
+            flowOf(0)
+        } else {
+            combine(downloads.map { it.statusFlow }) { statuses ->
+                statuses.count { it == MangaDownload.State.ERROR }
+            }
+        }
+    }.stateIn(screenModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
     fun getDownloadStatusFlow() = downloadManager.statusFlow()
     fun getDownloadProgressFlow() = downloadManager.progressFlow()
 
     fun startDownloads() {
         downloadManager.startDownloads()
+    }
+
+    fun retryDownload(download: MangaDownload) {
+        if (downloadManager.queueState.value.any { it === download } && download.status == MangaDownload.State.ERROR) {
+            downloadManager.retryDownload(download.chapter.id)
+        }
     }
 
     fun pauseDownloads() {
@@ -189,6 +215,7 @@ class MangaDownloadQueueScreenModel(
      * @param download the download whose status has changed.
      */
     fun onStatusChange(download: MangaDownload) {
+        getHolder(download)?.notifyStatus()
         when (download.status) {
             MangaDownload.State.DOWNLOADING -> {
                 launchProgressJob(download)
@@ -267,6 +294,6 @@ class MangaDownloadQueueScreenModel(
      * @return the holder of the download or null if it's not bound.
      */
     private fun getHolder(download: MangaDownload): MangaDownloadHolder? {
-        return controllerBinding.root.findViewHolderForItemId(download.chapter.id) as? MangaDownloadHolder
+        return controllerBinding?.root?.findViewHolderForItemId(download.chapter.id) as? MangaDownloadHolder
     }
 }

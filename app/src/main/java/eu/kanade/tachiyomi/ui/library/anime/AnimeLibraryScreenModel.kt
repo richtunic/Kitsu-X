@@ -616,6 +616,18 @@ class AnimeLibraryScreenModel(
         }
     }
 
+    fun clearFilters() {
+        libraryPreferences.filterDownloadedAnime().set(TriState.DISABLED)
+        libraryPreferences.filterUnseen().set(TriState.DISABLED)
+        libraryPreferences.filterStartedAnime().set(TriState.DISABLED)
+        libraryPreferences.filterBookmarkedAnime().set(TriState.DISABLED)
+        libraryPreferences.filterCompletedAnime().set(TriState.DISABLED)
+        libraryPreferences.filterIntervalCustom().set(TriState.DISABLED)
+        trackerManager.trackers.forEach {
+            libraryPreferences.filterTrackedAnime(it.id.toInt()).set(TriState.DISABLED)
+        }
+    }
+
     fun showSettingsDialog() {
         mutableState.update { it.copy(dialog = Dialog.SettingsSheet) }
     }

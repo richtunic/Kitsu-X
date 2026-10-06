@@ -15,8 +15,9 @@ import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.mutate
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toPersistentMap
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.collectLatest
@@ -32,7 +33,6 @@ import tachiyomi.domain.entries.manga.model.Manga
 import tachiyomi.domain.source.manga.service.MangaSourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.util.concurrent.Executors
 
 abstract class MangaSearchScreenModel(
     initialState: State = State(),
@@ -44,8 +44,9 @@ abstract class MangaSearchScreenModel(
     private val preferences: SourcePreferences = Injekt.get(),
 ) : StateScreenModel<MangaSearchScreenModel.State>(initialState) {
 
-    private val coroutineDispatcher = Executors.newFixedThreadPool(5).asCoroutineDispatcher()
+    private val coroutineDispatcher = Dispatchers.IO.limitedParallelism(5)
     private var searchJob: Job? = null
+    private val retryJobs = mutableMapOf<Long, Job>()
 
     private val enabledLanguages = sourcePreferences.enabledLanguages().get()
     private val disabledSources = sourcePreferences.disabledMangaSources().get()
@@ -153,6 +154,8 @@ abstract class MangaSearchScreenModel(
         this.lastSourceFilter = sourceFilter
 
         searchJob?.cancel()
+        retryJobs.values.forEach { it.cancel() }
+        retryJobs.clear()
         val sources = getSelectedSources()
 
         // Reuse previous results if possible
@@ -176,26 +179,39 @@ abstract class MangaSearchScreenModel(
                     if (state.value.items[source] !is MangaSearchItemResult.Loading) {
                         return@async
                     }
-                    try {
-                        val page = withContext(coroutineDispatcher) {
-                            source.getSearchManga(1, query, source.getFilterList())
-                        }
-
-                        val titles = page.mangas.map {
-                            networkToLocalManga.await(it.toDomainManga(source.id))
-                        }
-
-                        if (isActive) {
-                            updateItem(source, MangaSearchItemResult.Success(titles))
-                        }
-                    } catch (e: Exception) {
-                        if (isActive) {
-                            updateItem(source, MangaSearchItemResult.Error(e))
-                        }
-                    }
+                    val result = fetchSource(source, query)
+                    if (isActive) updateItem(source, result)
                 }
             }
                 .awaitAll()
+        }
+    }
+
+    fun retrySource(source: CatalogueSource) {
+        val query = lastQuery ?: return
+        if (state.value.items[source] !is MangaSearchItemResult.Error || retryJobs[source.id]?.isActive == true) return
+        updateItem(source, MangaSearchItemResult.Loading)
+        retryJobs[source.id] = ioCoroutineScope.launch {
+            val result = fetchSource(source, query)
+            if (isActive) updateItem(source, result)
+        }
+    }
+
+    private suspend fun fetchSource(source: CatalogueSource, query: String): MangaSearchItemResult {
+        return try {
+            val page = withContext(coroutineDispatcher) {
+                source.getSearchManga(1, query, source.getFilterList())
+            }
+            val titles = page.mangas.map {
+                networkToLocalManga.await(it.toDomainManga(source.id))
+            }
+            MangaSearchItemResult.Success(titles)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: LinkageError) {
+            MangaSearchItemResult.Error(e)
+        } catch (e: Exception) {
+            MangaSearchItemResult.Error(e)
         }
     }
 
@@ -210,10 +226,10 @@ abstract class MangaSearchScreenModel(
     }
 
     private fun updateItem(source: CatalogueSource, result: MangaSearchItemResult) {
-        val newItems = state.value.items.mutate {
-            it[source] = result
+        mutableState.update { current ->
+            val newItems = current.items.mutate { it[source] = result }
+            current.copy(items = newItems.toSortedMap(sortComparator(newItems)).toPersistentMap())
         }
-        updateItems(newItems)
     }
 
     @Immutable

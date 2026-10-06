@@ -11,6 +11,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import androidx.work.workDataOf
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.util.system.NetworkState
@@ -58,7 +59,8 @@ class MangaDownloadJob(context: Context, workerParams: WorkerParameters) : Corou
             applicationContext.activeNetworkState(),
             downloadPreferences.downloadOnlyOverWifi().get(),
         )
-        var active = networkCheck && downloadManager.downloaderStart()
+        var active =
+            networkCheck && downloadManager.downloaderStart(inputData.getLong(RETRY_ID, -1L).takeIf { it >= 0L })
 
         if (!active) {
             return Result.failure()
@@ -102,8 +104,11 @@ class MangaDownloadJob(context: Context, workerParams: WorkerParameters) : Corou
     companion object {
         private const val TAG = "MangaDownloader"
 
-        fun start(context: Context) {
+        private const val RETRY_ID = "retry_download_id"
+
+        fun start(context: Context, retryId: Long? = null) {
             val request = OneTimeWorkRequestBuilder<MangaDownloadJob>()
+                .setInputData(workDataOf(RETRY_ID to (retryId ?: -1L)))
                 .addTag(TAG)
                 .build()
             WorkManager.getInstance(context)

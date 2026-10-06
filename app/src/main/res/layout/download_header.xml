@@ -5,7 +5,10 @@
     android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="8dp"
+    android:layout_marginTop="12dp"
+    android:layout_marginHorizontal="12dp"
+    app:cardCornerRadius="14dp"
+    app:strokeWidth="0dp"
     app:cardBackgroundColor="?android:attr/colorBackground"
     app:cardElevation="0dp"
     app:cardForegroundColor="@color/draggable_card_foreground">
@@ -20,7 +23,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:paddingHorizontal="16dp"
-            android:paddingVertical="8dp"
+            android:paddingVertical="12dp"
             android:layout_weight="1"
             android:layout_gravity="center_vertical"
             tools:text="Title" />
@@ -32,11 +35,11 @@
             android:layout_gravity="start"
             android:layout_marginEnd="4dp"
             android:paddingHorizontal="10dp"
-            android:paddingVertical="8dp"
+            android:paddingVertical="12dp"
             android:scaleType="center"
             app:srcCompat="@drawable/ic_drag_handle_24dp"
             app:tint="?android:attr/textColorHint"
-            tools:ignore="ContentDescription" />
+            android:contentDescription="@string/kitsux_download_reorder" />
 
     </LinearLayout>
 

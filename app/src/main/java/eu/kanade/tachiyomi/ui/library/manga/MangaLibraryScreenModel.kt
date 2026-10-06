@@ -601,6 +601,18 @@ class MangaLibraryScreenModel(
         }
     }
 
+    fun clearFilters() {
+        libraryPreferences.filterDownloadedManga().set(TriState.DISABLED)
+        libraryPreferences.filterUnread().set(TriState.DISABLED)
+        libraryPreferences.filterStartedManga().set(TriState.DISABLED)
+        libraryPreferences.filterBookmarkedManga().set(TriState.DISABLED)
+        libraryPreferences.filterCompletedManga().set(TriState.DISABLED)
+        libraryPreferences.filterIntervalCustom().set(TriState.DISABLED)
+        trackerManager.trackers.forEach {
+            libraryPreferences.filterTrackedManga(it.id.toInt()).set(TriState.DISABLED)
+        }
+    }
+
     fun showSettingsDialog() {
         mutableState.update { it.copy(dialog = Dialog.SettingsSheet) }
     }

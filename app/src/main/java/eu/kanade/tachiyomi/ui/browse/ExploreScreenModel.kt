@@ -11,10 +11,13 @@ import eu.kanade.tachiyomi.network.awaitSuccess
 import eu.kanade.tachiyomi.network.jsonMime
 import eu.kanade.tachiyomi.ui.home.intelligence.KitsuXIntelDatabase
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
@@ -27,83 +30,134 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.IOException
 import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
 class ExploreScreenModel(
     context: Context,
     private val networkHelper: NetworkHelper = Injekt.get(),
+    private val cache: KitsuXIntelDatabase = KitsuXIntelDatabase(context.applicationContext),
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) : ScreenModel {
-    private val cache = KitsuXIntelDatabase(context.applicationContext)
     private val json = Json { ignoreUnknownKeys = true }
     private val mutableState = MutableStateFlow(ExploreState())
     val state = mutableState.asStateFlow()
 
-    init { refresh() }
+    init {
+        refresh()
+    }
 
     fun refresh(force: Boolean = false) {
         if (mutableState.value.isLoading) return
+        mutableState.update { it.copy(isLoading = true, hasError = false, isServiceUnavailable = false) }
         screenModelScope.launch {
-            val previous = mutableState.value
-            mutableState.value = mutableState.value.copy(isLoading = true, hasError = false)
-            var failed = false
-            var serviceUnavailable = false
-            var requestedNetwork = false
             suspend fun section(
                 path: String,
-                fallback: List<ExploreAnime>,
-                aniListSection: String? = null,
-            ): List<ExploreAnime> {
-                return try {
-                    withContext(Dispatchers.IO) {
-                        val cached = if (force) null else cache.getCache("explore_$path", 6 * 60 * 60 * 1000L)
-                        val body = cached ?: run {
-                            if (requestedNetwork) delay(1200)
-                            requestedNetwork = true
-                            networkHelper.client.newCall(GET("https://api.jikan.moe/v4/$path"))
-                                .awaitSuccess().body.string()
-                                .also { cache.saveCache("explore_$path", it) }
+                aniListSection: String,
+                networkDelay: Long,
+                hasContent: ExploreState.() -> Boolean,
+                publish: ExploreState.(List<ExploreAnime>) -> ExploreState,
+            ) {
+                try {
+                    val result = withContext(ioDispatcher) {
+                        val key = "explore_$path"
+                        val cached = if (force) {
+                            null
+                        } else {
+                            cache.getCache(key, CACHE_AGE)
+                                ?.let { runCatching { decodeJikan(it) }.getOrNull() }
                         }
-                        json.decodeFromString<ExploreResponse>(body).data
-                            .distinctBy { it.malId }
-                            .take(15)
+                        if (cached != null) return@withContext cached
+                        if (!force) {
+                            val backup = try {
+                                loadAniListSection(aniListSection, force = false, cachedOnly = true)
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (_: Exception) {
+                                emptyList()
+                            }
+                            if (backup.isNotEmpty()) return@withContext backup
+                        }
+                        val saved = cache.getCache(key, SAVED_CACHE_AGE)
+                            ?.let { runCatching { decodeJikan(it) }.getOrNull() }
+                            ?.takeIf { it.isNotEmpty() }
+                            ?: try {
+                                loadAniListSection(aniListSection, false, cachedOnly = true, maxAge = SAVED_CACHE_AGE)
+                            } catch (e: CancellationException) {
+                                throw e
+                            } catch (_: Exception) {
+                                emptyList()
+                            }
+                        if (saved.isNotEmpty()) {
+                            mutableState.update {
+                                if (it.hasContent()) {
+                                    it
+                                } else {
+                                    it.publish(saved).copy(
+                                        savedSections =
+                                        it.savedSections + path,
+                                    )
+                                }
+                            }
+                        }
+                        delay(networkDelay)
+                        try {
+                            val body = networkHelper.client.newCall(GET("https://api.jikan.moe/v4/$path"))
+                                .apply { timeout().timeout(4, TimeUnit.SECONDS) }
+                                .awaitSuccess().use { it.body.string() }
+                            val items = decodeJikan(body)
+                            cache.saveCache("explore_$path", body)
+                            items
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            if (!isUnavailable(e)) throw e
+                            loadAniListSection(aniListSection, force)
+                        }
                     }
+                    mutableState.update { it.publish(result).copy(savedSections = it.savedSections - path) }
                 } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
-                    val jikanUnavailable = (e is HttpException && (e.code == 429 || e.code in 500..599)) ||
-                        e is IOException
-                    if (jikanUnavailable && aniListSection != null) {
-                        try {
-                            val backup = withContext(Dispatchers.IO) { loadAniListSection(aniListSection, force) }
-                            if (backup.isNotEmpty()) {
-                                return backup
-                            }
-                        } catch (cancelled: CancellationException) {
-                            throw cancelled
-                        } catch (_: Exception) {
-                            // Keep the previous result when both providers fail.
-                        }
+                    mutableState.update {
+                        it.copy(hasError = true, isServiceUnavailable = it.isServiceUnavailable || isUnavailable(e))
                     }
-                    failed = true
-                    serviceUnavailable = serviceUnavailable || jikanUnavailable
-                    fallback
                 }
             }
 
-            val season = section("seasons/now?limit=15", previous.season, "RELEASING")
-            val upcoming = section("seasons/upcoming?limit=15", previous.upcoming, "NOT_YET_RELEASED")
-            val trending = section("top/anime?limit=15", previous.trending, "TRENDING")
-            mutableState.value = ExploreState(
-                season = season,
-                upcoming = upcoming,
-                trending = trending,
-                isLoading = false,
-                hasError = failed,
-                isServiceUnavailable = serviceUnavailable,
-            )
+            try {
+                coroutineScope {
+                    launch {
+                        section("seasons/now?limit=15", "RELEASING", 0, { season.isNotEmpty() }) { copy(season = it) }
+                    }
+                    launch {
+                        section("seasons/upcoming?limit=15", "NOT_YET_RELEASED", 1200, {
+                            upcoming.isNotEmpty()
+                        }) { copy(upcoming = it) }
+                    }
+                    launch {
+                        section("top/anime?limit=15", "TRENDING", 2400, {
+                            trending.isNotEmpty()
+                        }) { copy(trending = it) }
+                    }
+                }
+            } finally {
+                mutableState.update { it.copy(isLoading = false) }
+            }
         }
     }
 
-    private suspend fun loadAniListSection(section: String, force: Boolean): List<ExploreAnime> {
+    private fun decodeJikan(body: String): List<ExploreAnime> =
+        json.decodeFromString<ExploreResponse>(body).data.distinctBy { it.malId }.take(15)
+
+    private fun isUnavailable(error: Exception): Boolean =
+        (error is HttpException && (error.code == 429 || error.code in 500..599)) || error is IOException
+
+    private suspend fun loadAniListSection(
+        section: String,
+        force: Boolean,
+        cachedOnly: Boolean = false,
+        maxAge: Long = CACHE_AGE,
+    ): List<ExploreAnime> {
         val calendar = Calendar.getInstance()
         val seasons = listOf("WINTER", "SPRING", "SUMMER", "FALL")
         val current = calendar.get(Calendar.MONTH) / 3
@@ -119,7 +173,8 @@ class ExploreScreenModel(
         } else {
             "type: ANIME, season: ${seasons[selected]}, seasonYear: $year, status: $section, sort: POPULARITY_DESC"
         }
-        val cached = if (force) null else cache.getCache(key, 6 * 60 * 60 * 1000L)
+        val cached = if (force) null else cache.getCache(key, maxAge)
+        if (cachedOnly && cached == null) return emptyList()
         val body = cached ?: run {
             val query = """
                 query {
@@ -136,7 +191,8 @@ class ExploreScreenModel(
                     "https://graphql.anilist.co",
                     body = buildJsonObject { put("query", query) }.toString().toRequestBody(jsonMime),
                 ),
-            ).awaitSuccess().body.string()
+            ).apply { timeout().timeout(10, TimeUnit.SECONDS) }
+                .awaitSuccess().use { it.body.string() }
         }
         val media = json.decodeFromString<AniListExploreResponse>(body).data.page.media
         if (cached == null) cache.saveCache(key, body)
@@ -155,6 +211,11 @@ class ExploreScreenModel(
         }
     }
 
+    private companion object {
+        const val SAVED_CACHE_AGE = 7 * 24 * 60 * 60 * 1000L
+        const val CACHE_AGE = 6 * 60 * 60 * 1000L
+    }
+
     override fun onDispose() {
         cache.close()
     }
@@ -164,6 +225,7 @@ data class ExploreState(
     val season: List<ExploreAnime> = emptyList(),
     val upcoming: List<ExploreAnime> = emptyList(),
     val trending: List<ExploreAnime> = emptyList(),
+    val savedSections: Set<String> = emptySet(),
     val isLoading: Boolean = false,
     val hasError: Boolean = false,
     val isServiceUnavailable: Boolean = false,

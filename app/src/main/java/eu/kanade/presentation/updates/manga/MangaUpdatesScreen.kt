@@ -3,6 +3,7 @@ package eu.kanade.presentation.updates.manga
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
@@ -10,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.util.fastAll
@@ -35,6 +37,9 @@ fun MangaUpdateScreen(
     state: MangaUpdatesScreenModel.State,
     snackbarHostState: SnackbarHostState,
     lastUpdated: Long,
+    grouped: Boolean = false,
+    onlyNew: Boolean = false,
+    searchQuery: String = "",
     onClickCover: (MangaUpdatesItem) -> Unit,
     onSelectAll: (Boolean) -> Unit,
     onInvertSelection: () -> Unit,
@@ -46,6 +51,8 @@ fun MangaUpdateScreen(
     onUpdateSelected: (MangaUpdatesItem, Boolean, Boolean, Boolean) -> Unit,
     onOpenChapter: (MangaUpdatesItem) -> Unit,
 ) {
+    var expandedGroups by rememberSaveable { mutableStateOf(emptyList<Long>()) }
+    val listState = rememberLazyListState()
     BackHandler(enabled = state.selectionMode, onBack = { onSelectAll(false) })
 
     Scaffold(
@@ -63,7 +70,13 @@ fun MangaUpdateScreen(
         when {
             state.isLoading -> LoadingScreen(Modifier.padding(contentPadding))
             state.items.isEmpty() -> EmptyScreen(
-                stringRes = MR.strings.information_no_recent,
+                stringRes = if (searchQuery.isNotBlank()) {
+                    MR.strings.no_results_found
+                } else if (onlyNew) {
+                    MR.strings.kitsux_recent_no_new
+                } else {
+                    MR.strings.information_no_recent
+                },
                 modifier = Modifier.padding(contentPadding),
             )
             else -> {
@@ -86,12 +99,23 @@ fun MangaUpdateScreen(
                     indicatorPadding = contentPadding,
                 ) {
                     FastScrollLazyColumn(
+                        state = listState,
                         contentPadding = contentPadding,
                     ) {
                         mangaUpdatesLastUpdatedItem(lastUpdated)
 
                         mangaUpdatesUiItems(
-                            uiModels = state.getUiModel(),
+                            uiModels = state.getUiModel(grouped),
+                            expandedGroups = if (!grouped) {
+                                null
+                            } else if (searchQuery.isNotBlank()) {
+                                state.items.map { it.update.mangaId }.toSet()
+                            } else {
+                                expandedGroups.toSet()
+                            },
+                            onToggleGroup = { id ->
+                                expandedGroups = if (id in expandedGroups) expandedGroups - id else expandedGroups + id
+                            },
                             selectionMode = state.selectionMode,
                             onUpdateSelected = onUpdateSelected,
                             onClickCover = onClickCover,
@@ -141,6 +165,7 @@ private fun MangaUpdatesBottomBar(
 }
 
 sealed interface MangaUpdatesUiModel {
+    data class Group(val id: Long, val title: String, val count: Int) : MangaUpdatesUiModel
     data class Header(val date: LocalDate) : MangaUpdatesUiModel
     data class Item(val item: MangaUpdatesItem) : MangaUpdatesUiModel
 }

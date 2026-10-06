@@ -29,6 +29,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -48,6 +50,8 @@ fun MediaProgressCard(
     unseenCount: Int,
     onContinue: () -> Unit,
     onRemove: () -> Unit,
+    onDetails: () -> Unit,
+    sourceName: String,
     modifier: Modifier = Modifier,
 ) {
     var menuExpanded by remember { mutableStateOf(false) }
@@ -55,7 +59,8 @@ fun MediaProgressCard(
 
     Box(
         modifier = modifier
-            .width(108.dp)
+            .width(120.dp)
+            .semantics { stateDescription = progressText }
             .clip(RoundedCornerShape(KitsuXLayoutTokens.cardRadius))
             .background(scheme.surfaceContainerLow)
             .combinedClickable(
@@ -66,7 +71,11 @@ fun MediaProgressCard(
     ) {
         Column {
             Box(modifier = Modifier.fillMaxWidth()) {
-                ItemCover.Book(data = coverData, modifier = Modifier.fillMaxWidth())
+                ItemCover.Book(
+                    data = coverData,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(KitsuXLayoutTokens.cardRadius),
+                )
 
                 if (isAnime) {
                     Box(
@@ -105,27 +114,36 @@ fun MediaProgressCard(
                     style = MaterialTheme.typography.labelSmall,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(6.dp)
+                        .padding(
+                            start = 6.dp,
+                            top = 6.dp,
+                            end = 6.dp,
+                            bottom = if (progress > 0f) 18.dp else 6.dp,
+                        )
                         .clip(RoundedCornerShape(4.dp))
                         .background(Color.Black.copy(alpha = 0.75f))
                         .padding(horizontal = 6.dp, vertical = 2.dp)
                         .clearAndSetSemantics {},
                 )
-            }
 
-            if (progress > 0f) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(3.dp)
-                        .background(scheme.surfaceContainerHighest),
-                ) {
+                if (progress > 0f) {
                     Box(
                         modifier = Modifier
-                            .fillMaxHeight()
-                            .fillMaxWidth(progress.coerceIn(0f, 1f))
-                            .background(scheme.primary),
-                    )
+                            .align(Alignment.BottomCenter)
+                            .padding(horizontal = 6.dp, vertical = 6.dp)
+                            .fillMaxWidth()
+                            .height(6.dp)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(Color.Black.copy(alpha = 0.5f)),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                                .clip(RoundedCornerShape(3.dp))
+                                .background(scheme.primary),
+                        )
+                    }
                 }
             }
 
@@ -134,10 +152,21 @@ fun MediaProgressCard(
                 color = scheme.onSurface,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                maxLines = 1,
+                minLines = 2,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 5.dp),
             )
+            if (sourceName.isNotBlank()) {
+                Text(
+                    sourceName,
+                    color = scheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(start = 4.dp, end = 4.dp, bottom = 6.dp),
+                )
+            }
         }
 
         DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
@@ -145,13 +174,24 @@ fun MediaProgressCard(
                 text = {
                     Text(
                         stringResource(
-                            if (isAnime) MR.strings.kitsux_home_continue_watching else MR.strings.kitsux_home_continue_reading,
+                            if (isAnime) {
+                                MR.strings.kitsux_home_continue_watching
+                            } else {
+                                MR.strings.kitsux_home_continue_reading
+                            },
                         ),
                     )
                 },
                 onClick = {
                     menuExpanded = false
                     onContinue()
+                },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(MR.strings.kitsux_home_view_details)) },
+                onClick = {
+                    menuExpanded = false
+                    onDetails()
                 },
             )
             DropdownMenuItem(

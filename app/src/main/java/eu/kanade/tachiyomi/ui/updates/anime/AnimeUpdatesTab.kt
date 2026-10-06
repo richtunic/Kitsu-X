@@ -18,6 +18,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.core.content.PermissionChecker
 import cafe.adriel.voyager.core.model.rememberScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
@@ -25,6 +26,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.NavigatorAdaptiveSheet
 import eu.kanade.presentation.components.TabContent
 import eu.kanade.presentation.entries.anime.EpisodeOptionsDialogScreen
+import eu.kanade.presentation.updates.RecentMode
 import eu.kanade.presentation.updates.UpdatesDeleteConfirmationDialog
 import eu.kanade.presentation.updates.anime.AnimeUpdateScreen
 import eu.kanade.tachiyomi.ui.entries.anime.AnimeScreen
@@ -46,6 +48,8 @@ import uy.kohesive.injekt.injectLazy
 fun Screen.animeUpdatesTab(
     context: Context,
     fromMore: Boolean,
+    query: String = "",
+    mode: RecentMode = RecentMode.All,
 ): TabContent {
     val navigator = LocalNavigator.currentOrThrow
     val screenModel = rememberScreenModel { AnimeUpdatesScreenModel() }
@@ -58,6 +62,10 @@ fun Screen.animeUpdatesTab(
     }
     val scope = rememberCoroutineScope()
     val state by screenModel.state.collectAsState()
+    val visibleState = state.filtered(query, mode == RecentMode.New)
+    val visibleItems = visibleState.items
+    val visibleIds = visibleItems.map { it.update.episodeId }.toSet()
+    LaunchedEffect(query, mode) { screenModel.toggleAllSelection(false) }
 
     val navigateUp: (() -> Unit)? = if (fromMore) {
         {
@@ -83,12 +91,15 @@ fun Screen.animeUpdatesTab(
         searchEnabled = false,
         content = { contentPadding, _ ->
             AnimeUpdateScreen(
-                state = state,
+                state = visibleState,
+                grouped = mode == RecentMode.Grouped,
+                onlyNew = mode == RecentMode.New,
+                searchQuery = query,
                 snackbarHostState = screenModel.snackbarHostState,
                 lastUpdated = screenModel.lastUpdated,
                 onClickCover = { item -> navigator.push(AnimeScreen(item.update.animeId)) },
-                onSelectAll = screenModel::toggleAllSelection,
-                onInvertSelection = screenModel::invertSelection,
+                onSelectAll = { screenModel.toggleAllSelection(it, visibleIds) },
+                onInvertSelection = { screenModel.invertSelection(visibleIds) },
                 onUpdateLibrary = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                         PermissionChecker.checkSelfPermission(
@@ -107,7 +118,9 @@ fun Screen.animeUpdatesTab(
                 onMultiFillermarkClicked = screenModel::fillermarkUpdates,
                 onMultiMarkAsSeenClicked = screenModel::markUpdatesSeen,
                 onMultiDeleteClicked = screenModel::showConfirmDeleteEpisodes,
-                onUpdateSelected = screenModel::toggleSelection,
+                onUpdateSelected = { item, selected, _, _ ->
+                    screenModel.toggleSelection(item, selected)
+                },
                 onOpenEpisode = { updateItem: AnimeUpdatesItem, altPlayer: Boolean ->
                     scope.launchIO {
                         openEpisode(updateItem, altPlayer)
@@ -174,6 +187,8 @@ fun Screen.animeUpdatesTab(
                 screenModel.resetNewUpdatesCount()
 
                 onDispose {
+                    screenModel.toggleAllSelection(false)
+                    screenModel.screenModelScope.launch { HomeScreen.showBottomNav(true) }
                     screenModel.resetNewUpdatesCount()
                 }
             }
@@ -184,12 +199,12 @@ fun Screen.animeUpdatesTab(
                 AppBar.Action(
                     title = stringResource(MR.strings.action_select_all),
                     icon = Icons.Outlined.SelectAll,
-                    onClick = { screenModel.toggleAllSelection(true) },
+                    onClick = { screenModel.toggleAllSelection(true, visibleIds) },
                 ),
                 AppBar.Action(
                     title = stringResource(MR.strings.action_select_inverse),
                     icon = Icons.Outlined.FlipToBack,
-                    onClick = { screenModel.invertSelection() },
+                    onClick = { screenModel.invertSelection(visibleIds) },
                 ),
             )
         } else {
@@ -217,6 +232,8 @@ fun Screen.animeUpdatesTab(
                 ),
             )
         },
+        numberTitle = visibleState.selected.size,
+        cancelAction = { screenModel.toggleAllSelection(false) },
         navigateUp = navigateUp,
     )
 }

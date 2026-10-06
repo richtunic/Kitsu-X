@@ -18,6 +18,7 @@ import eu.kanade.tachiyomi.animesource.model.Track
 import eu.kanade.tachiyomi.animesource.model.Video
 import eu.kanade.tachiyomi.animesource.online.AnimeHttpSource
 import eu.kanade.tachiyomi.data.download.anime.model.AnimeDownload
+import eu.kanade.tachiyomi.data.download.prepareAnimeRetry
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateNotifier
 import eu.kanade.tachiyomi.data.notification.NotificationHandler
 import eu.kanade.tachiyomi.ui.player.loader.EpisodeLoader
@@ -36,7 +37,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -58,10 +58,12 @@ import tachiyomi.domain.download.service.DownloadPreferences
 import tachiyomi.domain.entries.anime.model.Anime
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.source.anime.service.AnimeSourceManager
+import tachiyomi.i18n.MR
 import tachiyomi.i18n.aniyomi.AYMR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import uy.kohesive.injekt.injectLazy
+import java.io.IOException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -105,6 +107,7 @@ class AnimeDownloader(
      * Job object for download queue management
      */
     private var downloaderJob: Job? = null
+    private val retryGeneration = MutableStateFlow(0L)
 
     /**
      * Preference for user's choice of external downloader
@@ -130,16 +133,20 @@ class AnimeDownloader(
      *
      * @return true if the downloader is started, false otherwise.
      */
-    fun start(): Boolean {
-        if (isRunning || queueState.value.isEmpty()) {
-            return false
+    fun start(retryId: Long? = null): Boolean {
+        if (queueState.value.isEmpty() || (isRunning && retryId == null)) return false
+        if (retryId != null && !prepareAnimeRetry(queueState.value, retryId)) return false
+        if (isRunning) {
+            retryGeneration.update { it + 1 }
+            return true
         }
-
-        val pending = queueState.value.filter { it.status != AnimeDownload.State.DOWNLOADED }
+        val pending = queueState.value.filter {
+            it.status != AnimeDownload.State.DOWNLOADED &&
+                (retryId == null || it.status != AnimeDownload.State.ERROR)
+        }
         pending.forEach { if (it.status != AnimeDownload.State.QUEUE) it.status = AnimeDownload.State.QUEUE }
 
         launchDownloaderJob()
-
         return pending.isNotEmpty()
     }
 
@@ -193,7 +200,9 @@ class AnimeDownloader(
         if (isRunning) return
 
         downloaderJob = scope.launch {
-            val activeDownloadsFlow = queueState.transformLatest { queue ->
+            val activeDownloadsFlow = combine(queueState, retryGeneration) { queue, _ ->
+                queue
+            }.transformLatest { queue ->
                 while (true) {
                     val activeDownloads = queue.asSequence()
                         .filter {
@@ -215,13 +224,14 @@ class AnimeDownloader(
                 }
 
                 if (areAllAnimeDownloadsFinished()) stop()
-            }.distinctUntilChanged()
+            }
 
             // Use supervisorScope to cancel child jobs when the downloader job is cancelled
             supervisorScope {
                 val downloadJobs = mutableMapOf<AnimeDownload, Job>()
 
                 activeDownloadsFlow.collectLatest { activeDownloads ->
+                    downloadJobs.entries.removeAll { !it.value.isActive }
                     val downloadJobsToStop = downloadJobs.filter { it.key !in activeDownloads }
                     downloadJobsToStop.forEach { (download, job) ->
                         job.cancel()
@@ -230,7 +240,9 @@ class AnimeDownloader(
 
                     val downloadsToStart = activeDownloads.filter { it !in downloadJobs }
                     downloadsToStart.forEach { download ->
-                        downloadJobs[download] = launchDownloadJob(download)
+                        downloadJobs[download] = launchDownloadJob(download).also { job ->
+                            job.invokeOnCompletion { retryGeneration.update { it + 1 } }
+                        }
                     }
                 }
             }
@@ -251,6 +263,8 @@ class AnimeDownloader(
             }
         } catch (e: Throwable) {
             if (e is CancellationException) throw e
+            download.errorMessage = e.message
+            download.status = AnimeDownload.State.ERROR
             logcat(LogPriority.ERROR, e)
             notifier.onError(e.message)
             stop()
@@ -332,13 +346,15 @@ class AnimeDownloader(
      * @param download the episode to be downloaded.
      */
     private suspend fun downloadEpisode(download: AnimeDownload) {
+        download.errorMessage = null
         val animeDir = provider.getAnimeDir(download.anime.title, download.source)
 
         val availSpace = DiskUtil.getAvailableStorageSpace(animeDir)
         if (availSpace != -1L && availSpace < MIN_DISK_SPACE) {
+            download.errorMessage = context.stringResource(AYMR.strings.download_insufficient_space)
             download.status = AnimeDownload.State.ERROR
             notifier.onError(
-                context.stringResource(AYMR.strings.download_insufficient_space),
+                download.errorMessage,
                 download.episode.name,
                 download.anime.title,
                 download.anime.id,
@@ -347,7 +363,8 @@ class AnimeDownloader(
         }
 
         val episodeDirname = provider.getEpisodeDirName(download.episode.name, download.episode.scanlator)
-        val tmpDir = animeDir.createDirectory(episodeDirname + TMP_DIR_SUFFIX)!!
+        val tmpDir = animeDir.createDirectory(episodeDirname + TMP_DIR_SUFFIX)
+            ?: throw IOException(context.stringResource(MR.strings.download_storage_write_error))
 
         try {
             if (download.video == null) {
@@ -383,6 +400,7 @@ class AnimeDownloader(
             if (error is CancellationException) throw error
             // If the video threw, it will resume here
             logcat(LogPriority.ERROR, error)
+            download.errorMessage = error.message
             download.status = AnimeDownload.State.ERROR
             notifier.onError(
                 error.message,
@@ -454,6 +472,7 @@ class AnimeDownloader(
         } catch (e: Exception) {
             if (e is CancellationException) throw e
             video.status = Video.State.ERROR
+            download.errorMessage = e.message
             notifier.onError(e.message, download.episode.name, download.anime.title, download.anime.id)
             progressJob?.cancel()
         }
@@ -473,7 +492,8 @@ class AnimeDownloader(
     ): UniFile {
         return flow {
             tmpDir.findFile("$filename.tmp")?.delete()
-            val videoFile = tmpDir.createFile("$filename.tmp")!!
+            val videoFile = tmpDir.createFile("$filename.tmp")
+                ?: throw IOException(context.stringResource(MR.strings.download_storage_write_error))
             try {
                 ffmpegDownload(download, tmpDir, videoFile, filename)
             } catch (e: Exception) {
@@ -647,7 +667,8 @@ class AnimeDownloader(
         filename: String,
     ): UniFile {
         try {
-            val file = tmpDir.createFile("${filename}_tmp.mkv")!!
+            val file = tmpDir.createFile("${filename}_tmp.mkv")
+                ?: throw IOException(context.stringResource(MR.strings.download_storage_write_error))
             withUIContext {
                 context.copyToClipboard("Episode download location", tmpDir.filePath!!.substringBeforeLast("_tmp"))
             }

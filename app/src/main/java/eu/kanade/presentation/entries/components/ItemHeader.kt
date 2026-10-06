@@ -36,7 +36,7 @@ fun ItemHeader(
                 enabled = enabled,
                 onClick = onClick,
             )
-            .padding(horizontal = 16.dp, vertical = 4.dp),
+            .padding(horizontal = 20.dp, vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(MaterialTheme.padding.extraSmall),
     ) {
         Text(
@@ -55,7 +55,7 @@ fun ItemHeader(
                 pluralStringResource(pluralCount, count = itemCount, itemCount)
             },
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = MaterialTheme.colorScheme.primary,
         )
 
         MissingItemsWarning(missingItemsCount)

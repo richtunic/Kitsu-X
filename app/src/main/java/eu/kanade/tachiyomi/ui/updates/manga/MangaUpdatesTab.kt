@@ -18,11 +18,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.core.content.PermissionChecker
 import cafe.adriel.voyager.core.model.rememberScreenModel
+import cafe.adriel.voyager.core.model.screenModelScope
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.components.TabContent
+import eu.kanade.presentation.updates.RecentMode
 import eu.kanade.presentation.updates.UpdatesDeleteConfirmationDialog
 import eu.kanade.presentation.updates.manga.MangaUpdateScreen
 import eu.kanade.tachiyomi.ui.entries.manga.MangaScreen
@@ -42,6 +44,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 fun Screen.mangaUpdatesTab(
     context: Context,
     fromMore: Boolean,
+    query: String = "",
+    mode: RecentMode = RecentMode.All,
 ): TabContent {
     val navigator = LocalNavigator.currentOrThrow
     val screenModel = rememberScreenModel { MangaUpdatesScreenModel() }
@@ -53,6 +57,10 @@ fun Screen.mangaUpdatesTab(
         }
     }
     val state by screenModel.state.collectAsState()
+    val visibleState = state.filtered(query, mode == RecentMode.New)
+    val visibleItems = visibleState.items
+    val visibleIds = visibleItems.map { it.update.chapterId }.toSet()
+    LaunchedEffect(query, mode) { screenModel.toggleAllSelection(false) }
 
     val scope = rememberCoroutineScope()
     val navigateUp: (() -> Unit)? = if (fromMore) {
@@ -72,12 +80,15 @@ fun Screen.mangaUpdatesTab(
         searchEnabled = false,
         content = { contentPadding, _ ->
             MangaUpdateScreen(
-                state = state,
+                state = visibleState,
+                grouped = mode == RecentMode.Grouped,
+                onlyNew = mode == RecentMode.New,
+                searchQuery = query,
                 snackbarHostState = screenModel.snackbarHostState,
                 lastUpdated = screenModel.lastUpdated,
                 onClickCover = { item -> navigator.push(MangaScreen(item.update.mangaId)) },
-                onSelectAll = screenModel::toggleAllSelection,
-                onInvertSelection = screenModel::invertSelection,
+                onSelectAll = { screenModel.toggleAllSelection(it, visibleIds) },
+                onInvertSelection = { screenModel.invertSelection(visibleIds) },
                 onUpdateLibrary = {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                         PermissionChecker.checkSelfPermission(
@@ -95,7 +106,9 @@ fun Screen.mangaUpdatesTab(
                 onMultiBookmarkClicked = screenModel::bookmarkUpdates,
                 onMultiMarkAsReadClicked = screenModel::markUpdatesRead,
                 onMultiDeleteClicked = screenModel::showConfirmDeleteChapters,
-                onUpdateSelected = screenModel::toggleSelection,
+                onUpdateSelected = { item, selected, _, _ ->
+                    screenModel.toggleSelection(item, selected)
+                },
                 onOpenChapter = {
                     val intent =
                         ReaderActivity.newIntent(context, it.update.mangaId, it.update.chapterId)
@@ -148,6 +161,8 @@ fun Screen.mangaUpdatesTab(
                 screenModel.resetNewUpdatesCount()
 
                 onDispose {
+                    screenModel.toggleAllSelection(false)
+                    screenModel.screenModelScope.launch { HomeScreen.showBottomNav(true) }
                     screenModel.resetNewUpdatesCount()
                 }
             }
@@ -158,12 +173,12 @@ fun Screen.mangaUpdatesTab(
                 AppBar.Action(
                     title = stringResource(MR.strings.action_select_all),
                     icon = Icons.Outlined.SelectAll,
-                    onClick = { screenModel.toggleAllSelection(true) },
+                    onClick = { screenModel.toggleAllSelection(true, visibleIds) },
                 ),
                 AppBar.Action(
                     title = stringResource(MR.strings.action_select_inverse),
                     icon = Icons.Outlined.FlipToBack,
-                    onClick = { screenModel.invertSelection() },
+                    onClick = { screenModel.invertSelection(visibleIds) },
                 ),
             )
         } else {
@@ -191,6 +206,8 @@ fun Screen.mangaUpdatesTab(
                 ),
             )
         },
+        numberTitle = visibleState.selected.size,
+        cancelAction = { screenModel.toggleAllSelection(false) },
         navigateUp = navigateUp,
     )
 }

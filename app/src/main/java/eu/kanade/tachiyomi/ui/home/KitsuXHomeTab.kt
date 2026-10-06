@@ -5,7 +5,6 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material3.Scaffold
@@ -16,7 +15,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.PermissionChecker
@@ -31,6 +29,7 @@ import eu.kanade.tachiyomi.ui.entries.manga.MangaScreen
 import kotlinx.coroutines.launch
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.material.LocalFloatingNavigationPadding
 
 data object KitsuXHomeTab : Tab {
 
@@ -66,11 +65,11 @@ data object KitsuXHomeTab : Tab {
 
         Scaffold(
             snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-            contentWindowInsets = WindowInsets(0),
+            contentWindowInsets = WindowInsets(bottom = LocalFloatingNavigationPadding.current),
         ) { contentPadding ->
             HomeScreenContent(
                 state = state,
-                modifier = Modifier.padding(contentPadding),
+                bottomPadding = contentPadding.calculateBottomPadding(),
                 onItemClick = { item ->
                     if (item.isAnime) {
                         navigator.push(AnimeScreen(item.id))

@@ -4,6 +4,7 @@ import android.content.Context
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.ui.UiPreferences
+import eu.kanade.presentation.util.formatChapterNumber
 import eu.kanade.tachiyomi.data.download.anime.AnimeDownloadManager
 import eu.kanade.tachiyomi.data.download.manga.MangaDownloadManager
 import eu.kanade.tachiyomi.data.library.anime.AnimeLibraryUpdateJob
@@ -17,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -42,6 +44,8 @@ import tachiyomi.domain.items.episode.interactor.GetEpisodesByAnimeId
 import tachiyomi.domain.items.episode.model.Episode
 import tachiyomi.domain.library.anime.LibraryAnime
 import tachiyomi.domain.library.manga.LibraryManga
+import tachiyomi.domain.source.anime.service.AnimeSourceManager
+import tachiyomi.domain.source.manga.service.MangaSourceManager
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -65,6 +69,8 @@ class KitsuXHomeScreenModel(
     private val preferenceStore: PreferenceStore = Injekt.get(),
 ) : ScreenModel {
 
+    private val animeSourceManager by lazy { Injekt.get<AnimeSourceManager>() }
+    private val mangaSourceManager by lazy { Injekt.get<MangaSourceManager>() }
     private val getAnime: GetAnime = Injekt.get()
     private val getManga: GetManga = Injekt.get()
     private val hiddenContinueItemsPreference = preferenceStore.getStringSet(
@@ -96,6 +102,8 @@ class KitsuXHomeScreenModel(
     ) { libraryAnime, libraryManga, animeHistory, mangaHistory, auxiliaryData ->
         val (preferences, hiddenContinueItems) = auxiliaryData
         val (showAnime, showManga, showHeroBanner) = preferences
+        val animeById = libraryAnime.associateBy { it.id }
+        val mangaById = libraryManga.associateBy { it.id }
 
         // 1. Process continue watching items (mix anime and manga history + library items with unseen count)
         val continueWatching = mutableListOf<ContinueWatchingItem>()
@@ -103,16 +111,12 @@ class KitsuXHomeScreenModel(
         val addedMediaIds = mutableSetOf<Pair<Long, Boolean>>() // Pair(mediaId, isAnime)
 
         if (showAnime) {
-            val animeHistoryLatest = animeHistory.groupBy { it.animeId }
-                .mapNotNull { (_, list) ->
-                    list.firstOrNull { history ->
-                        getEpisode.await(history.episodeId)?.lastSecondSeen?.let { it > 0L } == true
-                    }
-                }
-                .take(15)
+            val animeHistoryLatest = selectContinueAnimeHistory(animeHistory) { episodeId ->
+                getEpisode.await(episodeId)?.lastSecondSeen?.let { it > 0L } == true
+            }
 
             animeHistoryLatest.forEach { hist ->
-                val libAnime = libraryAnime.find { it.id == hist.animeId }
+                val libAnime = animeById[hist.animeId]
                 val anime = libAnime?.anime ?: getAnime.await(hist.animeId)
                 if (anime == null) return@forEach
 
@@ -158,7 +162,7 @@ class KitsuXHomeScreenModel(
                 .take(15)
 
             mangaHistoryLatest.forEach { hist ->
-                val libManga = libraryManga.find { it.id == hist.mangaId }
+                val libManga = mangaById[hist.mangaId]
                 val manga = libManga?.manga ?: getManga.await(hist.mangaId)
                 if (manga == null) return@forEach
 
@@ -190,7 +194,14 @@ class KitsuXHomeScreenModel(
                     val chapterProgressText = if (isNewChapter) {
                         context.stringResource(MR.strings.kitsux_home_new_badge)
                     } else {
-                        "Ch ${targetChapter.chapterNumber.toInt()}"
+                        if (targetChapter.chapterNumber >= 0) {
+                            context.stringResource(
+                                MR.strings.kitsux_continue_chapter,
+                                formatChapterNumber(targetChapter.chapterNumber),
+                            )
+                        } else {
+                            targetChapter.name
+                        }
                     }
                     val mediaItem = manga.toMediaItem().copy(
                         hasUpdates = hasUpdates || isNewChapter,
@@ -367,7 +378,7 @@ class KitsuXHomeScreenModel(
             isLibraryEmpty = libraryAnime.isEmpty() && libraryManga.isEmpty(),
             isLoading = false,
         )
-    }.stateIn(
+    }.flowOn(Dispatchers.IO).stateIn(
         scope = screenModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = KitsuXHomeState(isLoading = true),
@@ -381,6 +392,7 @@ class KitsuXHomeScreenModel(
         description = description ?: "",
         genres = genre ?: emptyList(),
         isAnime = true,
+        sourceName = animeSourceManager.get(source)?.name.orEmpty(),
         realModel = this,
     )
 
@@ -402,7 +414,10 @@ class KitsuXHomeScreenModel(
         val progressLabel = if (!isNewEpisode && totalSeconds > 0 && lastSecondSeen > 0) {
             val remainingSecs = (totalSeconds - lastSecondSeen) / 1000
             if (remainingSecs > 60) {
-                "$episodeLabel · ${context.stringResource(MR.strings.kitsux_home_minutes_remaining, remainingSecs / 60)}"
+                "$episodeLabel · ${context.stringResource(
+                    MR.strings.kitsux_home_minutes_remaining,
+                    remainingSecs / 60,
+                )}"
             } else {
                 episodeLabel
             }
@@ -437,6 +452,7 @@ class KitsuXHomeScreenModel(
         description = description ?: "",
         genres = genre ?: emptyList(),
         isAnime = false,
+        sourceName = mangaSourceManager.get(source)?.name.orEmpty(),
         realModel = this,
     )
 
@@ -653,6 +669,7 @@ data class KitsuXMediaItem(
     val title: String,
     val thumbnailUrl: String?,
     val heroArtworkUrl: String? = null,
+    val sourceName: String = "",
     val description: String,
     val genres: List<String>,
     val rating: String = "8.8",

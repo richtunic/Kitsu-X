@@ -58,6 +58,7 @@ fun TabbedScreen(
                 val actualOnChange = if (searchManga) onChangeMangaSearchQuery else onChangeAnimeSearchQuery
 
                 SearchToolbar(
+                    backgroundColor = MaterialTheme.colorScheme.background,
                     titleContent = {
                         AppBarTitle(
                             stringResource(titleRes),
@@ -138,12 +139,16 @@ private fun FlexibleTabRow(
         ScrollableTabRow(
             selectedTabIndex = selectedTabIndex,
             edgePadding = 13.dp,
+            containerColor = MaterialTheme.colorScheme.background,
+            divider = {},
             modifier = Modifier.zIndex(1f),
         ) {
             block()
         }
     } else {
         PrimaryTabRow(
+            containerColor = MaterialTheme.colorScheme.background,
+            divider = {},
             selectedTabIndex = selectedTabIndex,
             modifier = Modifier.zIndex(1f),
         ) {

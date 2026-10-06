@@ -7,8 +7,11 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -33,8 +36,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -67,10 +70,12 @@ import soup.compose.material.motion.animation.materialFadeThroughIn
 import soup.compose.material.motion.animation.materialFadeThroughOut
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.components.material.LocalFloatingNavigationPadding
 import tachiyomi.presentation.core.components.material.NavigationBar
 import tachiyomi.presentation.core.components.material.NavigationRail
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.pluralStringResource
+import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -87,6 +92,7 @@ object HomeScreen : Screen() {
 
     private val uiPreferences: UiPreferences by injectLazy()
     private val defaultTab = KitsuXHomeTab
+
     @Composable
     override fun Content() {
         val showAnime by uiPreferences.showAnime().collectAsState()
@@ -102,6 +108,7 @@ object HomeScreen : Screen() {
                 if (showAnime) add(AnimeLibraryTab)
                 if (showManga) add(MangaLibraryTab)
                 add(BrowseTab)
+                add(UpdatesTab)
                 add(MoreTab)
             }
         }
@@ -137,7 +144,6 @@ object HomeScreen : Screen() {
                                         .fillMaxWidth()
                                         .navigationBarsPadding()
                                         .padding(start = 12.dp, end = 12.dp, bottom = 10.dp)
-                                        .shadow(10.dp, RoundedCornerShape(24.dp))
                                         .clip(RoundedCornerShape(24.dp)),
                                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                                     windowInsets = WindowInsets(0),
@@ -151,24 +157,34 @@ object HomeScreen : Screen() {
                     },
                     contentWindowInsets = WindowInsets(0),
                 ) { contentPadding ->
-                    Box(
-                        modifier = Modifier
-                            .padding(contentPadding)
-                            .consumeWindowInsets(contentPadding),
+                    val layoutDirection = LocalLayoutDirection.current
+                    val overlayPadding = PaddingValues(
+                        top = contentPadding.calculateTopPadding(),
+                        start = contentPadding.calculateStartPadding(layoutDirection),
+                        end = contentPadding.calculateEndPadding(layoutDirection),
+                    )
+                    CompositionLocalProvider(
+                        LocalFloatingNavigationPadding provides contentPadding.calculateBottomPadding(),
                     ) {
-                        AnimatedContent(
-                            targetState = tabNavigator.current,
-                            transitionSpec = {
-                                materialFadeThroughIn(
-                                    initialScale = 1f,
-                                    durationMillis = TAB_FADE_DURATION,
-                                ) togetherWith
-                                    materialFadeThroughOut(durationMillis = TAB_FADE_DURATION)
-                            },
-                            label = "tabContent",
+                        Box(
+                            modifier = Modifier
+                                .padding(overlayPadding)
+                                .consumeWindowInsets(overlayPadding),
                         ) {
-                            tabNavigator.saveableState(key = "currentTab", it) {
-                                it.Content()
+                            AnimatedContent(
+                                targetState = tabNavigator.current,
+                                transitionSpec = {
+                                    materialFadeThroughIn(
+                                        initialScale = 1f,
+                                        durationMillis = TAB_FADE_DURATION,
+                                    ) togetherWith
+                                        materialFadeThroughOut(durationMillis = TAB_FADE_DURATION)
+                                },
+                                label = "tabContent",
+                            ) {
+                                tabNavigator.saveableState(key = "currentTab", it) {
+                                    it.Content()
+                                }
                             }
                         }
                     }
@@ -199,10 +215,7 @@ object HomeScreen : Screen() {
                         tabNavigator.current = when (it) {
                             is Tab.AnimeLib -> AnimeLibraryTab
                             is Tab.Library -> MangaLibraryTab
-                            is Tab.Updates -> {
-                                navigator.push(UpdatesTab)
-                                MoreTab
-                            }
+                            is Tab.Updates -> UpdatesTab
                             is Tab.History -> {
                                 navigator.push(HistoriesTab)
                                 MoreTab
@@ -255,8 +268,8 @@ object HomeScreen : Screen() {
             icon = { NavigationIconItem(tab) },
             label = {
                 Text(
-                    text = tab.options.title,
-                    style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
+                    text = if (tab is UpdatesTab) stringResource(MR.strings.kitsux_recent) else tab.options.title,
+                    style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -283,8 +296,8 @@ object HomeScreen : Screen() {
             icon = { NavigationIconItem(tab) },
             label = {
                 Text(
-                    text = tab.options.title,
-                    style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
+                    text = if (tab is UpdatesTab) stringResource(MR.strings.kitsux_recent) else tab.options.title,
+                    style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )

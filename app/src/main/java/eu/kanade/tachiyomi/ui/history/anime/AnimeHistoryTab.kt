@@ -46,6 +46,7 @@ val resumeLastEpisodeSeenEvent = Channel<Unit>()
 fun Screen.animeHistoryTab(
     context: Context,
     fromMore: Boolean,
+    externalQuery: String? = null,
 ): TabContent {
     val snackbarHostState = SnackbarHostState()
 
@@ -53,6 +54,9 @@ fun Screen.animeHistoryTab(
     val screenModel = rememberScreenModel { AnimeHistoryScreenModel() }
     val state by screenModel.state.collectAsState()
     val searchQuery by screenModel.query.collectAsState()
+    LaunchedEffect(externalQuery) {
+        if (externalQuery != null) screenModel.search(externalQuery)
+    }
 
     suspend fun openEpisode(context: Context, episode: Episode?) {
         val playerPreferences: PlayerPreferences by injectLazy()

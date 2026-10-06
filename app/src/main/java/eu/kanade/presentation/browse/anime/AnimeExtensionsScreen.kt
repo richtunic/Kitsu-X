@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -85,8 +86,29 @@ fun AnimeExtensionScreen(
     onOpenExtension: (AnimeExtension.Installed) -> Unit,
     onClickUpdateAll: () -> Unit,
     onRefresh: () -> Unit,
+    listContent: (@Composable (LazyListScope.() -> Unit) -> Unit)? = null,
 ) {
     val navigator = LocalNavigator.currentOrThrow
+
+    if (listContent != null) {
+        AnimeExtensionContent(
+            state = state,
+            listContent = listContent,
+            contentPadding = contentPadding,
+            onLongClickItem = onLongClickItem,
+            onClickItemCancel = onClickItemCancel,
+            onOpenWebView = onOpenWebView,
+            onInstallExtension = onInstallExtension,
+            onUninstallExtension = onUninstallExtension,
+            onUpdateExtension = onUpdateExtension,
+            onTrustExtension = onTrustExtension,
+            onOpenExtension = onOpenExtension,
+            onClickUpdateAll = onClickUpdateAll,
+            onAddRepo = { navigator.push(UnifiedExtensionReposScreen()) },
+            showAddRepoButton = !hasExtensionRepos,
+        )
+        return
+    }
 
     PullRefresh(
         refreshing = state.isRefreshing,
@@ -153,16 +175,38 @@ private fun AnimeExtensionContent(
     onClickUpdateAll: () -> Unit,
     onAddRepo: () -> Unit,
     showAddRepoButton: Boolean,
+    listContent: (@Composable (LazyListScope.() -> Unit) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     var trustState by remember { mutableStateOf<AnimeExtension.Untrusted?>(null) }
     val installGranted = rememberRequestPackageInstallsPermissionState(initialValue = true)
 
-    FastScrollLazyColumn(
-        contentPadding = contentPadding + topSmallPaddingValues,
-    ) {
+    val renderList: @Composable (LazyListScope.() -> Unit) -> Unit = listContent ?: { items ->
+        FastScrollLazyColumn(contentPadding = contentPadding + topSmallPaddingValues, content = items)
+    }
+    renderList {
+        if (state.isLoading || state.isEmpty) {
+            item(key = "anime-status") {
+                Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
+                    if (state.isLoading) {
+                        CircularProgressIndicator()
+                    } else {
+                        Text(
+                            stringResource(
+                                if (state.searchQuery.isNullOrBlank()) {
+                                    MR.strings.empty_screen
+                                } else {
+                                    MR.strings.no_results_found
+                                },
+                            ),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+        }
         if (!installGranted && state.installer?.requiresSystemPermission == true) {
-            item(key = "extension-permissions-warning") {
+            item(key = "anime-extension-permissions-warning") {
                 WarningBanner(
                     textRes = MR.strings.ext_permission_install_apps_warning,
                     modifier = Modifier.clickable {
@@ -175,7 +219,7 @@ private fun AnimeExtensionContent(
         state.items.forEach { (header, items) ->
             item(
                 contentType = "header",
-                key = "extensionHeader-${header.hashCode()}",
+                key = "anime-extensionHeader-${header.hashCode()}",
             ) {
                 when (header) {
                     is AnimeExtensionUiModel.Header.Resource -> {
@@ -217,9 +261,9 @@ private fun AnimeExtensionContent(
                 contentType = { "item" },
                 key = { item ->
                     when (item.extension) {
-                        is AnimeExtension.Untrusted -> "extension-untrusted-${item.hashCode()}"
-                        is AnimeExtension.Installed -> "extension-installed-${item.hashCode()}"
-                        is AnimeExtension.Available -> "extension-available-${item.hashCode()}"
+                        is AnimeExtension.Untrusted -> "anime-extension-untrusted-${item.hashCode()}"
+                        is AnimeExtension.Installed -> "anime-extension-installed-${item.hashCode()}"
+                        is AnimeExtension.Available -> "anime-extension-available-${item.hashCode()}"
                     }
                 },
             ) { item ->
@@ -265,7 +309,7 @@ private fun AnimeExtensionContent(
         }
 
         if (showAddRepoButton) {
-            item(key = "add-extension-repo") {
+            item(key = "anime-add-extension-repo") {
                 Button(
                     onClick = onAddRepo,
                     modifier = Modifier

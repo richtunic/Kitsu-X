@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.browse.manga.extension
 
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,6 +33,7 @@ import uy.kohesive.injekt.api.get
 @Composable
 fun mangaExtensionsTab(
     extensionsScreenModel: MangaExtensionsScreenModel,
+    listContent: (@Composable (LazyListScope.() -> Unit) -> Unit)? = null,
 ): TabContent {
     val navigator = LocalNavigator.currentOrThrow
     val context = LocalContext.current
@@ -62,6 +64,7 @@ fun mangaExtensionsTab(
         content = { contentPadding, _ ->
             MangaExtensionScreen(
                 state = state,
+                listContent = listContent,
                 hasExtensionRepos = hasExtensionRepos,
                 contentPadding = contentPadding,
                 searchQuery = state.searchQuery,

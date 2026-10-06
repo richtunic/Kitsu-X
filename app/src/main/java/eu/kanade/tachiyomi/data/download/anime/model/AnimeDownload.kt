@@ -22,6 +22,9 @@ data class AnimeDownload(
 ) : ProgressListener {
 
     @Transient
+    var errorMessage: String? = null
+
+    @Transient
     private val _statusFlow = MutableStateFlow(State.NOT_DOWNLOADED)
 
     @Transient

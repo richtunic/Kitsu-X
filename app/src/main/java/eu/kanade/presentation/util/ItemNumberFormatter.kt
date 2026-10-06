@@ -9,9 +9,9 @@ private val formatter = DecimalFormat(
 )
 
 fun formatChapterNumber(chapterNumber: Double): String {
-    return formatter.format(chapterNumber)
+    return synchronized(formatter) { formatter.format(chapterNumber) }
 }
 
 fun formatEpisodeNumber(episodeNumber: Double): String {
-    return formatter.format(episodeNumber)
+    return synchronized(formatter) { formatter.format(episodeNumber) }
 }
