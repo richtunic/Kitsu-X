@@ -47,13 +47,13 @@ El proyecto parte del trabajo de [Aniyomi](https://github.com/aniyomiorg/aniyomi
 *Capturas reales tomadas en un Samsung Galaxy S23 Ultra durante las pruebas del diseño de 1.1.0. Las obras y fuentes visibles pertenecen a la biblioteca de prueba; no vienen incluidas en la app. La navegación se adapta a los tipos de contenido habilitados en Ajustes.*
 
 <!-- START_DOWNLOADS_ES -->
-### Descargar e instalar
+### 📥 Descargas (Versión: `v1.1.0`)
 
-**Requisitos: Android 8.0 o superior y un sistema ARM de 64 bits (`arm64-v8a`).** Un procesador de 64 bits con Android de 32 bits no cumple este requisito.
+Para instalar Kitsu X, tu dispositivo debe contar con **Android 8.0 o superior y un sistema ARM de 64 bits (arm64-v8a)**.
 
-[**Ver versiones publicadas y descargar el APK**](https://github.com/richtunic/Kitsu-X/releases)
+* **APK arm64-v8a**: [Descargar Kitsu-X-v1.1.0-arm64-v8a.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.1.0/Kitsu-X-v1.1.0-arm64-v8a.apk)
 
-La versión **1.1.0** se distribuye exclusivamente para `arm64-v8a`: no incluye APK universal, ARM de 32 bits ni x86/x86_64.
+*Para ver versiones anteriores o el historial completo de cambios, visita la sección de [Releases](https://github.com/richtunic/Kitsu-X/releases).*
 <!-- END_DOWNLOADS_ES -->
 
 Para actualizar una instalación de Kitsu X, instala el APK sobre la versión existente. Crea un respaldo antes de actualizar y conserva la app instalada para mantener sus datos.
@@ -160,13 +160,13 @@ The project builds on [Aniyomi](https://github.com/aniyomiorg/aniyomi) and the T
 *Real Samsung Galaxy S23 Ultra screenshots from testing the 1.1.0 design. Titles and sources belong to the test library and are not bundled with the app. Navigation adapts to the content types enabled in Settings.*
 
 <!-- START_DOWNLOADS_EN -->
-### Download and installation
+### 📥 Download (Version: `v1.1.0`)
 
-**Requires Android 8.0 or newer and a 64-bit ARM Android system (`arm64-v8a`).** A 64-bit processor running 32-bit Android does not meet this requirement.
+To run Kitsu X, your device must have **Android 8.0 or higher and a 64-bit ARM system (arm64-v8a)**.
 
-[**View published releases and download the APK**](https://github.com/richtunic/Kitsu-X/releases)
+* **arm64-v8a APK**: [Download Kitsu-X-v1.1.0-arm64-v8a.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.1.0/Kitsu-X-v1.1.0-arm64-v8a.apk)
 
-Version **1.1.0** is distributed exclusively as `arm64-v8a`, without universal, ARM 32-bit, or x86/x86_64 builds.
+*To see older versions or the changelog, check the [Releases](https://github.com/richtunic/Kitsu-X/releases) page.*
 <!-- END_DOWNLOADS_EN -->
 
 To update an existing Kitsu X installation, install the APK over it. Create a backup before updating and keep the app installed to retain its data.
