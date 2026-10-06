@@ -53,7 +53,7 @@ El proyecto parte del trabajo de [Aniyomi](https://github.com/aniyomiorg/aniyomi
 
 [**Ver versiones publicadas y descargar el APK**](https://github.com/richtunic/Kitsu-X/releases)
 
-La versión **1.1.0 está en preparación**. Su distribución será exclusivamente `arm64-v8a`: no se ofrecerán APK universal, ARM de 32 bits ni x86/x86_64.
+La versión **1.1.0** se distribuye exclusivamente para `arm64-v8a`: no incluye APK universal, ARM de 32 bits ni x86/x86_64.
 <!-- END_DOWNLOADS_ES -->
 
 Para actualizar una instalación de Kitsu X, instala el APK sobre la versión existente. Crea un respaldo antes de actualizar y conserva la app instalada para mantener sus datos.
@@ -166,7 +166,7 @@ The project builds on [Aniyomi](https://github.com/aniyomiorg/aniyomi) and the T
 
 [**View published releases and download the APK**](https://github.com/richtunic/Kitsu-X/releases)
 
-Version **1.1.0 is being prepared**. It will be distributed exclusively as `arm64-v8a`, without universal, ARM 32-bit, or x86/x86_64 builds.
+Version **1.1.0** is distributed exclusively as `arm64-v8a`, without universal, ARM 32-bit, or x86/x86_64 builds.
 <!-- END_DOWNLOADS_EN -->
 
 To update an existing Kitsu X installation, install the APK over it. Create a backup before updating and keep the app installed to retain its data.
