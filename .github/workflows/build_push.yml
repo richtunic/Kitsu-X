@@ -40,6 +40,9 @@ jobs:
       - name: Build app
         run: ./gradlew assembleRelease -Penable-updater
 
+      - name: Verify APK architectures
+        run: python3 .github/scripts/verify_release_apks.py
+
       - name: Run unit tests
         run: ./gradlew testReleaseUnitTest
 
