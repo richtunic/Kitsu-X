@@ -3,7 +3,6 @@ package eu.kanade.tachiyomi.ui.browse
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,11 +12,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -73,10 +74,30 @@ internal fun Screen.ExploreSearchPage(anime: Boolean, onAnimeChange: (Boolean) -
         item {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(stringResource(MR.strings.kitsux_search_page_intro), style = MaterialTheme.typography.bodyMedium)
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+                    SegmentedButton(
+                        selected = anime,
+                        onClick = { onAnimeChange(true) },
+                        shape = SegmentedButtonDefaults.itemShape(0, 2),
+                        label = { Text(stringResource(AYMR.strings.label_anime)) },
+                    )
+                    SegmentedButton(
+                        selected = !anime,
+                        onClick = { onAnimeChange(false) },
+                        shape = SegmentedButtonDefaults.itemShape(1, 2),
+                        label = { Text(stringResource(AYMR.strings.label_manga)) },
+                    )
+                }
                 OutlinedTextField(
                     value = query,
                     onValueChange = { query = it },
-                    label = { Text(stringResource(MR.strings.kitsux_explore_search_hint)) },
+                    label = {
+                        Text(
+                            stringResource(
+                                if (anime) MR.strings.kitsux_search_anime_hint else MR.strings.kitsux_search_manga_hint,
+                            ),
+                        )
+                    },
                     singleLine = true,
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
                     modifier = Modifier.fillMaxWidth(),
@@ -88,18 +109,6 @@ internal fun Screen.ExploreSearchPage(anime: Boolean, onAnimeChange: (Boolean) -
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { search() }),
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(
-                        selected = anime,
-                        onClick = { onAnimeChange(true) },
-                        label = { Text(stringResource(AYMR.strings.label_anime)) },
-                    )
-                    FilterChip(
-                        selected = !anime,
-                        onClick = { onAnimeChange(false) },
-                        label = { Text(stringResource(AYMR.strings.label_manga)) },
-                    )
-                }
                 Text(
                     stringResource(MR.strings.kitsux_explore_installed_sources),
                     style = MaterialTheme.typography.titleMedium,

@@ -12,7 +12,7 @@ Una continuación independiente de Aniyomi, con una experiencia visual propia pa
 [![Discord](https://img.shields.io/badge/Comunidad-Discord-5865F2?logo=discord&logoColor=white)](https://discord.gg/uHY7TpZdZ)
 [![License](https://img.shields.io/badge/Licencia-Apache_2.0-blue)](LICENSE)
 
-[Español](#espanol) · [English](#english) · [Cambios en 1.1.0](docs/releases/1.1.0.md)
+[Español](#espanol) · [English](#english) · [Cambios en 1.1.1](docs/releases/1.1.1.md)
 
 </div>
 
@@ -47,13 +47,19 @@ El proyecto parte del trabajo de [Aniyomi](https://github.com/aniyomiorg/aniyomi
 *Capturas reales tomadas en un Samsung Galaxy S23 Ultra durante las pruebas del diseño de 1.1.0. Las obras y fuentes visibles pertenecen a la biblioteca de prueba; no vienen incluidas en la app. La navegación se adapta a los tipos de contenido habilitados en Ajustes.*
 
 <!-- START_DOWNLOADS_ES -->
-### 📥 Descargas (Versión: `v1.1.0`)
+### 📥 Descargas (Versión: `v1.1.1`)
 
-Para instalar Kitsu X, tu dispositivo debe contar con **Android 8.0 o superior y un sistema ARM de 64 bits (arm64-v8a)**.
+Requiere **Android 8.0 o superior**. Elige el APK según la arquitectura de tu sistema Android; si no la conoces, utiliza el universal.
 
-* **APK arm64-v8a**: [Descargar Kitsu-X-v1.1.0-arm64-v8a.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.1.0/Kitsu-X-v1.1.0-arm64-v8a.apk)
+* **ARM de 64 bits (arm64-v8a)**: [APK](https://github.com/richtunic/Kitsu-X/releases/download/v1.1.1/Kitsu-X-v1.1.1-arm64-v8a.apk)
+* **ARM de 32 bits (armeabi-v7a)**: [APK](https://github.com/richtunic/Kitsu-X/releases/download/v1.1.1/Kitsu-X-v1.1.1-armeabi-v7a.apk)
+* **Intel/AMD de 64 bits (x86_64)**: [APK](https://github.com/richtunic/Kitsu-X/releases/download/v1.1.1/Kitsu-X-v1.1.1-x86_64.apk)
+* **Intel/AMD de 32 bits (x86)**: [APK](https://github.com/richtunic/Kitsu-X/releases/download/v1.1.1/Kitsu-X-v1.1.1-x86.apk)
+* **Todas las arquitecturas (archivo más grande) (universal)**: [APK](https://github.com/richtunic/Kitsu-X/releases/download/v1.1.1/Kitsu-X-v1.1.1-universal.apk)
 
-*Para ver versiones anteriores o el historial completo de cambios, visita la sección de [Releases](https://github.com/richtunic/Kitsu-X/releases).*
+[SHA-256](https://github.com/richtunic/Kitsu-X/releases/download/v1.1.1/SHA256SUMS.txt)
+
+[Releases](https://github.com/richtunic/Kitsu-X/releases)
 <!-- END_DOWNLOADS_ES -->
 
 Para actualizar una instalación de Kitsu X, instala el APK sobre la versión existente. Crea un respaldo antes de actualizar y conserva la app instalada para mantener sus datos.
@@ -160,13 +166,19 @@ The project builds on [Aniyomi](https://github.com/aniyomiorg/aniyomi) and the T
 *Real Samsung Galaxy S23 Ultra screenshots from testing the 1.1.0 design. Titles and sources belong to the test library and are not bundled with the app. Navigation adapts to the content types enabled in Settings.*
 
 <!-- START_DOWNLOADS_EN -->
-### 📥 Download (Version: `v1.1.0`)
+### 📥 Download (Version: `v1.1.1`)
 
-To run Kitsu X, your device must have **Android 8.0 or higher and a 64-bit ARM system (arm64-v8a)**.
+Requires **Android 8.0 or higher**. Choose the APK for your Android system architecture; if unsure, use the universal APK.
 
-* **arm64-v8a APK**: [Download Kitsu-X-v1.1.0-arm64-v8a.apk](https://github.com/richtunic/Kitsu-X/releases/download/v1.1.0/Kitsu-X-v1.1.0-arm64-v8a.apk)
+* **64-bit ARM (arm64-v8a)**: [APK](https://github.com/richtunic/Kitsu-X/releases/download/v1.1.1/Kitsu-X-v1.1.1-arm64-v8a.apk)
+* **32-bit ARM (armeabi-v7a)**: [APK](https://github.com/richtunic/Kitsu-X/releases/download/v1.1.1/Kitsu-X-v1.1.1-armeabi-v7a.apk)
+* **64-bit Intel/AMD (x86_64)**: [APK](https://github.com/richtunic/Kitsu-X/releases/download/v1.1.1/Kitsu-X-v1.1.1-x86_64.apk)
+* **32-bit Intel/AMD (x86)**: [APK](https://github.com/richtunic/Kitsu-X/releases/download/v1.1.1/Kitsu-X-v1.1.1-x86.apk)
+* **All architectures (larger file) (universal)**: [APK](https://github.com/richtunic/Kitsu-X/releases/download/v1.1.1/Kitsu-X-v1.1.1-universal.apk)
 
-*To see older versions or the changelog, check the [Releases](https://github.com/richtunic/Kitsu-X/releases) page.*
+[SHA-256](https://github.com/richtunic/Kitsu-X/releases/download/v1.1.1/SHA256SUMS.txt)
+
+[Releases](https://github.com/richtunic/Kitsu-X/releases)
 <!-- END_DOWNLOADS_EN -->
 
 To update an existing Kitsu X installation, install the APK over it. Create a backup before updating and keep the app installed to retain its data.

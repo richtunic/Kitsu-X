@@ -53,6 +53,7 @@ import eu.kanade.tachiyomi.util.removeCovers
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -369,19 +370,8 @@ class AnimeScreenModel(
 
                 val categories = getCategories()
                 val organizationMode = libraryPreferences.organizationOnAdd().get()
-                val suggestedCategory = if (
-                    organizationMode == LibraryPreferences.OrganizationOnAdd.Automatic &&
-                    uiPreferences.autoCategorizeLibrary().get()
-                ) {
-                    fetchJikanGenresForAnime(anime.title)
-                        ?.firstNotNullOfOrNull { genre ->
-                            categories.find { it.name.equals(genre, ignoreCase = true) }
-                        }
-                } else {
-                    null
-                }
                 val defaultCategoryId = libraryPreferences.defaultAnimeCategory().get().toLong()
-                val targetCategory = suggestedCategory ?: categories.find { it.id == defaultCategoryId }
+                val targetCategory = categories.find { it.id == defaultCategoryId }
                 when {
                     organizationMode == LibraryPreferences.OrganizationOnAdd.Ask -> {
                         showChangeCategoryDialog()
@@ -389,6 +379,26 @@ class AnimeScreenModel(
                     organizationMode == LibraryPreferences.OrganizationOnAdd.Uncategorized -> {
                         if (!updateAnime.awaitUpdateFavorite(anime.id, true)) return@launchIO
                         moveAnimeToCategory(null)
+                    }
+                    organizationMode == LibraryPreferences.OrganizationOnAdd.Automatic -> {
+                        if (!updateAnime.awaitUpdateFavorite(anime.id, true)) return@launchIO
+                        val initialCategories = listOfNotNull(targetCategory?.id)
+                        setAnimeCategories.await(anime.id, initialCategories)
+                        screenModelScope.launchIO categorize@{
+                            if (!uiPreferences.autoCategorizeLibrary().get()) return@categorize
+                            val suggestedCategory = fetchJikanGenresForAnime(anime.title)
+                                ?.firstNotNullOfOrNull { genre ->
+                                    getCategories().find { it.name.equals(genre, ignoreCase = true) }
+                                } ?: return@categorize
+                            if (uiPreferences.autoCategorizeLibrary().get() &&
+                                libraryPreferences.organizationOnAdd().get() ==
+                                LibraryPreferences.OrganizationOnAdd.Automatic &&
+                                animeRepository.getAnimeById(anime.id).favorite &&
+                                getCategories.await(anime.id).map { it.id }.toSet() == initialCategories.toSet()
+                            ) {
+                                setAnimeCategories.await(anime.id, listOf(suggestedCategory.id))
+                            }
+                        }
                     }
                     targetCategory != null -> {
                         if (!updateAnime.awaitUpdateFavorite(anime.id, true)) return@launchIO
@@ -1629,8 +1639,11 @@ class AnimeScreenModel(
             val encodedTitle = URLEncoder.encode(normalizedTitle, "UTF-8")
             val response = networkHelper.client
                 .newCall(GET("https://api.jikan.moe/v4/anime?q=$encodedTitle&limit=1"))
+                .apply { timeout().timeout(8, java.util.concurrent.TimeUnit.SECONDS) }
                 .awaitSuccess()
-            val parsed = jikanJson.decodeFromString<JikanAnimeSearchResponse>(response.body.string())
+            val parsed = response.use {
+                jikanJson.decodeFromString<JikanAnimeSearchResponse>(it.body.string())
+            }
             parsed.data
                 .firstOrNull()
                 ?.genres
@@ -1638,6 +1651,7 @@ class AnimeScreenModel(
                 ?.distinctBy { it.lowercase() }
                 ?.takeIf { it.isNotEmpty() }
         } catch (e: Exception) {
+            if (e is CancellationException) throw e
             logcat(LogPriority.ERROR, e) { "Failed to resolve Jikan genres for '$title'" }
             null
         }

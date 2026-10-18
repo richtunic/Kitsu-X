@@ -1,68 +1,51 @@
-import sys
 import re
+import sys
+from pathlib import Path
+
+
+def downloads(tag, language):
+    prefix = f"Kitsu-X-{tag}"
+    base = f"https://github.com/richtunic/Kitsu-X/releases/download/{tag}"
+    spanish = language == "ES"
+    title = f"Descargas (Versión: `{tag}`)" if spanish else f"Download (Version: `{tag}`)"
+    requirement = (
+        "Requiere **Android 8.0 o superior**. Elige el APK según la arquitectura de tu sistema Android; "
+        "si no la conoces, utiliza el universal."
+        if spanish else
+        "Requires **Android 8.0 or higher**. Choose the APK for your Android system architecture; "
+        "if unsure, use the universal APK."
+    )
+    architectures = [
+        ("arm64-v8a", "ARM de 64 bits" if spanish else "64-bit ARM"),
+        ("armeabi-v7a", "ARM de 32 bits" if spanish else "32-bit ARM"),
+        ("x86_64", "Intel/AMD de 64 bits" if spanish else "64-bit Intel/AMD"),
+        ("x86", "Intel/AMD de 32 bits" if spanish else "32-bit Intel/AMD"),
+        ("universal", "Todas las arquitecturas (archivo más grande)" if spanish else "All architectures (larger file)"),
+    ]
+    lines = [f"<!-- START_DOWNLOADS_{language} -->", f"### 📥 {title}", "", requirement, ""]
+    for abi, label in architectures:
+        lines.append(f"* **{label} ({abi})**: [APK]({base}/{prefix}-{abi}.apk)")
+    lines.extend(["", f"[SHA-256]({base}/SHA256SUMS.txt)", "", "[Releases](https://github.com/richtunic/Kitsu-X/releases)", f"<!-- END_DOWNLOADS_{language} -->"])
+    return "\n".join(lines)
+
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python update_readme_downloads.py <tag_name>")
-        sys.exit(1)
+    if len(sys.argv) != 2 or not re.fullmatch(r"v\d+\.\d+\.\d+", sys.argv[1]):
+        raise SystemExit("Usage: python update_readme_downloads.py vX.Y.Z")
+    path = Path("README.md")
+    content = path.read_text(encoding="utf-8")
+    for language in ("ES", "EN"):
+        content, count = re.subn(
+            rf"<!-- START_DOWNLOADS_{language} -->.*?<!-- END_DOWNLOADS_{language} -->",
+            lambda _: downloads(sys.argv[1], language),
+            content,
+            flags=re.DOTALL,
+        )
+        if count != 1:
+            raise SystemExit(f"Expected exactly one {language} downloads block")
+    path.write_text(content, encoding="utf-8")
+    print(f"Updated README downloads for {sys.argv[1]}")
 
-    tag = sys.argv[1]
-    
-    # Read README.md
-    try:
-        with open("README.md", "r", encoding="utf-8") as f:
-            content = f.read()
-    except FileNotFoundError:
-        print("Error: README.md not found.")
-        sys.exit(1)
-
-    asset_prefix = f"Kitsu-X-{tag}"
-
-    # Generate new downloads block for Spanish
-    downloads_es = f"""<!-- START_DOWNLOADS_ES -->
-### 📥 Descargas (Versión: `{tag}`)
-
-Para instalar Kitsu X, tu dispositivo debe contar con **Android 8.0 o superior y un sistema ARM de 64 bits (arm64-v8a)**.
-
-* **APK arm64-v8a**: [Descargar {asset_prefix}-arm64-v8a.apk](https://github.com/richtunic/Kitsu-X/releases/download/{tag}/{asset_prefix}-arm64-v8a.apk)
-
-*Para ver versiones anteriores o el historial completo de cambios, visita la sección de [Releases](https://github.com/richtunic/Kitsu-X/releases).*
-<!-- END_DOWNLOADS_ES -->"""
-
-    # Generate new downloads block for English
-    downloads_en = f"""<!-- START_DOWNLOADS_EN -->
-### 📥 Download (Version: `{tag}`)
-
-To run Kitsu X, your device must have **Android 8.0 or higher and a 64-bit ARM system (arm64-v8a)**.
-
-* **arm64-v8a APK**: [Download {asset_prefix}-arm64-v8a.apk](https://github.com/richtunic/Kitsu-X/releases/download/{tag}/{asset_prefix}-arm64-v8a.apk)
-
-*To see older versions or the changelog, check the [Releases](https://github.com/richtunic/Kitsu-X/releases) page.*
-<!-- END_DOWNLOADS_EN -->"""
-
-    # Replace in content using regex with DOTALL flag to match multiline blocks
-    new_content = re.sub(
-        r"<!-- START_DOWNLOADS_ES -->.*?<!-- END_DOWNLOADS_ES -->",
-        downloads_es,
-        content,
-        flags=re.DOTALL
-    )
-
-    new_content = re.sub(
-        r"<!-- START_DOWNLOADS_EN -->.*?<!-- END_DOWNLOADS_EN -->",
-        downloads_en,
-        new_content,
-        flags=re.DOTALL
-    )
-
-    if new_content == content:
-        print("Warning: No placeholders matched or replacement produced identical content.")
-    
-    # Write back README.md
-    with open("README.md", "w", encoding="utf-8") as f:
-        f.write(new_content)
-
-    print(f"Successfully updated README.md downloads section to tag {tag}")
 
 if __name__ == "__main__":
     main()

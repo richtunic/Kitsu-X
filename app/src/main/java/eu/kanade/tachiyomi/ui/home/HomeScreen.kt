@@ -10,12 +10,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Home
@@ -34,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
@@ -122,9 +128,25 @@ object HomeScreen : Screen() {
                 Scaffold(
                     startBar = {
                         if (useNavigationRail) {
-                            NavigationRail {
-                                allTabs.fastForEach {
-                                    NavigationRailItem(it)
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .windowInsetsPadding(
+                                        WindowInsets.safeDrawing.only(
+                                            WindowInsetsSides.Start + WindowInsetsSides.Vertical,
+                                        ),
+                                    )
+                                    .padding(horizontal = 12.dp, vertical = 12.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                NavigationRail(
+                                    modifier = Modifier.clip(RoundedCornerShape(24.dp)),
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    windowInsets = WindowInsets(0),
+                                ) {
+                                    allTabs.fastForEach {
+                                        NavigationRailItem(it)
+                                    }
                                 }
                             }
                         }

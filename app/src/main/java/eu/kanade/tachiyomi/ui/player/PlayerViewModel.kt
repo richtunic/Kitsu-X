@@ -1353,7 +1353,6 @@ class PlayerViewModel @JvmOverloads constructor(
                                 if (
                                     prefIndex == -1 &&
                                     hosterIndex == -1 &&
-                                    shouldStartFirstReadyVideo(source) &&
                                     selectedHosterVideoIndex.value == Pair(-1, -1)
                                 ) {
                                     val currentHosterState = _hosterState.value
@@ -1498,11 +1497,6 @@ class PlayerViewModel @JvmOverloads constructor(
                 updateIsLoadingEpisode(false)
             }
         }
-    }
-
-    private fun shouldStartFirstReadyVideo(source: AnimeSource): Boolean {
-        return (source as? AnimeHttpSource)?.baseUrl
-            ?.contains("animeonline.ninja", ignoreCase = true) == true
     }
 
     fun onVideoClicked(hosterIndex: Int, videoIndex: Int) {
