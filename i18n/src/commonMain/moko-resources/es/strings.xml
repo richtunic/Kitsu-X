@@ -1022,4 +1022,6 @@
     <string name="kitsux_explore_saved_content">Mostrando contenido guardado</string>
     <string name="kitsux_download_error_details">Error de descarga</string>
     <string name="kitsux_download_copy_error">Copiar detalles</string>
+    <string name="kitsux_search_anime_hint">Buscar anime</string>
+    <string name="kitsux_search_manga_hint">Buscar manga</string>
 </resources>

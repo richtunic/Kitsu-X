@@ -20,8 +20,8 @@ android {
     defaultConfig {
         applicationId = "io.kitsux.app"
 
-        versionCode = 9
-        versionName = "1.1.0"
+        versionCode = 10
+        versionName = "1.1.1"
 
         buildConfigField("String", "COMMIT_COUNT", "\"${getCommitCount()}\"")
         buildConfigField("String", "COMMIT_SHA", "\"${getGitSha()}\"")
@@ -104,9 +104,9 @@ android {
     splits {
         abi {
             isEnable = true
-            isUniversalApk = false
+            isUniversalApk = true
             reset()
-            include("arm64-v8a")
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
         }
     }
 

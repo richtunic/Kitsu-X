@@ -1158,4 +1158,6 @@
     <string name="kitsux_explore_saved_content">Showing saved content</string>
     <string name="kitsux_download_error_details">Download error</string>
     <string name="kitsux_download_copy_error">Copy details</string>
+    <string name="kitsux_search_anime_hint">Search anime</string>
+    <string name="kitsux_search_manga_hint">Search manga</string>
 </resources>
